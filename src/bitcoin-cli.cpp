@@ -68,13 +68,13 @@ static bool AppInitRPC(int argc, char* argv[])
 
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
-        std::string strUsage = _("Bitcoin Core RPC client version") + " " + FormatFullVersion() + "\n";
+        std::string strUsage = _("Viacoin Core RPC client version") + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version"))
         {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  bitcoin-cli [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
-                  "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
-                  "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  viacoin-cli [options] <command> [params]  " + _("Send command to Viacoin Core") + "\n" +
+                  "  viacoin-cli [options] help                " + _("List commands") + "\n" +
+                  "  viacoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessageCli();
         }

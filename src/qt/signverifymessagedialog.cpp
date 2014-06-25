@@ -27,7 +27,7 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
 
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
-    ui->addressIn_VM->setPlaceholderText(tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+    ui->addressIn_VM->setPlaceholderText(tr("Enter a Viacoin address (e.g. VpzzvjQHooFgZX1rh4hC4J5r9YwE86aiZ2)"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);

@@ -19,8 +19,8 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (http://www.bitcoin.org/),
- * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+ * This is the developer documentation of the reference client for an experimental new digital currency called Viacoin (http://www.viacoin.org/),
+ * which enables instant payments to anyone, anywhere in the world. Viacoin uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
  * The software is a community-driven open source project, released under the MIT license.
@@ -84,7 +84,7 @@ bool AppInit(int argc, char* argv[])
 
         if (mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version"))
         {
-            std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n";
+            std::string strUsage = _("Viacoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n";
 
             if (mapArgs.count("-version"))
             {
@@ -93,7 +93,7 @@ bool AppInit(int argc, char* argv[])
             else
             {
                 strUsage += "\n" + _("Usage:") + "\n" +
-                      "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n";
+                      "  viacoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n";
 
                 strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             }
@@ -105,7 +105,7 @@ bool AppInit(int argc, char* argv[])
         // Command-line RPC
         bool fCommandLine = false;
         for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "viacoin:"))
                 fCommandLine = true;
 
         if (fCommandLine)
@@ -117,7 +117,7 @@ bool AppInit(int argc, char* argv[])
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
-            fprintf(stdout, "Bitcoin server starting\n");
+            fprintf(stdout, "Viacoin server starting\n");
 
             // Daemonize
             pid_t pid = fork();

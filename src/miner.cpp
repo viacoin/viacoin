@@ -395,14 +395,14 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 
 bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
-    uint256 hash = pblock->GetHash();
+    uint256 hash = pblock->GetPoWHash();
     uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
     if (hash > hashTarget)
         return false;
 
     //// debug print
-    LogPrintf("BitcoinMiner:\n");
+    LogPrintf("ViacoinMiner:\n");
     LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
     pblock->print();
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
@@ -411,7 +411,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-            return error("BitcoinMiner : generated block is stale");
+            return error("ViacoinMiner : generated block is stale");
     }
 
     // Remove key from key pool
@@ -426,22 +426,22 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     // Process this block the same as if we had received it from another node
     CValidationState state;
     if (!ProcessBlock(state, NULL, pblock))
-        return error("BitcoinMiner : ProcessBlock, block not accepted");
+        return error("ViacoinMiner : ProcessBlock, block not accepted");
 
     return true;
 }
 
 void static BitcoinMiner(CWallet *pwallet)
 {
-    LogPrintf("BitcoinMiner started\n");
+    LogPrintf("ViacoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("bitcoin-miner");
+    RenameThread("viacoin-miner");
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
-    try {
+    try { 
         while (true) {
             if (Params().MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
@@ -462,8 +462,8 @@ void static BitcoinMiner(CWallet *pwallet)
             CBlock *pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-            LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
-                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
+            LogPrintf("Running ViacoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
+                   ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
             //
             // Search
@@ -471,22 +471,18 @@ void static BitcoinMiner(CWallet *pwallet)
             int64_t nStart = GetTime();
             uint256 hashTarget = uint256().SetCompact(pblock->nBits);
             uint256 hash;
-            uint32_t nNonce = 0;
-            uint32_t nOldNonce = 0;
-            while (true) {
-                bool fFound = ScanHash(pblock, nNonce, &hash);
-                uint32_t nHashesDone = nNonce - nOldNonce;
-                nOldNonce = nNonce;
+            while (true)
+            {
+                uint32_t nHashesDone = 0;
 
                 // Check if something found
-                if (fFound)
+                while (true)
                 {
+                    scrypt_1024_1_1_256(BEGIN(pblock->nVersion), BEGIN(hash));
+
                     if (hash <= hashTarget)
                     {
                         // Found a solution
-                        pblock->nNonce = nNonce;
-                        assert(hash == pblock->GetHash());
-
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
                         CheckWork(pblock, *pwallet, reservekey);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -495,8 +491,13 @@ void static BitcoinMiner(CWallet *pwallet)
                         if (Params().MineBlocksOnDemand())
                             throw boost::thread_interrupted();
 
-                        break;
-                    }
+                    break;
+                }
+
+                pblock->nNonce += 1;
+                nHashesDone += 1;
+                if ((pblock->nNonce & 0xFF) == 0)
+                    break;
                 }
 
                 // Meter hashes/sec
@@ -533,7 +534,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Regtest mode doesn't require peers
                 if (vNodes.empty() && Params().MiningRequiresPeers())
                     break;
-                if (nNonce >= 0xffff0000)
+                if (pblock->nNonce >= 0xffff0000)
                     break;
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
@@ -548,11 +549,11 @@ void static BitcoinMiner(CWallet *pwallet)
                     hashTarget.SetCompact(pblock->nBits);
                 }
             }
-        }
+        } 
     }
     catch (boost::thread_interrupted)
     {
-        LogPrintf("BitcoinMiner terminated\n");
+        LogPrintf("ViacoinMiner terminated\n");
         throw;
     }
 }

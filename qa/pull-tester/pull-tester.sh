@@ -8,11 +8,11 @@
 #Param ...: arguments for build-test.sh
 
 if [ $# -lt 1 ]; then
-  echo "usage: $0 [bitcoin srcroot] build-test arguments..."
+  echo "usage: $0 [viacoin srcroot] build-test arguments..."
 fi
 
-killall -q bitcoin-cli
-killall -q bitcoind
+killall -q viacoin-cli
+killall -q viacoind
 
 cd $1
 shift

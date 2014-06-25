@@ -9,13 +9,13 @@
 #include "script.h"
 #include "serialize.h"
 #include "uint256.h"
-
+#include "crypto/scrypt.h"
 #include <stdint.h>
 
 class CTransaction;
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
+static const int64_t MAX_MONEY = 9670000 * COIN;
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
@@ -438,6 +438,13 @@ public:
     bool IsNull() const
     {
         return (nBits == 0);
+    }
+
+    uint256 GetPoWHash() const
+    {
+        uint256 thash;
+        scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
+        return thash;
     }
 
     uint256 GetHash() const;

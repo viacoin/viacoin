@@ -48,10 +48,10 @@ using namespace std;
 using namespace boost;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
-const QString BITCOIN_IPC_PREFIX("bitcoin:");
-const char* BITCOIN_REQUEST_MIMETYPE = "application/bitcoin-paymentrequest";
-const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/bitcoin-paymentack";
-const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/bitcoin-payment";
+const QString BITCOIN_IPC_PREFIX("viacoin:");
+const char* BITCOIN_REQUEST_MIMETYPE = "application/viacoin-paymentrequest";
+const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/viacoin-paymentack";
+const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/viacoin-payment";
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -70,7 +70,7 @@ void PaymentServer::freeCertStore()
 //
 static QString ipcServerName()
 {
-    QString name("BitcoinQt");
+    QString name("ViacoinQt");
 
     // Append a simple hash of the datadir
     // Note that GetDataDir(true) returns a different path
@@ -426,7 +426,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
             }
             else
                 emit message(tr("URI handling"),
-                    tr("URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters."),
+                    tr("URI can not be parsed! This can be caused by an invalid Viacoin address or malformed URI parameters."),
                     CClientUIInterface::ICON_WARNING);
 
             return;
