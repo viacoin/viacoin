@@ -1,8 +1,8 @@
 Release Process
 ====================
 
-* update translations (ping wumpus, Diapolo or tcatm on IRC)
-* see https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#syncing-with-transifex
+* update translations 
+* see https://github.com/viacoin/viacoin/blob/master/doc/translation_process.md#syncing-with-transifex
 
 * * *
 
@@ -25,11 +25,11 @@ Release Process
 
 ##perform gitian builds
 
- From a directory containing the bitcoin source, gitian-builder and gitian.sigs
+ From a directory containing the viacoin source, gitian-builder and gitian.sigs
   
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
 	export VERSION=(new version, e.g. 0.8.0)
-	pushd ./bitcoin
+	pushd ./viacoin
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
@@ -63,25 +63,25 @@ Release Process
 	wget 'http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz' -O clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
 	wget 'https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff' -O cdrkit-deterministic.patch
 	cd ..
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-linux.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/boost-linux.yml
 	mv build/out/boost-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-linux.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/deps-linux.yml
 	mv build/out/bitcoin-deps-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-linux.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/qt-linux.yml
 	mv build/out/qt-*.tar.gz inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/boost-win.yml
 	mv build/out/boost-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/deps-win.yml
 	mv build/out/bitcoin-deps-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/qt-win.yml
 	mv build/out/qt-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/protobuf-win.yml
+	./bin/gbuild ../viacoin/contrib/gitian-descriptors/protobuf-win.yml
 	mv build/out/protobuf-*.zip inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-native.yml
+    ./bin/gbuild ../viacoin/contrib/gitian-descriptors/gitian-osx-native.yml
 	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-depends.yml
+    ./bin/gbuild ../viacoin/contrib/gitian-descriptors/gitian-osx-depends.yml
 	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/gitian-osx-qt.yml
+    ./bin/gbuild ../viacoin/contrib/gitian-descriptors/gitian-osx-qt.yml
 	mv build/out/osx-*.tar.gz inputs/
 
  The expected SHA256 hashes of the intermediate inputs are:
@@ -101,48 +101,48 @@ Release Process
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
     a0999037e8b0ef9ade13efd88fee261ba401f5ca910068b7e0cd3262ba667db0  protobuf-win64-2.5.0-gitian-r4.zip
 
- Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
+ Build viacoind and viacoin-qt on Linux32, Linux64, and Win32:
   
-	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
-	zip -r bitcoin-${VERSION}-linux-gitian.zip *
-	mv bitcoin-${VERSION}-linux-gitian.zip ../../../
+        zip -r viacoin-${VERSION}-linux-gitian.zip *
+	mv viacoin-${VERSION}-linux-gitian.zip ../../../
 	popd
-	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+        ./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-win.yml
 	pushd build/out
-	zip -r bitcoin-${VERSION}-win-gitian.zip *
-	mv bitcoin-${VERSION}-win-gitian.zip ../../../
+        zip -r viacoin-${VERSION}-win-gitian.zip *
+        mv viacoin-${VERSION}-win-gitian.zip ../../../
 	popd
-        ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-        ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+        ./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-osx-viacoin.yml
+        ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 	pushd build/out
-	mv Bitcoin-Qt.dmg ../../../
+        mv Viacoin-Qt.dmg ../../../
 	popd
 	popd
 
   Build output expected:
 
-  1. linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit and 64-bit binaries + installer + source (bitcoin-${VERSION}-win-gitian.zip)
-  3. OSX installer (Bitcoin-Qt.dmg)
+  1. linux 32-bit and 64-bit binaries + source (viacoin-${VERSION}-linux-gitian.zip)
+  2. windows 32-bit and 64-bit binaries + installer + source (viacoin-${VERSION}-win-gitian.zip)
+  3. OSX installer (Viacoin-Qt.dmg)
   4. Gitian signatures (in gitian.sigs/${VERSION}[-win|-osx]/(your gitian key)/
 
 repackage gitian builds for release as stand-alone zip/tar/installer exe
 
 **Linux .tar.gz:**
 
-	unzip bitcoin-${VERSION}-linux-gitian.zip -d bitcoin-${VERSION}-linux
-	tar czvf bitcoin-${VERSION}-linux.tar.gz bitcoin-${VERSION}-linux
-	rm -rf bitcoin-${VERSION}-linux
+        unzip viacoin-${VERSION}-linux-gitian.zip -d viacoin-${VERSION}-linux
+        tar czvf viacoin-${VERSION}-linux.tar.gz viacoin-${VERSION}-linux
+        rm -rf viacoin-${VERSION}-linux
 
 **Windows .zip and setup.exe:**
 
-	unzip bitcoin-${VERSION}-win-gitian.zip -d bitcoin-${VERSION}-win
-	mv bitcoin-${VERSION}-win/bitcoin-*-setup.exe .
-	zip -r bitcoin-${VERSION}-win.zip bitcoin-${VERSION}-win
-	rm -rf bitcoin-${VERSION}-win
+        unzip viacoin-${VERSION}-win-gitian.zip -d viacoin-${VERSION}-win
+        mv viacoin-${VERSION}-win/viacoin-*-setup.exe .
+        zip -r viacoin-${VERSION}-win.zip viacoin-${VERSION}-win
+        rm -rf viacoin-${VERSION}-win
 
 ###Next steps:
 
@@ -153,16 +153,16 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 
 * create SHA256SUMS for builds, and PGP-sign it
 
-* update bitcoin.org version
+* update viacoin.org version
   make sure all OS download links go to the right versions
   
-* update download sizes on bitcoin.org/_templates/download.html
+* update download sizes on viacoin.org/_templates/download.html
 
 * update forum version
 
 * update wiki download links
 
-* update wiki changelog: [https://en.bitcoin.it/wiki/Changelog](https://en.bitcoin.it/wiki/Changelog)
+* update wiki changelog: [https://en.viacoin.org/wiki/Changelog](https://en.viacoin.org/wiki/Changelog)
 
 Commit your signature to gitian.sigs:
 
@@ -181,12 +181,12 @@ Commit your signature to gitian.sigs:
 
 - Announce the release:
 
-  - Add the release to bitcoin.org: https://github.com/bitcoin/bitcoin.org/tree/master/_releases
+  - Add the release to viacoin.org: https://github.com/viacoin/viacoin.org/tree/master/_releases
 
   - Release sticky on bitcointalk: https://bitcointalk.org/index.php?board=1.0
 
-  - Bitcoin-development mailing list
+  - Viacoin-development mailing list
 
-  - Optionally reddit /r/Bitcoin, ...
+  - Optionally reddit /r/Viacoin, twitter/viacoin ...
 
 - Celebrate 
