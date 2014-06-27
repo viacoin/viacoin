@@ -25,7 +25,7 @@ unsigned int pnSeed[] =
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        networkID = CChainParams::MAIN;
+        networkID = CBaseChainParams::MAIN;
         strNetworkID = "main";
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -36,7 +36,6 @@ public:
         pchMessageStart[3] = 0xcb;
         vAlertPubKey = ParseHex("047885d9f6c0cf9e918d04634d4dd696cf172763f1975aad099daddca3f3c712c98754eae293b36484055e0d414800e519f5a342e56e09217faf07abff5bd96507");
         nDefaultPort = 5223;
-        nRPCPort = 5222;
         bnProofOfWorkLimit = ~uint256(0) >> 17;
         nSubsidyHalvingInterval = 2102400;
         nEnforceBlockUpgradeMajority = 750;
@@ -113,7 +112,7 @@ static CMainParams mainParams;
 class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
-        networkID = CChainParams::TESTNET;
+        networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -124,11 +123,12 @@ public:
         pchMessageStart[3] = 0x92;
         vAlertPubKey = ParseHex("045c480dac3b2c8ef95a8577faa2420eabfe376fbfa31b2bb1896b3e5a30675403f4b3d084724d65afcbbb61473a302a6ed3286e39041176d9af6ff601543bd113");
         nDefaultPort = 25223;
-        nRPCPort = 25222;
         nEnforceBlockUpgradeMajority = 51;
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
-        strDataDir = "testnet3";
+        nMinerThreads = 0;
+        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetSpacing = 1 * 60;
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1401043267;
@@ -163,7 +163,7 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
-        networkID = CChainParams::REGTEST;
+        networkID = CBaseChainParams::REGTEST;
         strNetworkID = "regtest";
         pchMessageStart[0] = 0x2d;
         pchMessageStart[1] = 0x97;
@@ -174,6 +174,8 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
+        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetSpacing = 1 * 60;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1401037650;
         genesis.nBits = 0x207fffff;
@@ -195,21 +197,23 @@ public:
 };
 static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = &mainParams;
+static CChainParams *pCurrentParams = 0;
 
 const CChainParams &Params() {
+    assert(pCurrentParams);
     return *pCurrentParams;
 }
 
-void SelectParams(CChainParams::Network network) {
+void SelectParams(CBaseChainParams::Network network) {
+    SelectBaseParams(network);
     switch (network) {
-        case CChainParams::MAIN:
+        case CBaseChainParams::MAIN:
             pCurrentParams = &mainParams;
             break;
-        case CChainParams::TESTNET:
+        case CBaseChainParams::TESTNET:
             pCurrentParams = &testNetParams;
             break;
-        case CChainParams::REGTEST:
+        case CBaseChainParams::REGTEST:
             pCurrentParams = &regTestParams;
             break;
         default:
@@ -219,19 +223,9 @@ void SelectParams(CChainParams::Network network) {
 }
 
 bool SelectParamsFromCommandLine() {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fTestNet = GetBoolArg("-testnet", false);
-
-    if (fTestNet && fRegTest) {
+    if (!SelectBaseParamsFromCommandLine())
         return false;
-    }
 
-    if (fRegTest) {
-        SelectParams(CChainParams::REGTEST);
-    } else if (fTestNet) {
-        SelectParams(CChainParams::TESTNET);
-    } else {
-        SelectParams(CChainParams::MAIN);
-    }
+    SelectParams(BaseParams().NetworkID());
     return true;
 }

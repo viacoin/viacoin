@@ -20,10 +20,19 @@ endif
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
 BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 
+LIBBITCOIN_SERVER=libbitcoin_server.a
+LIBBITCOIN_WALLET=libbitcoin_wallet.a
+LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_CLI=libbitcoin_cli.a
+LIBBITCOIN_UTIL=libbitcoin_util.a
+LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
+LIBBITCOINQT=qt/libbitcoinqt.a
+
 noinst_LIBRARIES = \
   libbitcoin_server.a \
   libbitcoin_common.a \
   libbitcoin_cli.a \
+  libbitcoin_util.a \
   crypto/libbitcoin_crypto.a
 if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
@@ -50,6 +59,7 @@ BITCOIN_CORE_H = \
   base58.h \
   bloom.h \
   chainparams.h \
+  chainparamsbase.h \
   checkpoints.h \
   checkqueue.h \
   clientversion.h \
@@ -81,6 +91,7 @@ BITCOIN_CORE_H = \
   serialize.h \
   sync.h \
   threadsafety.h \
+  timedata.h \
   tinyformat.h \
   txdb.h \
   txmempool.h \
@@ -107,17 +118,16 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
-libbitcoin_common_a-version.$(OBJEXT): obj/build.h
+libbitcoin_util_a-version.$(OBJEXT): obj/build.h
 
+# server: shared between bitcoind and bitcoin-qt
 libbitcoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
   checkpoints.cpp \
-  coins.cpp \
   init.cpp \
-  keystore.cpp \
   leveldbwrapper.cpp \
   main.cpp \
   miner.cpp \
@@ -130,11 +140,14 @@ libbitcoin_server_a_SOURCES = \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
+  timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
+# wallet: shared between bitcoind and bitcoin-qt, but only linked
+# when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   db.cpp \
@@ -145,6 +158,7 @@ libbitcoin_wallet_a_SOURCES = \
   walletdb.cpp \
   $(BITCOIN_CORE_H)
 
+# crypto primitives library
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha1.cpp \
@@ -155,19 +169,30 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha1.h \
   crypto/ripemd160.h
 
+# common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  base58.cpp \
   allocators.cpp \
+  base58.cpp \
   chainparams.cpp \
+  coins.cpp \
   core.cpp \
   hash.cpp \
   key.cpp \
+  keystore.cpp \
   netbase.cpp \
   protocol.cpp \
-  rpcprotocol.cpp \
   script.cpp \
   crypto/scrypt.cpp \
+  $(BITCOIN_CORE_H)
+
+# util: shared between all executables.
+# This library *must* be included to make sure that the glibc
+# backward-compatibility objects and their sanity checks are linked.
+libbitcoin_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libbitcoin_util_a_SOURCES = \
+  chainparamsbase.cpp \
+  rpcprotocol.cpp \
   sync.cpp \
   util.cpp \
   version.cpp \
@@ -176,22 +201,24 @@ libbitcoin_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcoin_common_a_SOURCES += compat/glibc_compat.cpp
-libbitcoin_common_a_SOURCES += compat/glibcxx_compat.cpp
+libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
+libbitcoin_util_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
+# cli: shared between bitcoin-cli and bitcoin-qt
 libbitcoin_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libbitcoin_common_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
 viacoind_LDADD = \
-  libbitcoin_server.a \
-  libbitcoin_common.a \
-  crypto/libbitcoin_crypto.a \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
@@ -209,11 +236,13 @@ viacoind_CPPFLAGS = $(BITCOIN_INCLUDES)
 
 # bitcoin-cli binary #
 viacoin_cli_LDADD = \
-  libbitcoin_cli.a \
-  libbitcoin_common.a \
-  crypto/libbitcoin_crypto.a \
+  $(LIBBITCOIN_CLI) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
   $(BOOST_LIBS)
-viacoin_cli_SOURCES = bitcoin-cli.cpp
+viacoin_cli_SOURCES = \
+  bitcoin-cli.cpp
 viacoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
@@ -243,13 +272,6 @@ clean-local:
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
-
-LIBBITCOIN_SERVER=libbitcoin_server.a
-LIBBITCOIN_WALLET=libbitcoin_wallet.a
-LIBBITCOIN_COMMON=libbitcoin_common.a
-LIBBITCOIN_CLI=libbitcoin_cli.a
-LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
-LIBBITCOINQT=qt/libbitcoinqt.a
 
 if ENABLE_TESTS
 include Makefile.test.include

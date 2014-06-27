@@ -256,6 +256,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
     { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
+    { "prioritisetransaction",  &prioritisetransaction,  true,      false,      false },
     { "submitblock",            &submitblock,            false,     true,       false },
 
     /* Raw transactions */
@@ -602,7 +603,7 @@ void StartRPCThreads()
 
     std::vector<ip::tcp::endpoint> vEndpoints;
     bool bBindAny = false;
-    int defaultPort = GetArg("-rpcport", Params().RPCPort());
+    int defaultPort = GetArg("-rpcport", BaseParams().RPCPort());
     if (!mapArgs.count("-rpcallowip")) // Default to loopback if not allowing external IPs
     {
         vEndpoints.push_back(ip::tcp::endpoint(asio::ip::address_v6::loopback(), defaultPort));

@@ -12,6 +12,7 @@
 #include "checkqueue.h"
 #include "init.h"
 #include "net.h"
+#include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
@@ -788,6 +789,16 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
 int64_t GetMinFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode)
 {
+    {
+        LOCK(mempool.cs);
+        uint256 hash = tx.GetHash();
+        double dPriorityDelta = 0;
+        int64_t nFeeDelta = 0;
+        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+        if (dPriorityDelta > 0 || nFeeDelta > 0)
+            return 0;
+    }
+
     // Base fee is either minTxFee or minRelayTxFee
     CFeeRate baseFeeRate = (mode == GMF_RELAY) ? tx.minRelayTxFee : tx.minTxFee;
 
@@ -1194,7 +1205,6 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 
     return nSubsidy + nFees;
 }
-
 
 bool IsInitialBlockDownload()
 {

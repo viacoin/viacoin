@@ -10,32 +10,6 @@
 #include "main.h"
 #include "uint256.h"
 
-//
-// minimum amount of work that could possibly be required nTime after
-// minimum work required was nBase
-//
-unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
-{
-    const uint256 &bnLimit = Params().ProofOfWorkLimit();
-    // Testnet has min-difficulty blocks
-    // after Params().TargetSpacing()*2 time between blocks:
-    if (Params().AllowMinDifficultyBlocks() && nTime > Params().TargetSpacing()*2)
-        return bnLimit.GetCompact();
-
-    uint256 bnResult;
-    bnResult.SetCompact(nBase);
-    while (nTime > 0 && bnResult < bnLimit)
-    {
-        // Maximum 400% adjustment...
-        bnResult *= 4;
-        // ... in best-case exactly 4-times-normal target time
-        nTime -= Params().TargetTimespan()*4;
-    }
-    if (bnResult > bnLimit)
-        bnResult = bnLimit;
-    return bnResult.GetCompact();
-}
-
 unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
@@ -74,7 +48,7 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
 
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < blockstogoback; i++)
+    for (int i = 0; pindexFirst && i < Params().Interval()-1; i++)
         pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
@@ -189,4 +163,30 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
         return error("CheckProofOfWork() : hash doesn't match nBits");
 
     return true;
+}
+
+//
+// minimum amount of work that could possibly be required nTime after
+// minimum work required was nBase
+//
+unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
+{
+    const uint256 &bnLimit = Params().ProofOfWorkLimit();
+    // Testnet has min-difficulty blocks
+    // after Params().TargetSpacing()*2 time between blocks:
+    if (Params().AllowMinDifficultyBlocks() && nTime > Params().TargetSpacing()*2)
+        return bnLimit.GetCompact();
+
+    uint256 bnResult;
+    bnResult.SetCompact(nBase);
+    while (nTime > 0 && bnResult < bnLimit)
+    {
+        // Maximum 400% adjustment...
+        bnResult *= 4;
+        // ... in best-case exactly 4-times-normal target time
+        nTime -= Params().TargetTimespan()*4;
+    }
+    if (bnResult > bnLimit)
+        bnResult = bnLimit;
+    return bnResult.GetCompact();
 }

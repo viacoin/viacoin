@@ -809,11 +809,6 @@ public:
         return (~bnTarget / (bnTarget + 1)) + 1;
     }
 
-    bool CheckIndex() const
-    {
-        return true;
-    }
-
     enum { nMedianTimeSpan=11 };
 
     int64_t GetMedianTimePast() const

@@ -7,6 +7,7 @@
 #define BITCOIN_CHAIN_PARAMS_H
 
 #include "core.h"
+#include "chainparamsbase.h"
 #include "protocol.h"
 #include "uint256.h"
 
@@ -29,14 +30,6 @@ struct CDNSSeedData {
 class CChainParams
 {
 public:
-    enum Network {
-        MAIN,
-        TESTNET,
-        REGTEST,
-
-        MAX_NETWORK_TYPES
-    };
-
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
@@ -73,17 +66,18 @@ public:
     bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
     /* Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
-    const std::string& DataDir() const { return strDataDir; }
+    int64_t TargetTimespan() const { return nTargetTimespan; }
+    int64_t TargetSpacing() const { return nTargetSpacing; }
+    int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    Network NetworkID() const { return networkID; }
+    CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
-    int RPCPort() const { return nRPCPort; }
 protected:
     CChainParams() {}
 
@@ -92,7 +86,6 @@ protected:
     // Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
-    int nRPCPort;
     uint256 bnProofOfWorkLimit;
     int nSubsidyHalvingInterval;
     int64_t nTargetTimespan;
@@ -101,11 +94,12 @@ protected:
     int nEnforceBlockUpgradeMajority;
     int nRejectBlockOutdatedMajority;
     int nToCheckBlockUpgradeMajority;
-    std::string strDataDir;
+    int64_t nTargetTimespan;
+    int64_t nTargetSpacing;
     int nMinerThreads;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
-    Network networkID;
+    CBaseChainParams::Network networkID;
     std::string strNetworkID;
     CBlock genesis;
     std::vector<CAddress> vFixedSeeds;
@@ -124,7 +118,7 @@ protected:
 const CChainParams &Params();
 
 /** Sets the params returned by Params() to those for the given network. */
-void SelectParams(CChainParams::Network network);
+void SelectParams(CBaseChainParams::Network network);
 
 /**
  * Looks for -regtest or -testnet and then calls SelectParams as appropriate.

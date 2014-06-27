@@ -12,8 +12,6 @@ class CBlockIndex;
 class CBlockHeader;
 class uint256;
 
-//unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
-//unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
