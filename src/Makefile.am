@@ -34,11 +34,11 @@ bin_PROGRAMS =
 TESTS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+  bin_PROGRAMS += viacoind
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcoin-cli
+  bin_PROGRAMS += viacoin-cli
 endif
 
 .PHONY: FORCE
@@ -188,37 +188,37 @@ nodist_libbitcoin_common_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-bitcoind_LDADD = \
+viacoind_LDADD = \
   libbitcoin_server.a \
   libbitcoin_common.a \
   crypto/libbitcoin_crypto.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-bitcoind_LDADD += libbitcoin_wallet.a
+viacoind_LDADD += libbitcoin_wallet.a
 endif
-bitcoind_SOURCES = bitcoind.cpp
+viacoind_SOURCES = bitcoind.cpp
 #
 
 if TARGET_WINDOWS
-bitcoind_SOURCES += bitcoind-res.rc
+viacoind_SOURCES += bitcoind-res.rc
 endif
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
-bitcoind_CPPFLAGS = $(BITCOIN_INCLUDES)
+viacoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
+viacoind_CPPFLAGS = $(BITCOIN_INCLUDES)
 
 # bitcoin-cli binary #
-bitcoin_cli_LDADD = \
+viacoin_cli_LDADD = \
   libbitcoin_cli.a \
   libbitcoin_common.a \
   crypto/libbitcoin_crypto.a \
   $(BOOST_LIBS)
-bitcoin_cli_SOURCES = bitcoin-cli.cpp
-bitcoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+viacoin_cli_SOURCES = bitcoin-cli.cpp
+viacoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
 if TARGET_WINDOWS
-bitcoin_cli_SOURCES += bitcoin-cli-res.rc
+viacoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
