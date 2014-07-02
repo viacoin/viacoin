@@ -1,6 +1,10 @@
 AM_CPPFLAGS =  $(INCLUDES)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
+if USE_LIBSECP256K1
+secp256k1/libsecp256k1.la: $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
+	@$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+endif
 
 if EMBEDDED_LEVELDB
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
@@ -19,6 +23,10 @@ endif
 
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
 BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
+
+if USE_LIBSECP256K1
+BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
+endif
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -222,6 +230,11 @@ viacoind_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
+
+if USE_LIBSECP256K1
+  bitcoind_LDADD += secp256k1/libsecp256k1.la
+endif
+
 if ENABLE_WALLET
 viacoind_LDADD += libbitcoin_wallet.a
 endif
@@ -244,6 +257,10 @@ viacoin_cli_LDADD = \
   $(BOOST_LIBS)
 viacoin_cli_SOURCES = \
   bitcoin-cli.cpp
+
+if USE_LIBSECP256K1
+  viacoin_cli_LDADD += secp256k1/libsecp256k1.la
+endif
 viacoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
@@ -255,10 +272,11 @@ CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
 DISTCLEANFILES = obj/build.h
 
-EXTRA_DIST = leveldb
+EXTRA_DIST = leveldb secp256k1
 
 clean-local:
 	-$(MAKE) -C leveldb clean
+	-$(MAKE) -C secp256k1 clean
 	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 
