@@ -232,7 +232,7 @@ viacoind_LDADD = \
   $(LIBMEMENV)
 
 if USE_LIBSECP256K1
-  bitcoind_LDADD += secp256k1/libsecp256k1.la
+  viacoind_LDADD += secp256k1/libsecp256k1.la
 endif
 
 if ENABLE_WALLET
