@@ -1302,16 +1302,40 @@ void static PruneOrphanBlocks()
 
 int64_t GetBlockValue(int nHeight, int64_t nFees)
 {
-    int64_t nSubsidy = (nHeight > 0) ? 23 * COIN : 0;
+    int64_t nSubsidy = 0;
 
-    int halvings = nHeight / Params().SubsidyHalvingInterval();
-
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return nFees;
-
-    // Subsidy is cut in half approximately every 4 years.
-    nSubsidy >>= halvings;
+    if (Params().AllowMinDifficultyBlocks()) {
+        nSubsidy = (nHeight > 0) ? 5 * COIN : 0;
+    } else if (nHeight == 0) {
+        nSubsidy = 0;
+    } else if (nHeight == 1) {
+        // first distribution
+        nSubsidy = 10000000 * COIN;
+    } else if (nHeight < 1001) {
+        // no block reward to allow difficulty to scale up and prevent instamining
+        nSubsidy = 0;
+    } else if (nHeight <= 55001) {
+        // every 10800 blocks reduce nSubsidy from 10 to 6
+        nSubsidy = (10 - int((nHeight-1001) / 10800)) * COIN;
+    } else if (nHeight <= 1369001) {
+        // first 4 years
+        nSubsidy = 5 * COIN;
+    } else if (nHeight <= 6625001) {
+        // next 4 years
+        nSubsidy = 4 * COIN;
+    } else if (nHeight <= 11881001) {
+        // next 4 years
+        nSubsidy = 3 * COIN;
+    } else if (nHeight <= 17137001) {
+        // next 4 years
+        nSubsidy = 2 * COIN;
+    } else if (nHeight <= 22393001) {
+        // next 4 years
+        nSubsidy = 1 * COIN;
+    } else if (nHeight <= 27649001) {
+        // next 4 years
+        nSubsidy = 0.5 * COIN;
+    }
 
     return nSubsidy + nFees;
 }
