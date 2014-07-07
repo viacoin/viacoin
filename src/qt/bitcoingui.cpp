@@ -34,13 +34,10 @@
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
 #include <QIcon>
-#include <QLabel>
 #include <QListWidget>
-#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
-#include <QPoint>
 #include <QProgressBar>
 #include <QProgressDialog>
 #include <QSettings>
@@ -50,8 +47,6 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
-
-
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -1014,7 +1009,6 @@ UnitDisplayStatusBarControl::UnitDisplayStatusBarControl():QLabel()
 {
     optionsModel = 0;
     createContextMenu();
-    setStyleSheet("font:11pt; color: #333333");
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
 }
 
@@ -1059,7 +1053,7 @@ void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *optionsModel)
 /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
 void UnitDisplayStatusBarControl::updateDisplayUnit(int newUnits)
 {
-    setText(BitcoinUnits::name(newUnits));
+    setPixmap(QIcon(":/icons/unit_" + BitcoinUnits::id(newUnits)).pixmap(31,STATUSBAR_ICONSIZE));
 }
 
 /** Shows context menu with Display Unit options by the mouse coordinates */
