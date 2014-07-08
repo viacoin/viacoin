@@ -1304,35 +1304,33 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 {
     int64_t nSubsidy = 0;
 
-    if (Params().AllowMinDifficultyBlocks()) {
-        nSubsidy = (nHeight > 0) ? 5 * COIN : 0;
-    } else if (nHeight == 0) {
+    if (nHeight == 0) {
         nSubsidy = 0;
     } else if (nHeight == 1) {
         // first distribution
         nSubsidy = 10000000 * COIN;
-    } else if (nHeight < 1001) {
+    } else if (nHeight < 2001) {
         // no block reward to allow difficulty to scale up and prevent instamining
         nSubsidy = 0;
-    } else if (nHeight <= 55001) {
+    } else if (nHeight <= 56001) {
         // every 10800 blocks reduce nSubsidy from 10 to 6
         nSubsidy = (10 - int((nHeight-1001) / 10800)) * COIN;
-    } else if (nHeight <= 1369001) {
+    } else if (nHeight <= 1370001) {
         // first 4 years
         nSubsidy = 5 * COIN;
-    } else if (nHeight <= 6625001) {
+    } else if (nHeight <= 6626001) {
         // next 4 years
         nSubsidy = 4 * COIN;
-    } else if (nHeight <= 11881001) {
+    } else if (nHeight <= 11882001) {
         // next 4 years
         nSubsidy = 3 * COIN;
-    } else if (nHeight <= 17137001) {
+    } else if (nHeight <= 17138001) {
         // next 4 years
         nSubsidy = 2 * COIN;
-    } else if (nHeight <= 22393001) {
+    } else if (nHeight <= 22394001) {
         // next 4 years
         nSubsidy = 1 * COIN;
-    } else if (nHeight <= 27649001) {
+    } else if (nHeight <= 27650001) {
         // next 4 years
         nSubsidy = 0.5 * COIN;
     }
