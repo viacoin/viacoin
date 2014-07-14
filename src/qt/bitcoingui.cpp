@@ -159,10 +159,13 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     labelEncryptionIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
-    frameBlocksLayout->addStretch();
-    frameBlocksLayout->addWidget(unitDisplayControl);
-    frameBlocksLayout->addStretch();
-    frameBlocksLayout->addWidget(labelEncryptionIcon);
+    if(enableWallet)
+    {
+        frameBlocksLayout->addStretch();
+        frameBlocksLayout->addWidget(unitDisplayControl);
+        frameBlocksLayout->addStretch();
+        frameBlocksLayout->addWidget(labelEncryptionIcon);
+    }
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
@@ -1012,7 +1015,7 @@ UnitDisplayStatusBarControl::UnitDisplayStatusBarControl():QLabel()
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
 }
 
-/** So that it responds to left-button clicks */
+/** So that it responds to button clicks */
 void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 {
     onDisplayUnitsClicked(event->pos());
@@ -1029,10 +1032,6 @@ void UnitDisplayStatusBarControl::createContextMenu()
         menu->addAction(menuAction);
     }
     connect(menu,SIGNAL(triggered(QAction*)),this,SLOT(onMenuSelection(QAction*)));
-
-    // what happens on right click.
-    setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this,SIGNAL(customContextMenuRequested(const QPoint&)),this,SLOT(onDisplayUnitsClicked(const QPoint&)));
 }
 
 /** Lets the control know about the Options Model (and its signals) */
