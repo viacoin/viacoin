@@ -1305,34 +1305,45 @@ void static PruneOrphanBlocks()
 int64_t GetBlockValue(int nHeight, int64_t nFees)
 {
     int64_t nSubsidy = 0;
+    int tHeight = 5256000; // reduction frequency: 3600 * 365 * 4
+
+    // different zero block period for testnet and mainnet
+    // mainnet not fixed until final release
+    int zeroRewardHeight = Params().AllowMinDifficultyBlocks() ? 2001 : 7001;
+
+    int rampHeight = 43200 + zeroRewardHeight; // 4 periods of 10800
 
     if (nHeight == 0) {
+        // no reward for genesis block
         nSubsidy = 0;
     } else if (nHeight == 1) {
         // first distribution
         nSubsidy = 10000000 * COIN;
-    } else if (nHeight < 2001) {
+    } else if (nHeight <= zeroRewardHeight) {
         // no block reward to allow difficulty to scale up and prevent instamining
         nSubsidy = 0;
-    } else if (nHeight <= 56001) {
-        // every 10800 blocks reduce nSubsidy from 10 to 6
-        nSubsidy = (10 - int((nHeight-1001) / 10800)) * COIN;
-    } else if (nHeight <= 1370001) {
+    } else if (nHeight <= (zeroRewardHeight + 10800)) {
+        // first 10800 block after zero reward period is 10 coins per block
+        nSubsidy = 10 * COIN;
+    } else if (nHeight <= rampHeight) {
+        // every 10800 blocks reduce nSubsidy from 8 to 6
+        nSubsidy = (8 - int((nHeight-zeroRewardHeight-1) / 10800)) * COIN;
+    } else if (nHeight <= tHeight) {
         // first 4 years
         nSubsidy = 5 * COIN;
-    } else if (nHeight <= 6626001) {
+    } else if (nHeight <= (2 * tHeight)) {
         // next 4 years
         nSubsidy = 4 * COIN;
-    } else if (nHeight <= 11882001) {
+    } else if (nHeight <= (3 * tHeight)) {
         // next 4 years
         nSubsidy = 3 * COIN;
-    } else if (nHeight <= 17138001) {
+    } else if (nHeight <= (4 * tHeight)) {
         // next 4 years
         nSubsidy = 2 * COIN;
-    } else if (nHeight <= 22394001) {
+    } else if (nHeight <= (5 * tHeight)) {
         // next 4 years
         nSubsidy = 1 * COIN;
-    } else if (nHeight <= 27650001) {
+    } else if (nHeight <= (6 * tHeight)) {
         // next 4 years
         nSubsidy = 0.5 * COIN;
     }
@@ -2514,7 +2525,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
             return state.DoS(100, error("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
         // Prevent blocks from too far in the future (timewarp)
-        if(Params().AllowMinDifficultyBlocks() || nHeight >= 200) {
+        if(Params().AllowMinDifficultyBlocks() || nHeight >= 100) {
             if (block.GetBlockTime() > GetAdjustedTime() + 15 * 60) {
                 return error("AcceptBlock() : block's timestamp too far in the future");
             }
@@ -3182,6 +3193,7 @@ bool InitBlockIndex() {
     if (!fReindex) {
         try {
             CBlock &block = const_cast<CBlock&>(Params().GenesisBlock());
+
             // Start new block file
             unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
             CDiskBlockPos blockPos;
