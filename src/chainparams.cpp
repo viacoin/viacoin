@@ -37,11 +37,11 @@ public:
         pchMessageStart[3] = 0xcb;
         vAlertPubKey = ParseHex("047885d9f6c0cf9e918d04634d4dd696cf172763f1975aad099daddca3f3c712c98754eae293b36484055e0d414800e519f5a342e56e09217faf07abff5bd96507");
         nDefaultPort = 5223;
-        bnProofOfWorkLimit = ~uint256(0) >> 17;
+        bnProofOfWorkLimit = ~uint256(0) >> 23;
         nSubsidyHalvingInterval = 2102400;
-        nEnforceBlockUpgradeMajority = 750;
-        nRejectBlockOutdatedMajority = 950;
-        nToCheckBlockUpgradeMajority = 1000;
+        nEnforceBlockUpgradeMajority = 7500;
+        nRejectBlockOutdatedMajority = 9500;
+        nToCheckBlockUpgradeMajority = 10000;
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
@@ -49,12 +49,14 @@ public:
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
         //
-        // CBlock(hash=e8b0c8fd9dac6d684a011ebccb8b7709dcc3314e15ac963e789975ece30b2371, PoW=0000676da9967023f40d73b6aa0744135e9992ad3bf965ff1ebb6b22f36526c0, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=d9a52ba8673c87e4d8a73b7922dd58c05a3d14376378ff476946e0f3ce4091f3, nTime=1401031990, nBits=1e7fffff, nNonce=370206, vtx=1)
-        //   CTransaction(hash=d9a52ba867, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-        //   CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff001d01044c4e426c6f636b20233330323537333a30303030303030303030303030303030303766626137623430383231356633366265386235653262653638386563633265633135323165646531373931616465)
+        // CBlock(hash=4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1, PoW=000001a16729477595c7247e1b49b4ec93acca8345037177cabbe898ce8a5783, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, 
+        //     hashMerkleRoot=0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200,
+        //     nTime=1405164774, nBits=1e01ffff, nNonce=4016033, vtx=1)
+        //   CTransaction(hash=0317d32e01, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+        //   CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff001d01044c4e426c6f636b20233331303337393a30303030303030303030303030303030323431323532613762623237626539376265666539323138633132393064666633366331666631323965633732313161)
         //   CTxOut(nValue=0.00000000, scriptPubKey=0459934a6a228ce9716fa0b13aa1cd)
-        // vMerkleTree: d9a52b
-        const char* pszTimestamp = "Block #302573:000000000000000007fba7b408215f36be8b5e2be688ecc2ec1521ede1791ade";
+        // vMerkleTree: 0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200
+        const char* pszTimestamp = "Block #310379:0000000000000000241252a7bb27be97befe9218c1290dff36c1ff129ec7211a";
         CMutableTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -65,13 +67,13 @@ public:
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1401031990;
-        genesis.nBits    = 0x1e7fffff;
-        genesis.nNonce   = 370206;
+        genesis.nTime    = 1405164774;
+        genesis.nBits    = 0x1e01ffff;
+        genesis.nNonce   = 4016033;
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0xe8b0c8fd9dac6d684a011ebccb8b7709dcc3314e15ac963e789975ece30b2371"));
-        assert(genesis.hashMerkleRoot == uint256("0xd9a52ba8673c87e4d8a73b7922dd58c05a3d14376378ff476946e0f3ce4091f3"));
+        assert(hashGenesisBlock == uint256("0x4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1"));
+        assert(genesis.hashMerkleRoot == uint256("0x0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200"));
 
         vSeeds.push_back(CDNSSeedData("viacoin.net", "seed.viacoin.net"));
         vSeeds.push_back(CDNSSeedData("bootstap.viacoin.net", "mainnet.viacoin.net"));
@@ -124,22 +126,24 @@ public:
         pchMessageStart[3] = 0x92;
         vAlertPubKey = ParseHex("045c480dac3b2c8ef95a8577faa2420eabfe376fbfa31b2bb1896b3e5a30675403f4b3d084724d65afcbbb61473a302a6ed3286e39041176d9af6ff601543bd113");
         nDefaultPort = 25223;
-        nEnforceBlockUpgradeMajority = 51;
-        nRejectBlockOutdatedMajority = 75;
-        nToCheckBlockUpgradeMajority = 100;
+        nEnforceBlockUpgradeMajority = 510;
+        nRejectBlockOutdatedMajority = 750;
+        nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
+        bnProofOfWorkLimit = ~uint256(0) >> 19;
+        genesis.nBits = 0x1e1fffff;
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1401043267;
-        genesis.nNonce = 66080;
+        genesis.nTime = 1405168772;
+        genesis.nNonce = 262929;
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x5a2eb69d287d9e480d92bb54bcb2fdb35e64ebdf8c86aa12275be4a13c0ee105"));
+        assert(hashGenesisBlock == uint256("0x770aa712aa08fdcbdecc1c8df1b3e2d4e17a7cf6e63a28b785b32e74c96cb27d"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("bootstrap.viacoin.net", "testnet.viacoin.net"));
+        vSeeds.push_back(CDNSSeedData("bootstrap-testnet.viacoin.net", "testnet.viacoin.net"));
         vSeeds.push_back(CDNSSeedData("viacoin.net", "seed-testnet.viacoin.net"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(127);
@@ -171,19 +175,19 @@ public:
         pchMessageStart[2] = 0x7b;
         pchMessageStart[3] = 0x37;
         nSubsidyHalvingInterval = 150;
-        nEnforceBlockUpgradeMajority = 750;
-        nRejectBlockOutdatedMajority = 950;
-        nToCheckBlockUpgradeMajority = 1000;
+        nEnforceBlockUpgradeMajority = 7500;
+        nRejectBlockOutdatedMajority = 9500;
+        nToCheckBlockUpgradeMajority = 10000;
         nMinerThreads = 1;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
-        genesis.nTime = 1401037650;
+        genesis.nTime = 1405166035;
         genesis.nBits = 0x207fffff;
-        genesis.nNonce = 1;
+        genesis.nNonce = 0;
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 15224;
-        assert(hashGenesisBlock == uint256("0x2382c32b31fd0fe74bab499e75bbabe2cc81d99fccddcabd2f2bd67228dd3f5a"));
+        assert(hashGenesisBlock == uint256("0xf0dae070f24fbc35311533a22aa85c0a616c84a1f22881612304d802acda286f"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
 

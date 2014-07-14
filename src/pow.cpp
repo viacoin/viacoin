@@ -136,7 +136,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-        if (pindexLast->nHeight+1 >= 200) { return DarkGravityWave3(pindexLast, pblock); }
+        if (pindexLast->nHeight+1 >= 100) { return DarkGravityWave3(pindexLast, pblock); }
 
         return GetNextWorkRequired_V1(pindexLast, pblock);
 }
