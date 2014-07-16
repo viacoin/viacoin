@@ -4,6 +4,8 @@
 
 #include "coins.h"
 
+#include "random.h"
+
 #include <assert.h>
 
 // calculate number of bytes for the bitmask, and its number of non-zero bytes
@@ -69,6 +71,8 @@ void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
 bool CCoinsViewBacked::BatchWrite(const CCoinsMap &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
 bool CCoinsViewBacked::GetStats(CCoinsStats &stats) { return base->GetStats(stats); }
 
+CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
+
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
 
 bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
@@ -84,8 +88,8 @@ bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
 }
 
 CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
-    CCoinsMap::iterator it = cacheCoins.lower_bound(txid);
-    if (it != cacheCoins.end() && it->first == txid)
+    CCoinsMap::iterator it = cacheCoins.find(txid);
+    if (it != cacheCoins.end())
         return it;
     CCoins tmp;
     if (!base->GetCoins(txid,tmp))
@@ -107,7 +111,12 @@ bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
 }
 
 bool CCoinsViewCache::HaveCoins(const uint256 &txid) {
-    return FetchCoins(txid) != cacheCoins.end();
+    CCoinsMap::iterator it = FetchCoins(txid);
+    // We're using vtx.empty() instead of IsPruned here for performance reasons,
+    // as we only care about the case where an transaction was replaced entirely
+    // in a reorganization (which wipes vout entirely, as opposed to spending
+    // which just cleans individual outputs).
+    return (it != cacheCoins.end() && !it->second.vout.empty());
 }
 
 uint256 CCoinsViewCache::GetBestBlock() {
