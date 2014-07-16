@@ -39,9 +39,9 @@ public:
         nDefaultPort = 5223;
         bnProofOfWorkLimit = ~uint256(0) >> 23;
         nSubsidyHalvingInterval = 2102400;
-        nEnforceBlockUpgradeMajority = 7500;
-        nRejectBlockOutdatedMajority = 9500;
-        nToCheckBlockUpgradeMajority = 10000;
+        nEnforceBlockUpgradeMajority = 15000;
+        nRejectBlockOutdatedMajority = 19000;
+        nToCheckBlockUpgradeMajority = 20000;
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
