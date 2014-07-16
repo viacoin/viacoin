@@ -92,7 +92,7 @@ int64_t CFeeRate::GetFee(size_t nSize) const
 
 std::string CFeeRate::ToString() const
 {
-    std::string result = FormatMoney(nSatoshisPerK) + " BTC/kB";
+    std::string result = FormatMoney(nSatoshisPerK) + " VIA/kB";
     return result;
 }
 

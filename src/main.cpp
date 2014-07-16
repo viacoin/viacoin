@@ -1309,7 +1309,7 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 
     // different zero block period for testnet and mainnet
     // mainnet not fixed until final release
-    int zeroRewardHeight = Params().AllowMinDifficultyBlocks() ? 2001 : 7001;
+    int zeroRewardHeight = Params().AllowMinDifficultyBlocks() ? 2001 : 10001;
 
     int rampHeight = 43200 + zeroRewardHeight; // 4 periods of 10800
 
