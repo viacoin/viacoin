@@ -21,7 +21,7 @@ unsigned int nTxConfirmTarget = 1;
 bool bSpendZeroConfChange = true;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
-CFeeRate CWallet::minTxFee = CFeeRate(100000);  // Override with -mintxfee
+CFeeRate CWallet::minTxFee = CFeeRate(0.001 * COIN);  // Override with -mintxfee
 
 //////////////////////////////////////////////////////////////////////////////
 //
