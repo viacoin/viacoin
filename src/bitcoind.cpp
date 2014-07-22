@@ -93,7 +93,7 @@ bool AppInit(int argc, char* argv[])
             else
             {
                 strUsage += "\n" + _("Usage:") + "\n" +
-                      "  viacoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n";
+                      "  viacoind [options]                     " + _("Start Viacoin Core Daemon") + "\n";
 
                 strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             }
@@ -110,7 +110,7 @@ bool AppInit(int argc, char* argv[])
 
         if (fCommandLine)
         {
-            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
+            fprintf(stderr, "Error: There is no RPC client functionality in viacoind anymore. Use the viacoin-cli utility instead.\n");
             exit(1);
         }
 #ifndef WIN32
