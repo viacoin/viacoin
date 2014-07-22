@@ -20,7 +20,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Viacoin"
-            VALUE "FileDescription",    "Viacoin Core (OSS GUI client for Bitcoin)"
+            VALUE "FileDescription",    "Viacoin Core (OSS GUI client for Viacoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "viacoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
