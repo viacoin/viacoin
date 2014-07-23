@@ -1597,9 +1597,10 @@ int64_t CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
 {
     // payTxFee is user-set "I want to pay this much"
     int64_t nFeeNeeded = payTxFee.GetFee(nTxBytes);
-    // User didn't set: use -txconfirmtarget to estimate...
-    if (nFeeNeeded == 0)
-        nFeeNeeded = pool.estimateFee(nConfirmTarget).GetFee(nTxBytes);
+    // Viacoin: enforce the lower bound
+    int64_t nFeeNeededFromPool = pool.estimateFee(nConfirmTarget).GetFee(nTxBytes); 
+    if (nFeeNeeded < nFeeNeededFromPool)
+        nFeeNeeded = nFeeNeededFromPool;
     // ... unless we don't have enough mempool data, in which case fall
     // back to a hard-coded fee
     if (nFeeNeeded == 0)
