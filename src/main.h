@@ -40,9 +40,9 @@ static const unsigned int MAX_BLOCK_SIZE = 60000;
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 45000;
 static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
-static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 2000;
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 3000;
 /** The maximum size for transactions we're willing to relay/mine */
-static const unsigned int MAX_STANDARD_TX_SIZE = 15000;
+static const unsigned int MAX_STANDARD_TX_SIZE = 20000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Maxiumum number of signature check operations in an IsStandard() P2SH script */
