@@ -2,7 +2,7 @@ Wallet Tools
 ---------------------
 
 ### [BitRPC](/contrib/bitrpc) ###
-Allows for sending of all standard Bitcoin commands via RPC rather than as command line args.
+Allows for sending of all standard Viacoin commands via RPC rather than as command line args.
 
 ### [SpendFrom](/contrib/spendfrom) ###
 
@@ -21,11 +21,11 @@ Construct a linear, no-fork, best version of the blockchain.
 
 ### [PyMiner](/contrib/pyminer) ###
 
-This is a 'getwork' CPU mining client for Bitcoin. It is pure-python, and therefore very, very slow.  The purpose is to provide a reference implementation of a miner, for study.
+This is a 'getwork' CPU mining client for Viacoin. It is pure-python, and therefore very, very slow.  The purpose is to provide a reference implementation of a miner in order to study and develop other mining programs.
 
 ### [Qos](/contrib/qos) ###
 
-A Linux bash script that will set up tc to limit the outgoing bandwidth for connections to the Bitcoin network. This means one can have an always-on bitcoind instance running, and another local bitcoind/bitcoin-qt instance which connects to this node and receives blocks from it.
+A Linux bash script that will set up traffic control (tc) to limit the outgoing bandwidth for connections to the Bitcoin network. This means one can have an always-on viacoind instance running, and another local viacoind/viacoin-qt instance which connects to this node and receives blocks from it.
 
 ### [Seeds](/contrib/seeds) ###
 Utility to generate the pnSeed[] array that is compiled into the client.

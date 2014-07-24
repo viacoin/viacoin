@@ -5,7 +5,6 @@
 #include "transactiontablemodel.h"
 
 #include "addresstablemodel.h"
-#include "bitcoinunits.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -168,7 +167,8 @@ public:
                 parent->endRemoveRows();
                 break;
             case CT_UPDATED:
-                emit parent->dataChanged(parent->index(lowerIndex, parent->Status), parent->index(upperIndex-1, parent->Amount));
+                // Miscellaneous updates -- nothing to do, status update will take care of this, and is only computed for
+                // visible transactions.
                 break;
             }
         }
@@ -189,21 +189,20 @@ public:
             // stuck if the core is holding the locks for a longer time - for
             // example, during a wallet rescan.
             //
-            // If a status update is needed (blocks or conflicts came in since last check),
-            // update the status of this transaction from the wallet. Otherwise,
+            // If a status update is needed (blocks came in since last check),
+            //  update the status of this transaction from the wallet. Otherwise,
             // simply re-use the cached status.
             TRY_LOCK(cs_main, lockMain);
             if(lockMain)
             {
                 TRY_LOCK(wallet->cs_wallet, lockWallet);
-                if(lockWallet && rec->statusUpdateNeeded(wallet->nConflictsReceived))
+                if(lockWallet && rec->statusUpdateNeeded())
                 {
                     std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
                     if(mi != wallet->mapWallet.end())
                     {
                         rec->updateStatus(mi->second);
-                        rec->status.cur_num_conflicts = wallet->nConflictsReceived;
                     }
                 }
             }
@@ -369,8 +368,6 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
-    case TransactionRecord::Other:
-        return tr("Other");
     default:
         return QString();
     }
@@ -436,9 +433,9 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     return QVariant();
 }
 
-QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed) const
+QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, BitcoinUnits::SeparatorStyle separators) const
 {
-    QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
+    QString str = BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit, false, separators);
     if(showUnconfirmed)
     {
         if(!wtx->status.countsForBalance)
@@ -523,7 +520,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, false);
         case Amount:
-            return formatTxAmount(rec);
+            return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
         }
         break;
     case Qt::EditRole:
@@ -546,13 +543,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return formatTooltip(rec);
     case Qt::TextAlignmentRole:
         return column_alignments[index.column()];
-    case Qt::BackgroundColorRole:
-        if (rec->status.hasConflicting)
-            return COLOR_HASCONFLICTING_BG;
-        break;
     case Qt::ForegroundRole:
-        if (rec->status.hasConflicting)
-            return COLOR_HASCONFLICTING;
         // Non-confirmed (but not immature) as transactions are grey
         if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)
         {
@@ -586,7 +577,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case ConfirmedRole:
         return rec->status.countsForBalance;
     case FormattedAmountRole:
-        return formatTxAmount(rec, false);
+	// Used for copy/export, so don't include separators
+        return formatTxAmount(rec, false, BitcoinUnits::separatorNever);
     case StatusRole:
         return rec->status.status;
     }

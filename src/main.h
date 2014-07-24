@@ -96,6 +96,7 @@ extern bool fReindex;
 extern bool fBenchmark;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
+extern bool fIsBareMultisigStd;
 extern unsigned int nCoinCacheSize;
 extern CFeeRate minRelayTxFee;
 
@@ -112,9 +113,6 @@ class CWalletInterface;
 struct CNodeStateStats;
 
 struct CBlockTemplate;
-
-/** Initialize respend bloom filter **/
-void InitRespendFilter();
 
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWalletInterface* pwalletIn);
