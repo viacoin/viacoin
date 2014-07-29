@@ -159,6 +159,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     return true;
 }
 
+#if 0
 //
 // minimum amount of work that could possibly be required nTime after
 // minimum work required was nBase
@@ -184,3 +185,16 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
         bnResult = bnLimit;
     return bnResult.GetCompact();
 }
+
+#else
+
+// DarkGravityWave doesn't use ComputeMinWork, but we do basic
+// check here to see that at least we meet the minimum nBits
+//
+unsigned int ComputeMinWork(unsigned int, int64_t)
+{
+    const uint256 &bnLimit = Params().ProofOfWorkLimit();
+    return bnLimit.GetCompact();
+}
+
+#endif
