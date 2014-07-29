@@ -3575,6 +3575,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             vRecv >> pfrom->strSubVer;
             pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
         }
+
+        if (pfrom->cleanSubVer.find("/Satoshi:0.10.0/") != std::string::npos)
+        {
+            LogPrintf("Client %s runs obsolete version 0.10.0, disconnecting\n", pfrom->addr.ToString());
+            pfrom->fDisconnect = true;
+            return true;
+        }
+
         if (!vRecv.empty())
             vRecv >> pfrom->nStartingHeight;
         if (!vRecv.empty())
