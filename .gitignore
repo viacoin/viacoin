@@ -4,6 +4,7 @@
 src/bitcoin
 src/bitcoind
 src/bitcoin-cli
+src/viacoin-tx
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 

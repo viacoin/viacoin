@@ -1,0 +1,17 @@
+[Unit]
+Description=Viacoin's distributed currency daemon
+After=network.target
+
+[Service]
+User=viacoind
+Group=viacoind
+
+Type=forking
+PIDFile=/var/lib/viacoind/viacoind.pid
+ExecStart=/usr/bin/viacoind -daemon -pid=/var/lib/viacoind/viacoind.pid -conf=/etc/viacoind.conf -datadir=/var/lib/viacoind
+
+Restart=always
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
