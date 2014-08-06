@@ -271,8 +271,8 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     if (!fIsTestnet)
         aboutAction = new QAction(QIcon(":/icons/viacoin"), tr("&About Viacoin Core"), this);
     else
-        aboutAction = new QAction(QIcon(":/icons/viacoin_testnet"), tr("&About viacoin Core"), this);
-    aboutAction->setStatusTip(tr("Show information about Viacoin"));
+        aboutAction = new QAction(QIcon(":/icons/viacoin_testnet"), tr("&About Viacoin Core"), this);
+    aboutAction->setStatusTip(tr("Show information about Viacoin Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -478,12 +478,12 @@ void BitcoinGUI::createTrayIcon(bool fIsTestnet)
 
     if (!fIsTestnet)
     {
-        trayIcon->setToolTip(tr("Viacoin client"));
+        trayIcon->setToolTip(tr("Viacoin Core client"));
         trayIcon->setIcon(QIcon(":/icons/toolbar"));
     }
     else
     {
-        trayIcon->setToolTip(tr("\viacoin client") + " " + tr("[testnet]"));
+        trayIcon->setToolTip(tr("Viacoin Core client") + " " + tr("[testnet]"));
         trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
     }
 

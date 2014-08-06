@@ -1070,7 +1070,7 @@ public:
     CBlockIndex *FindFork(const CBlockLocator &locator) const;
 
     /** Find the last common block between this chain and a block index entry. */
-    CBlockIndex *FindFork(CBlockIndex *pindex) const;
+    const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 };
 
 /** The currently-connected chain of blocks. */

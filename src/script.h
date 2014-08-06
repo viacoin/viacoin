@@ -166,7 +166,7 @@ private:
       // If the input vector's most significant byte is 0x80, remove it from
       // the result's msb and return a negative.
       if (vch.back() & 0x80)
-          return -(result & ~(0x80 << (8 * (vch.size() - 1))));
+          return -(result & ~(0x80ULL << (8 * (vch.size() - 1))));
 
       return result;
     }
@@ -809,6 +809,7 @@ bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int
 bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions);
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
