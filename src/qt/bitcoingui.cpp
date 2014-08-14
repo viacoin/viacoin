@@ -479,12 +479,12 @@ void BitcoinGUI::createTrayIcon(bool fIsTestnet)
     if (!fIsTestnet)
     {
         trayIcon->setToolTip(tr("Viacoin Core client"));
-        trayIcon->setIcon(QIcon(":/icons/toolbar"));
+        trayIcon->setIcon(QIcon(":/icons/viacoin"));
     }
     else
     {
         trayIcon->setToolTip(tr("Viacoin Core client") + " " + tr("[testnet]"));
-        trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
+        trayIcon->setIcon(QIcon(":/icons/viacoin_testnet"));
     }
 
     trayIcon->show();
