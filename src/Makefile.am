@@ -55,11 +55,9 @@ if BUILD_BITCOIND
   bin_PROGRAMS += viacoind
 endif
 
-if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += viacoin-cli
+if BUILD_BITCOIN_UTILS
+  bin_PROGRAMS += viacoin-cli viacoin-tx
 endif
-
-bin_PROGRAMS += viacoin-tx
 
 .PHONY: FORCE
 # bitcoin core #
