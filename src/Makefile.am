@@ -186,6 +186,7 @@ univalue_libbitcoin_univalue_a_SOURCES = \
   univalue/univalue.cpp \
   univalue/univalue_read.cpp \
   univalue/univalue_write.cpp \
+  univalue/univalue_escapes.h \
   univalue/univalue.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
@@ -263,6 +264,7 @@ endif
 
 viacoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
 viacoind_CPPFLAGS = $(BITCOIN_INCLUDES)
+viacoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 
 # bitcoin-cli binary #
 viacoin_cli_LDADD = \
@@ -300,18 +302,12 @@ endif
 viacoin_tx_SOURCES = bitcoin-tx.cpp
 viacoin_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
-<<<<<<< HEAD
 viacoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
-=======
->>>>>>> aug18
 
 if TARGET_WINDOWS
 viacoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
-<<<<<<< HEAD
 viacoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
-=======
->>>>>>> aug18
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
