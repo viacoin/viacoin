@@ -263,7 +263,6 @@ endif
 
 viacoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
 viacoind_CPPFLAGS = $(BITCOIN_INCLUDES)
-viacoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 
 # bitcoin-cli binary #
 viacoin_cli_LDADD = \
@@ -301,12 +300,18 @@ endif
 viacoin_tx_SOURCES = bitcoin-tx.cpp
 viacoin_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
+<<<<<<< HEAD
 viacoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
+=======
+>>>>>>> aug18
 
 if TARGET_WINDOWS
 viacoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
+<<<<<<< HEAD
 viacoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
+=======
+>>>>>>> aug18
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
