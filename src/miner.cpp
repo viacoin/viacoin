@@ -42,14 +42,6 @@ public:
     COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0), dPriority(0)
     {
     }
-
-    void print() const
-    {
-        LogPrintf("COrphan(hash=%s, dPriority=%.1f, fee=%s)\n",
-                  ptx->GetHash().ToString(), dPriority, feeRate.ToString());
-        BOOST_FOREACH(uint256 hash, setDependsOn)
-            LogPrintf("   setDependsOn %s\n", hash.ToString());
-    }
 };
 
 uint64_t nLastBlockTx = 0;
@@ -413,7 +405,7 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     //// debug print
     LogPrintf("ViacoinMiner:\n");
     LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-    pblock->print();
+    LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
     // Found a solution
