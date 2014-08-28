@@ -33,6 +33,7 @@
 #include <stdint.h>
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/thread.hpp>
 #include <QApplication>
 #include <QDebug>
 #include <QLibraryInfo>
@@ -414,8 +415,8 @@ void BitcoinApplication::initializeResult(int retval)
         {
             walletModel = new WalletModel(pwalletMain, optionsModel);
 
-            window->addWallet("~Default", walletModel);
-            window->setCurrentWallet("~Default");
+            window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
+            window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
 
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));

@@ -9,6 +9,7 @@
 #include "core.h"
 #include "main.h"
 #include "uint256.h"
+#include "util.h"
 
 unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {

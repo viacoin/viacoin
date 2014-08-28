@@ -8,6 +8,7 @@
 #include "crypter.h"
 #include "key.h"
 #include "script.h"
+#include "util.h"
 
 #include <boost/foreach.hpp>
 
@@ -70,4 +71,10 @@ bool CBasicKeyStore::HaveWatchOnly(const CScript &dest) const
 {
     LOCK(cs_KeyStore);
     return setWatchOnly.count(dest) > 0;
+}
+
+bool CBasicKeyStore::HaveWatchOnly() const
+{
+    LOCK(cs_KeyStore);
+    return (!setWatchOnly.empty());
 }
