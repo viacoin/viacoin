@@ -1,7 +1,9 @@
 Viacoin Core integration/staging tree
 =====================================
 
-http://www.viacoin.org
+[![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
+
+http://viacoin.org
 
 Copyright (c) 2009-2014 Bitcoin Core Developers
 Copyright (c) 2013-2014 Viacoin Core Developers
