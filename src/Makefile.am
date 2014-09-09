@@ -79,6 +79,7 @@ BITCOIN_CORE_H = \
   core.h \
   core_io.h \
   crypter.h \
+  crypto/scrypt.h \
   db.h \
   hash.h \
   init.h \
@@ -98,8 +99,12 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
-  script.h \
-  crypto/scrypt.h \
+  script/interpreter.h \
+  script/compressor.h \
+  script/script.h \
+  script/sign.h \
+  script/standard.h \
+  scriptutils.h \
   serialize.h \
   sync.h \
   threadsafety.h \
@@ -202,13 +207,18 @@ libbitcoin_common_a_SOURCES = \
   core.cpp \
   core_read.cpp \
   core_write.cpp \
+  crypto/scrypt.cpp \
   hash.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
-  script.cpp \
-  crypto/scrypt.cpp \
+  script/interpreter.cpp \
+  script/compressor.cpp \
+  script/script.cpp \
+  script/sign.cpp \
+  script/standard.cpp \
+  scriptutils.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
