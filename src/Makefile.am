@@ -104,7 +104,7 @@ BITCOIN_CORE_H = \
   script/script.h \
   script/sign.h \
   script/standard.h \
-  scriptutils.h \
+  wallet_ismine.h \
   serialize.h \
   sync.h \
   threadsafety.h \
@@ -174,6 +174,7 @@ libbitcoin_wallet_a_SOURCES = \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
+  wallet_ismine.cpp \
   wallet.cpp \
   walletdb.cpp \
   $(BITCOIN_CORE_H)
@@ -218,7 +219,6 @@ libbitcoin_common_a_SOURCES = \
   script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  scriptutils.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
