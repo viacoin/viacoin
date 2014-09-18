@@ -124,8 +124,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     // Check if the current key has been used
     if (account.vchPubKey.IsValid())
     {
-        CScript scriptPubKey;
-        scriptPubKey.SetDestination(account.vchPubKey.GetID());
+        CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
              it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
@@ -472,10 +471,9 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 
     // Bitcoin address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
-    CScript scriptPubKey;
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Viacoin address");
-    scriptPubKey.SetDestination(address.Get());
+    CScript scriptPubKey = GetScriptForDestination(address.Get());
     if (!IsMine(*pwalletMain,scriptPubKey))
         return (double)0.0;
 
@@ -849,8 +847,7 @@ Value sendmany(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
         setAddress.insert(address);
 
-        CScript scriptPubKey;
-        scriptPubKey.SetDestination(address.Get());
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
         int64_t nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 
@@ -1490,7 +1487,7 @@ Value gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "gettransaction \"txid\"\n"
+            "gettransaction \"txid\" ( includeWatchonly )\n"
             "\nGet detailed information about in-wallet transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
@@ -1520,6 +1517,7 @@ Value gettransaction(const Array& params, bool fHelp)
 
             "\nExamples:\n"
             + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true")
             + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
@@ -1536,7 +1534,7 @@ Value gettransaction(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     const CWalletTx& wtx = pwalletMain->mapWallet[hash];
 
-    int64_t nCredit = wtx.GetCredit(filter);
+    int64_t nCredit = wtx.GetCredit(filter != 0);
     int64_t nDebit = wtx.GetDebit(filter);
     int64_t nNet = nCredit - nDebit;
     int64_t nFee = (wtx.IsFromMe(filter) ? wtx.GetValueOut() - nDebit : 0);

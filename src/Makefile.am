@@ -99,12 +99,11 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
-  script/interpreter.h \
   script/compressor.h \
+  script/interpreter.h \
   script/script.h \
   script/sign.h \
   script/standard.h \
-  wallet_ismine.h \
   serialize.h \
   sync.h \
   threadsafety.h \
@@ -119,8 +118,9 @@ BITCOIN_CORE_H = \
   utilmoneystr.h \
   utiltime.h \
   version.h \
-  walletdb.h \
   wallet.h \
+  wallet_ismine.h \
+  walletdb.h \
   compat/sanity.h
 
 JSON_H = \
@@ -174,8 +174,8 @@ libbitcoin_wallet_a_SOURCES = \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
-  wallet_ismine.cpp \
   wallet.cpp \
+  wallet_ismine.cpp \
   walletdb.cpp \
   $(BITCOIN_CORE_H)
 
@@ -214,8 +214,8 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
-  script/interpreter.cpp \
   script/compressor.cpp \
+  script/interpreter.cpp \
   script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \

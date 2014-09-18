@@ -48,8 +48,8 @@
 #endif
 #endif
 
-using namespace std;
 using namespace boost;
+using namespace std;
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
@@ -488,10 +488,6 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     {
         addrman.Attempt(addrConnect);
 
-        // Set to non-blocking
-        if (!SetSocketNonBlocking(hSocket, true))
-            LogPrintf("ConnectNode: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
-
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
         pnode->AddRef();
@@ -689,7 +685,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     try {
         hdrbuf >> hdr;
     }
-    catch (std::exception &e) {
+    catch (const std::exception &) {
         return -1;
     }
 

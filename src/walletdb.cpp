@@ -9,8 +9,8 @@
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
-#include "utiltime.h"
 #include "util.h"
+#include "utiltime.h"
 #include "wallet.h"
 
 #include <boost/filesystem.hpp>
@@ -242,9 +242,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     pcursor->close();
 }
 
-
-DBErrors
-CWalletDB::ReorderTransactions(CWallet* pwallet)
+DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
 {
     LOCK(pwallet->cs_wallet);
     // Old wallets didn't have any defined order for transactions

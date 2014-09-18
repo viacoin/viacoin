@@ -13,6 +13,7 @@
 #include "util.h"
 
 #include <boost/foreach.hpp>
+
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
@@ -94,8 +95,8 @@ Value getpeerinfo(const Array& params, bool fHelp)
             "    \"subver\": \"/Satoshi:0.8.5/\",  (string) The string version\n"
             "    \"inbound\": true|false,     (boolean) Inbound (true) or Outbound (false)\n"
             "    \"startingheight\": n,       (numeric) The starting height (block) of the peer\n"
-            "    \"banscore\": n,              (numeric) The ban score (stats.nMisbehavior)\n"
-            "    \"syncnode\" : true|false     (booleamn) if sync node\n"
+            "    \"banscore\": n,             (numeric) The ban score\n"
+            "    \"syncnode\": true|false     (boolean) if sync node\n"
             "  }\n"
             "  ,...\n"
             "]\n"

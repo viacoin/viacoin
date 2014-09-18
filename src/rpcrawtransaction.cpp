@@ -12,8 +12,8 @@
 #include "net.h"
 #include "rpcserver.h"
 #include "script/script.h"
-#include "script/standard.h"
 #include "script/sign.h"
+#include "script/standard.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
@@ -25,10 +25,10 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
-using namespace std;
 using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
+using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex)
 {
@@ -366,8 +366,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
         setAddress.insert(address);
 
-        CScript scriptPubKey;
-        scriptPubKey.SetDestination(address.Get());
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
         int64_t nAmount = AmountFromValue(s.value_);
 
         CTxOut out(nAmount, scriptPubKey);
@@ -543,7 +542,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             ssData >> tx;
             txVariants.push_back(tx);
         }
-        catch (std::exception &e) {
+        catch (const std::exception &) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
         }
     }
@@ -688,7 +687,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx, i, STANDARD_SCRIPT_VERIFY_FLAGS, 0))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx, i, STANDARD_SCRIPT_VERIFY_FLAGS))
             fComplete = false;
     }
 

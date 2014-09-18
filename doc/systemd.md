@@ -1,10 +1,10 @@
-SYSTEMD SUPPORT IN BITCOIN
+SYSTEMD SUPPORT IN VIACOIN
 ==========================
 
-Packagers can find a .service file in this repo in order to integrate bitcoin's 
+Packagers can find a .service file in this repo in order to integrate viacoin's 
 daemon into systemd based distributions.
 
-bitcoind.service file is located in contrib/systemd/ folder.
+viacoind.service file is located in contrib/systemd/ folder.
 
 1. Users
 ---------------------------------

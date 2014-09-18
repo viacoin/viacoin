@@ -3,8 +3,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core.h"
 #include "txmempool.h"
+
+#include "core.h"
 #include "util.h"
 
 #include <boost/circular_buffer.hpp>
@@ -12,7 +13,7 @@
 using namespace std;
 
 CTxMemPoolEntry::CTxMemPoolEntry():
-    nFee(0), nTxSize(0), nTime(0), dPriority(0.0)
+    nFee(0), nTxSize(0), nModSize(0), nTime(0), dPriority(0.0)
 {
     nHeight = MEMPOOL_HEIGHT;
 }
@@ -23,6 +24,8 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee,
     tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight)
 {
     nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+
+    nModSize = tx.CalculateModifiedSize(nTxSize);
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
@@ -34,7 +37,7 @@ double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
     int64_t nValueIn = tx.GetValueOut()+nFee;
-    double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nTxSize;
+    double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
     double dResult = dPriority + deltaPriority;
     return dResult;
 }
@@ -572,7 +575,7 @@ CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
         fileout << CLIENT_VERSION; // version that wrote the file
         minerPolicyEstimator->Write(fileout);
     }
-    catch (std::exception &e) {
+    catch (const std::exception &) {
         LogPrintf("CTxMemPool::WriteFeeEstimates() : unable to write policy estimator data (non-fatal)");
         return false;
     }
@@ -591,7 +594,7 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
         LOCK(cs);
         minerPolicyEstimator->Read(filein, minRelayFee);
     }
-    catch (std::exception &e) {
+    catch (const std::exception &) {
         LogPrintf("CTxMemPool::ReadFeeEstimates() : unable to read policy estimator data (non-fatal)");
         return false;
     }
@@ -644,4 +647,3 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
 bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
     return mempool.exists(txid) || base->HaveCoins(txid);
 }
-

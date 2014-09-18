@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef H_BITCOIN_SCRIPT
@@ -320,20 +320,6 @@ inline std::string ValueString(const std::vector<unsigned char>& vch)
         return HexStr(vch);
 }
 
-class CNoDestination {
-public:
-    friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
-    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
-};
-
-/** A txout script template with a specific destination. It is either:
- *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination
- *  * CScriptID: TX_SCRIPTHASH destination
- *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
- */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
-
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public std::vector<unsigned char>
 {
@@ -604,9 +590,6 @@ public:
         return (size() > 0 && *begin() == OP_RETURN);
     }
 
-    void SetDestination(const CTxDestination& address);
-    void SetMultisig(int nRequired, const std::vector<CPubKey>& keys);
-
     std::string ToString() const
     {
         std::string str;
@@ -642,4 +625,4 @@ public:
     }
 };
 
-#endif
+#endif // H_BITCOIN_SCRIPT

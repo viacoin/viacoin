@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "checkpoints.h"
+#include "compat/sanity.h"
 #include "key.h"
 #include "main.h"
 #include "miner.h"
@@ -32,7 +33,6 @@
 #ifndef WIN32
 #include <signal.h>
 #endif
-#include "compat/sanity.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -198,7 +198,7 @@ bool static Bind(const CService &addr, unsigned int flags) {
     if (!(flags & BF_EXPLICIT) && IsLimited(addr))
         return false;
     std::string strError;
-    if (!BindListenPort(addr, strError, flags & BF_WHITELIST)) {
+    if (!BindListenPort(addr, strError, (flags & BF_WHITELIST) != 0)) {
         if (flags & BF_REPORT_ERROR)
             return InitError(strError);
         return false;
@@ -404,9 +404,11 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
         int nFile = 0;
         while (true) {
             CDiskBlockPos pos(nFile, 0);
+            if (!boost::filesystem::exists(GetBlockPosFilename(pos, "blk")))
+                break; // No block files left to reindex
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
-                break;
+                break; // This error is logged in OpenBlockFile
             LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             LoadExternalBlockFile(file, &pos);
             nFile++;
@@ -694,7 +696,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
 
-    fIsBareMultisigStd = GetArg("-permitbaremultisig", true);
+    fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
     // Sanity check
