@@ -338,7 +338,9 @@ void BitcoinApplication::createWindow(bool isaTestNet)
 
 void BitcoinApplication::createSplashScreen(bool isaTestNet)
 {
-    SplashScreen *splash = new SplashScreen(QPixmap(), 0, isaTestNet);
+    SplashScreen *splash = new SplashScreen(0, isaTestNet);
+    // We don't hold a direct pointer to the splash screen after creation, so use
+    // Qt::WA_DeleteOnClose to make sure that the window will be deleted eventually.
     splash->setAttribute(Qt::WA_DeleteOnClose);
     splash->show();
     connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
@@ -423,8 +425,6 @@ void BitcoinApplication::initializeResult(int retval)
         }
 #endif
 
-        emit splashFinished(window);
-
         // If -min option passed, start window minimized.
         if(GetBoolArg("-min", false))
         {
@@ -434,6 +434,8 @@ void BitcoinApplication::initializeResult(int retval)
         {
             window->show();
         }
+        emit splashFinished(window);
+
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
         // bitcoin: URIs or payment requests:
