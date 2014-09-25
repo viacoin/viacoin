@@ -3,6 +3,9 @@ Viacoin Core integration/staging tree
 
 [![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
 
+## PLEASE DO NOT USE MASTER BRANCH ON MAINNET.
+**Use only the stable tag `v0.10.3`** or `0.10` branch.
+
 http://viacoin.org
 
 Copyright (c) 2009-2014 Bitcoin Core Developers
@@ -18,7 +21,7 @@ out collectively by the network. Viacoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Viacoin Core software, see http://www.viacoin.org/en/download.
+the Viacoin Core software, see http://viacoin.org/.
 
 License
 -------
