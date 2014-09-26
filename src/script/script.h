@@ -304,7 +304,7 @@ private:
       // If the input vector's most significant byte is 0x80, remove it from
       // the result's msb and return a negative.
       if (vch.back() & 0x80)
-          return -(result & ~(0x80ULL << (8 * (vch.size() - 1))));
+          return -((int64_t)(result & ~(0x80ULL << (8 * (vch.size() - 1)))));
 
       return result;
     }
@@ -544,7 +544,7 @@ public:
         {
             while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
-                erase(pc, pc + b.size());
+                pc = erase(pc, pc + b.size());
                 ++nFound;
             }
         }
