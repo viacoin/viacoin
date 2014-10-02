@@ -154,6 +154,10 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
         zip -r viacoin-${VERSION}-win.zip viacoin-${VERSION}-win
         rm -rf viacoin-${VERSION}-win
 
+**Mac OS X .dmg:**
+
+	mv Viacoin-Qt.dmg viacoin-${VERSION}-osx.dmg
+
 ###Next steps:
 
 Commit your signature to gitian.sigs:
