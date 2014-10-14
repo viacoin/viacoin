@@ -44,6 +44,48 @@ static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data
     }
 }
 
+    // What makes a good checkpoint block?
+    // + Is surrounded by blocks with reasonable timestamps
+    //   (no blocks before with a timestamp after, none after with
+    //    timestamp before)
+    // + Contains no strange transactions
+static Checkpoints::MapCheckpoints mapCheckpoints =
+        boost::assign::map_list_of
+        ( 3901, uint256("0x39c94020b653871bbcb29c9489bb12f84c5e89adef75f2e5c5f59e88869129d9"))
+        ( 40821, uint256("0xe0471675f9c98aa5ed321ed951d140d4603d96254a4ca9fbca07b8da5ee11954"))
+        ( 41433, uint256("0x627e18cc08a276282781705bac09508992dc8b665391edd7bde8a601f011954c"))
+        ( 44606, uint256("0x5ceeec38564a36ee3e1e5404970f5715efe0420e92c8e92bedfdfef782c49320"))
+        ;
+static const Checkpoints::CCheckpointData data = {
+        &mapCheckpoints,
+        1406662650, // * UNIX timestamp of last checkpoint block
+        54299,   // * total number of transactions between genesis and last checkpoint
+                    //   (the tx=... number in the SetBestChain debug.log lines)
+        10000.0     // * estimated number of transactions per day after checkpoint
+    };
+
+static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
+        boost::assign::map_list_of
+        ( 4230, uint256("0x15a29dde01cbad777180c089bc8fcf0d7b4bd18993b47d8c301c41fc90ce8c8f"))
+        ;
+static const Checkpoints::CCheckpointData dataTestnet = {
+        &mapCheckpointsTestnet,
+        1405625749,
+        4440,
+        5000
+    };
+
+static Checkpoints::MapCheckpoints mapCheckpointsRegtest =
+        boost::assign::map_list_of
+        ( 0, uint256("0xf0dae070f24fbc35311533a22aa85c0a616c84a1f22881612304d802acda286f"))
+        ;
+static const Checkpoints::CCheckpointData dataRegtest = {
+        &mapCheckpointsRegtest,
+        1405166035,
+        0,
+        0
+    };
+
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
@@ -114,6 +156,12 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fSkipProofOfWorkCheck = false;
+        fTestnetToBeDeprecatedFieldRPC = false;
+    }
+
+    const Checkpoints::CCheckpointData& Checkpoints() const 
+    {
+        return data;
     }
 };
 static CMainParams mainParams;
@@ -170,6 +218,11 @@ public:
         fAllowMinDifficultyBlocks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = true;
+    }
+    const Checkpoints::CCheckpointData& Checkpoints() const 
+    {
+        return dataTestnet;
     }
 };
 static CTestNetParams testNetParams;
@@ -209,6 +262,11 @@ public:
         fAllowMinDifficultyBlocks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
+    }
+    const Checkpoints::CCheckpointData& Checkpoints() const 
+    {
+        return dataRegtest;
     }
 };
 static CRegTestParams regTestParams;
@@ -231,7 +289,13 @@ public:
         fAllowMinDifficultyBlocks = false;
         fMineBlocksOnDemand = true;
     }
-public:
+
+    const Checkpoints::CCheckpointData& Checkpoints() const 
+    {
+        // UnitTest share the same checkpoints as MAIN
+        return data;
+    }
+
     // Published setters to allow changing values in unit test cases
     virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval)  { nSubsidyHalvingInterval=anSubsidyHalvingInterval; }
     virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)  { nEnforceBlockUpgradeMajority=anEnforceBlockUpgradeMajority; }
