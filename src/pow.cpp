@@ -79,8 +79,6 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 {
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
-    const CBlockHeader *BlockCreating = pblock;
-    BlockCreating = BlockCreating;
     int64_t nActualTimespan = 0;
     int64_t LastBlockTime = 0;
     int64_t PastBlocksMin = 24;
@@ -125,6 +123,9 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
     uint256 bnNew(PastDifficultyAverage);
 
+    if (version == 2)
+        --CountBlocks;
+
     int64_t nTargetTimespan = CountBlocks*Params().TargetSpacing();
 
     int64_t div = 3;
@@ -151,7 +152,7 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-    if (pindexLast->nHeight+1 >= 450000 || (Params().AllowMinDifficultyBlocks() && pindexLast->nHeight+1 >= 225000)) {
+    if (pindexLast->nHeight+1 >= 451000 || (Params().AllowMinDifficultyBlocks() && pindexLast->nHeight+1 >= 300000)) {
         return DarkGravityWave3(pindexLast, pblock, 2);
     } else if (pindexLast->nHeight+1 >= 3600) {
         return DarkGravityWave3(pindexLast, pblock, 1);
