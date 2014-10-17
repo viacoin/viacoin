@@ -165,41 +165,6 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     return true;
 }
 
-#if 0
-//
-// true if nBits is greater than the minimum amount of work that could
-// possibly be required deltaTime after minimum work required was nBase
-//
-bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
-{
-    bool fOverflow = false;
-    uint256 bnNewBlock;
-    bnNewBlock.SetCompact(nBits, NULL, &fOverflow);
-    if (fOverflow)
-        return false;
-
-    const uint256 &bnLimit = Params().ProofOfWorkLimit();
-    // Testnet has min-difficulty blocks
-    // after Params().TargetSpacing()*2 time between blocks:
-    if (Params().AllowMinDifficultyBlocks() && deltaTime > Params().TargetSpacing()*2)
-        return bnNewBlock <= bnLimit;
-
-    uint256 bnResult;
-    bnResult.SetCompact(nBase);
-    while (deltaTime > 0 && bnResult < bnLimit)
-    {
-        // Maximum 400% adjustment...
-        bnResult *= 4;
-        // ... in best-case exactly 4-times-normal target time
-        deltaTime -= Params().TargetTimespan()*4;
-    }
-    if (bnResult > bnLimit)
-        bnResult = bnLimit;
-
-    return bnNewBlock <= bnResult;
-}
-#endif
-
 void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
 {
     pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
@@ -222,22 +187,4 @@ uint256 GetProofIncrement(unsigned int nBits)
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
-}
-
-// DarkGravityWave doesn't use ComputeMinWork, but we do basic
-// check here to see that at least we meet the minimum nBits
-//
-bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
-{
-    bool fOverflow = false;
-    uint256 bnNewBlock;
-    bnNewBlock.SetCompact(nBits, NULL, &fOverflow);
-    if (fOverflow)
-        return false;
-
-    uint256 bnRequired;
-    const uint256 &bnLimit = Params().ProofOfWorkLimit();
-    bnRequired.SetCompact(bnLimit.GetCompact());
-
-    return bnNewBlock < bnRequired;
 }
