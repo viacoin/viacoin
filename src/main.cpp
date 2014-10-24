@@ -106,7 +106,7 @@ namespace {
     multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
 
     CCriticalSection cs_LastBlockFile;
-    CBlockFileInfo infoLastBlockFile;
+    std::vector<CBlockFileInfo> vinfoBlockFile;
     int nLastBlockFile = 0;
 
     // Every received block is assigned a unique and increasing identifier, so we
@@ -1051,7 +1051,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
                 CBlockHeader header;
                 try {
                     file >> header;
-                    fseek(file, postx.nTxOffset, SEEK_CUR);
+                    fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
                     file >> txOut;
                 } catch (std::exception &e) {
                     return error("%s : Deserialize or I/O error - %s", __func__, e.what());
@@ -1106,7 +1106,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 {
     // Open history file to append
     CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
-    if (!fileout)
+    if (fileout.IsNull())
         return error("WriteBlockToDisk : OpenBlockFile failed");
 
     // Write index header
@@ -1114,16 +1114,16 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
     fileout << FLATDATA(Params().MessageStart()) << nSize;
 
     // Write block
-    long fileOutPos = ftell(fileout);
+    long fileOutPos = ftell(fileout.Get());
     if (fileOutPos < 0)
         return error("WriteBlockToDisk : ftell failed");
     pos.nPos = (unsigned int)fileOutPos;
     fileout << block;
 
     // Flush stdio buffers and commit to disk before returning
-    fflush(fileout);
+    fflush(fileout.Get());
     if (!IsInitialBlockDownload())
-        FileCommit(fileout);
+        FileCommit(fileout.Get());
 
     return true;
 }
@@ -1134,7 +1134,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 
     // Open history file to read
     CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (!filein)
+    if (filein.IsNull())
         return error("ReadBlockFromDisk : OpenBlockFile failed");
 
     // Read block
@@ -1581,7 +1581,7 @@ void static FlushBlockFile(bool fFinalize = false)
     FILE *fileOld = OpenBlockFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, infoLastBlockFile.nSize);
+            TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nSize);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -1589,7 +1589,7 @@ void static FlushBlockFile(bool fFinalize = false)
     fileOld = OpenUndoFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, infoLastBlockFile.nUndoSize);
+            TruncateFile(fileOld, vinfoBlockFile[nLastBlockFile].nUndoSize);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -2197,32 +2197,32 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
 
     LOCK(cs_LastBlockFile);
 
-    if (fKnown) {
-        if (nLastBlockFile != pos.nFile) {
-            nLastBlockFile = pos.nFile;
-            infoLastBlockFile.SetNull();
-            pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile);
-            fUpdatedLast = true;
-        }
-    } else {
-        while (infoLastBlockFile.nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
-            LogPrintf("Leaving block file %i: %s\n", nLastBlockFile, infoLastBlockFile.ToString());
-            FlushBlockFile(true);
-            nLastBlockFile++;
-            infoLastBlockFile.SetNull();
-            pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
-            fUpdatedLast = true;
-        }
-        pos.nFile = nLastBlockFile;
-        pos.nPos = infoLastBlockFile.nSize;
+    unsigned int nFile = fKnown ? pos.nFile : nLastBlockFile;
+    if (vinfoBlockFile.size() <= nFile) {
+        vinfoBlockFile.resize(nFile + 1);
     }
 
-    infoLastBlockFile.nSize += nAddSize;
-    infoLastBlockFile.AddBlock(nHeight, nTime);
+    if (!fKnown) {
+        while (vinfoBlockFile[nFile].nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
+            LogPrintf("Leaving block file %i: %s\n", nFile, vinfoBlockFile[nFile].ToString());
+            FlushBlockFile(true);
+            nFile++;
+            if (vinfoBlockFile.size() <= nFile) {
+                vinfoBlockFile.resize(nFile + 1);
+            }
+            fUpdatedLast = true;
+        }
+        pos.nFile = nFile;
+        pos.nPos = vinfoBlockFile[nFile].nSize;
+    }
+
+    nLastBlockFile = nFile;
+    vinfoBlockFile[nFile].nSize += nAddSize;
+    vinfoBlockFile[nFile].AddBlock(nHeight, nTime);
 
     if (!fKnown) {
         unsigned int nOldChunks = (pos.nPos + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
-        unsigned int nNewChunks = (infoLastBlockFile.nSize + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
+        unsigned int nNewChunks = (vinfoBlockFile[nFile].nSize + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
         if (nNewChunks > nOldChunks) {
             if (CheckDiskSpace(nNewChunks * BLOCKFILE_CHUNK_SIZE - pos.nPos)) {
                 FILE *file = OpenBlockFile(pos);
@@ -2237,7 +2237,7 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
         }
     }
 
-    if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
+    if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, vinfoBlockFile[nFile]))
         return state.Abort("Failed to write file info");
     if (fUpdatedLast)
         pblocktree->WriteLastBlockFile(nLastBlockFile);
@@ -2252,19 +2252,10 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     LOCK(cs_LastBlockFile);
 
     unsigned int nNewSize;
-    if (nFile == nLastBlockFile) {
-        pos.nPos = infoLastBlockFile.nUndoSize;
-        nNewSize = (infoLastBlockFile.nUndoSize += nAddSize);
-        if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, infoLastBlockFile))
-            return state.Abort("Failed to write block info");
-    } else {
-        CBlockFileInfo info;
-        if (!pblocktree->ReadBlockFileInfo(nFile, info))
-            return state.Abort("Failed to read block info");
-        pos.nPos = info.nUndoSize;
-        nNewSize = (info.nUndoSize += nAddSize);
-        if (!pblocktree->WriteBlockFileInfo(nFile, info))
-            return state.Abort("Failed to write block info");
+    pos.nPos = vinfoBlockFile[nFile].nUndoSize;
+    nNewSize = vinfoBlockFile[nFile].nUndoSize += nAddSize;
+    if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, vinfoBlockFile[nLastBlockFile])) {
+        return state.Abort("Failed to write block info");
     }
 
     unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
@@ -2873,9 +2864,20 @@ bool static LoadBlockIndexDB()
 
     // Load block file info
     pblocktree->ReadLastBlockFile(nLastBlockFile);
-    LogPrintf("LoadBlockIndexDB(): last block file = %i\n", nLastBlockFile);
-    if (pblocktree->ReadBlockFileInfo(nLastBlockFile, infoLastBlockFile))
-        LogPrintf("LoadBlockIndexDB(): last block file info: %s\n", infoLastBlockFile.ToString());
+    vinfoBlockFile.resize(nLastBlockFile + 1);
+    LogPrintf("%s: last block file = %i\n", __func__, nLastBlockFile);
+    for (int nFile = 0; nFile <= nLastBlockFile; nFile++) {
+        pblocktree->ReadBlockFileInfo(nFile, vinfoBlockFile[nFile]);
+    }
+    LogPrintf("%s: last block file info: %s\n", __func__, vinfoBlockFile[nLastBlockFile].ToString());
+    for (int nFile = nLastBlockFile + 1; true; nFile++) {
+        CBlockFileInfo info;
+        if (pblocktree->ReadBlockFileInfo(nFile, info)) {
+            vinfoBlockFile.push_back(info);
+        } else {
+            break;
+        }
+    }
 
     // Check presence of blk files
     LogPrintf("Checking all blk files are present...\n");
@@ -2890,7 +2892,7 @@ bool static LoadBlockIndexDB()
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
     {
         CDiskBlockPos pos(*it, 0);
-        if (!CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION)) {
+        if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
             return false;
         }
     }
@@ -4604,7 +4606,7 @@ bool CBlockUndo::WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
 {
     // Open history file to append
     CAutoFile fileout(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
-    if (!fileout)
+    if (fileout.IsNull())
         return error("CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
     // Write index header
@@ -4612,7 +4614,7 @@ bool CBlockUndo::WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     fileout << FLATDATA(Params().MessageStart()) << nSize;
 
     // Write undo data
-    long fileOutPos = ftell(fileout);
+    long fileOutPos = ftell(fileout.Get());
     if (fileOutPos < 0)
         return error("CBlockUndo::WriteToDisk : ftell failed");
     pos.nPos = (unsigned int)fileOutPos;
@@ -4625,9 +4627,9 @@ bool CBlockUndo::WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     fileout << hasher.GetHash();
 
     // Flush stdio buffers and commit to disk before returning
-    fflush(fileout);
+    fflush(fileout.Get());
     if (!IsInitialBlockDownload())
-        FileCommit(fileout);
+        FileCommit(fileout.Get());
 
     return true;
 }
@@ -4636,7 +4638,7 @@ bool CBlockUndo::ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock
 {
     // Open history file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (!filein)
+    if (filein.IsNull())
         return error("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
     // Read block

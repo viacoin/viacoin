@@ -17,6 +17,7 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <boost/tuple/tuple.hpp>
 
 using namespace std;
 
@@ -398,7 +399,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
 
-    CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
+    CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
     return CreateNewBlock(scriptPubKey);
 }
 

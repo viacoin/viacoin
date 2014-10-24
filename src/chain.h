@@ -8,6 +8,7 @@
 
 #include "core.h"
 #include "pow.h"
+#include "tinyformat.h"
 #include "uint256.h"
 
 #include <vector>
@@ -395,8 +396,8 @@ public:
         return vChain.size() - 1;
     }
 
-    /** Set/initialize a chain with a given tip. Returns the forking point. */
-    CBlockIndex *SetTip(CBlockIndex *pindex);
+    /** Set/initialize a chain with a given tip. */
+    void SetTip(CBlockIndex *pindex);
 
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
     CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
