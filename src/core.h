@@ -12,6 +12,7 @@
 #include "serialize.h"
 #include "uint256.h"
 #include "crypto/scrypt.h"
+#include "utilstrencodings.h"
 #include <stdint.h>
 
 class CTransaction;
