@@ -74,8 +74,8 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
     return bnNew.GetCompact();
 }
 
-/* current difficulty formula, DarkGravity v3, written by Evan Duffield - evan@darkcoin.io */
-unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlockHeader *pblock, int64_t version)
+// AntiGravityWave by reorder, derived from code by Evan Duffield - evan@darkcoin.io
+unsigned int static AntiGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, int64_t version)
 {
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
@@ -153,9 +153,9 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
     if (pindexLast->nHeight+1 >= 451000 || (Params().AllowMinDifficultyBlocks() && pindexLast->nHeight+1 >= 300000)) {
-        return DarkGravityWave3(pindexLast, pblock, 2);
+        return AntiGravityWave(pindexLast, pblock, 2);
     } else if (pindexLast->nHeight+1 >= 3600) {
-        return DarkGravityWave3(pindexLast, pblock, 1);
+        return AntiGravityWave(pindexLast, pblock, 1);
     } else {
         return GetNextWorkRequired_V1(pindexLast, pblock);
     }
