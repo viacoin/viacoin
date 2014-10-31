@@ -76,17 +76,24 @@ unsigned int static GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const 
     return bnNew.GetCompact();
 }
 
-/* current difficulty formula, DarkGravity v3, written by Evan Duffield - evan@darkcoin.io */
-unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+// AntiGravityWave by reorder, derived from code by Evan Duffield - evan@darkcoin.io
+unsigned int static AntiGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, int64_t version)
 {
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
-    const CBlockHeader *BlockCreating = pblock;
-    BlockCreating = BlockCreating;
     int64_t nActualTimespan = 0;
     int64_t LastBlockTime = 0;
     int64_t PastBlocksMin = 24;
     int64_t PastBlocksMax = 24;
+
+    if (version == 1) {
+        PastBlocksMin = 24;
+        PastBlocksMax = 24;
+    } else if (version == 2) {
+        PastBlocksMin = 72;
+        PastBlocksMax = 72;
+    }
+
     int64_t CountBlocks = 0;
     uint256 PastDifficultyAverage;
     uint256 PastDifficultyAveragePrev;
@@ -118,12 +125,21 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
     uint256 bnNew(PastDifficultyAverage);
 
+    if (version == 2)
+        --CountBlocks;
+
     int64_t nTargetTimespan = CountBlocks*Params().TargetSpacing();
 
-    if (nActualTimespan < nTargetTimespan/3)
-        nActualTimespan = nTargetTimespan/3;
-    if (nActualTimespan > nTargetTimespan*3)
-        nActualTimespan = nTargetTimespan*3;
+    int64_t div = 3;
+    if (version == 1)
+        div = 3;
+    else if (version == 2)
+        div = 2;
+
+    if (nActualTimespan < nTargetTimespan/div)
+        nActualTimespan = nTargetTimespan/div;
+    if (nActualTimespan > nTargetTimespan*div)
+        nActualTimespan = nTargetTimespan*div;
 
     // Retarget
     bnNew *= nActualTimespan;
@@ -138,9 +154,13 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-        if (pindexLast->nHeight+1 >= 3600) { return DarkGravityWave3(pindexLast, pblock); }
-
+    if (pindexLast->nHeight+1 >= 451000 || (Params().AllowMinDifficultyBlocks() && pindexLast->nHeight+1 >= 300000)) {
+        return AntiGravityWave(pindexLast, pblock, 2);
+    } else if (pindexLast->nHeight+1 >= 3600) {
+        return AntiGravityWave(pindexLast, pblock, 1);
+    } else {
         return GetNextWorkRequired_V1(pindexLast, pblock);
+    }
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
