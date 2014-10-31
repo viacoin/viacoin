@@ -2552,6 +2552,8 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
     uint256 hash = block.GetHash();
     std::map<uint256, CBlockIndex*>::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = NULL;
+    int64_t timeframe;
+
     if (miSelf != mapBlockIndex.end()) {
         pindex = miSelf->second;
         if (pindex->nStatus & BLOCK_FAILED_MASK)
@@ -2610,14 +2612,20 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
         if (pcheckpoint && nHeight < pcheckpoint->nHeight)
             return state.DoS(100, error("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
+        if ((Params().AllowMinDifficultyBlocks() && nHeight < 300000) || nHeight < 451000) {
+            timeframe = 15 * 60;
+        } else {
+            timeframe = 5 * 60;
+        }
+
         // Prevent blocks from too far in the future (timewarp)
         if(Params().AllowMinDifficultyBlocks() || nHeight >= 100) {
-            if (block.GetBlockTime() > GetAdjustedTime() + 15 * 60) {
+            if (block.GetBlockTime() > GetAdjustedTime() + timeframe) {
                 return error("AcceptBlock() : block's timestamp too far in the future");
             }
 
             // Check timestamp is not too far in the past (timewarp)
-            if (block.GetBlockTime() <= pindexPrev->GetBlockTime() - 15 * 60) {
+            if (block.GetBlockTime() <= pindexPrev->GetBlockTime() - timeframe) {
                 return error("AcceptBlock() : block's timestamp is too early compare to last block");
             }
         }
