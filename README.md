@@ -4,7 +4,7 @@ Viacoin Core integration/staging tree
 [![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
 
 ## DO NOT USE MASTER BRANCH ON MAINNET.
-**Use only the stable tag `v0.10.3`** or `0.10` branch.
+**Use only the stable tag `v0.10.5`** or `0.10` branch.
 
 http://viacoin.org
 
