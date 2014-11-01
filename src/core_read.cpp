@@ -4,9 +4,10 @@
 
 #include "core_io.h"
 
-#include "core.h"
+#include "core/transaction.h"
 #include "script/script.h"
 #include "serialize.h"
+#include "streams.h"
 #include "univalue/univalue.h"
 #include "util.h"
 #include "utilstrencodings.h"

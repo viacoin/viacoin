@@ -26,6 +26,7 @@ public:
 };
 
 static const unsigned int MAX_OP_RETURN_RELAY = 120;      // bytes
+extern unsigned nMaxDatacarrierBytes;
 
 // Mandatory script verification flags that all new blocks must comply with for
 // them to be valid. (but old blocks may not comply with) Currently just P2SH,
@@ -41,6 +42,7 @@ static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 // blocks and we must accept those blocks.
 static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
                                                          SCRIPT_VERIFY_STRICTENC |
+                                                         SCRIPT_VERIFY_MINIMALDATA |
                                                          SCRIPT_VERIFY_NULLDUMMY;
 
 // For convenience, standard but not mandatory verify flags.

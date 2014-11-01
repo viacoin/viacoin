@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
@@ -23,11 +23,11 @@ struct SeedSpec6 {
 
 #include "chainparamsseeds.h"
 
-//
-// Main network
-//
+/**
+ * Main network
+ */
 
-// Convert the pnSeeds6 array into usable address objects.
+//! Convert the pnSeeds6 array into usable address objects.
 static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data, unsigned int count)
 {
     // It'll only connect to one or two seed nodes because once it connects,
@@ -45,11 +45,13 @@ static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data
     }
 }
 
-    // What makes a good checkpoint block?
-    // + Is surrounded by blocks with reasonable timestamps
-    //   (no blocks before with a timestamp after, none after with
-    //    timestamp before)
-    // + Contains no strange transactions
+/**
+ * What makes a good checkpoint block?
+ * + Is surrounded by blocks with reasonable timestamps
+ *   (no blocks before with a timestamp after, none after with
+ *    timestamp before)
+ * + Contains no strange transactions
+ */
 static Checkpoints::MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
         ( 3901, uint256("0x39c94020b653871bbcb29c9489bb12f84c5e89adef75f2e5c5f59e88869129d9"))
@@ -92,9 +94,11 @@ public:
     CMainParams() {
         networkID = CBaseChainParams::MAIN;
         strNetworkID = "main";
-        // The message start string is designed to be unlikely to occur in normal data.
-        // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
-        // a large 4-byte int at any alignment.
+        /** 
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 4-byte int at any alignment.
+         */
         pchMessageStart[0] = 0x0f;
         pchMessageStart[1] = 0x68;
         pchMessageStart[2] = 0xc6;
@@ -110,16 +114,18 @@ public:
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
 
-        // Build the genesis block. Note that the output of the genesis coinbase cannot
-        // be spent as it did not originally exist in the database.
-        //
-        // CBlock(hash=4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1, PoW=000001a16729477595c7247e1b49b4ec93acca8345037177cabbe898ce8a5783, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, 
-        //     hashMerkleRoot=0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200,
-        //     nTime=1405164774, nBits=1e01ffff, nNonce=4016033, vtx=1)
-        //   CTransaction(hash=0317d32e01, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-        //   CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff001d01044c4e426c6f636b20233331303337393a30303030303030303030303030303030323431323532613762623237626539376265666539323138633132393064666633366331666631323965633732313161)
-        //   CTxOut(nValue=0.00000000, scriptPubKey=0459934a6a228ce9716fa0b13aa1cd)
-        // vMerkleTree: 0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200
+        /**
+         * Build the genesis block. Note that the output of the genesis coinbase cannot
+         * be spent as it did not originally exist in the database.
+         * 
+         * CBlock(hash=4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1, PoW=000001a16729477595c7247e1b49b4ec93acca8345037177cabbe898ce8a5783, ver=1, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, 
+         *     hashMerkleRoot=0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200,
+         *     nTime=1405164774, nBits=1e01ffff, nNonce=4016033, vtx=1)
+         *   CTransaction(hash=0317d32e01, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+         *   CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff001d01044c4e426c6f636b20233331303337393a30303030303030303030303030303030323431323532613762623237626539376265666539323138633132393064666633366331666631323965633732313161)
+         *   CTxOut(nValue=0.00000000, scriptPubKey=0459934a6a228ce9716fa0b13aa1cd)
+         * vMerkleTree: 0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200
+         */
         const char* pszTimestamp = "Block #310379:0000000000000000241252a7bb27be97befe9218c1290dff36c1ff129ec7211a";
         CMutableTransaction txNew;
         txNew.vin.resize(1);
@@ -167,18 +173,19 @@ public:
 };
 static CMainParams mainParams;
 
-//
-// Testnet (v3)
-//
-
+/**
+ * Testnet (v3)
+ */
 class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
         networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
-        // The message start string is designed to be unlikely to occur in normal data.
-        // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
-        // a large 4-byte int at any alignment.
+        /** 
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 4-byte int at any alignment.
+         */
         pchMessageStart[0] = 0xa9;
         pchMessageStart[1] = 0xc5;
         pchMessageStart[2] = 0xef;
@@ -189,7 +196,7 @@ public:
         nRejectBlockOutdatedMajority = 750;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 0;
-        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
         bnProofOfWorkLimit = ~uint256(0) >> 19;
         genesis.nBits = 0x1e1fffff;
@@ -228,9 +235,9 @@ public:
 };
 static CTestNetParams testNetParams;
 
-//
-// Regression test
-//
+/**
+ * Regression test
+ */
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
@@ -245,7 +252,7 @@ public:
         nRejectBlockOutdatedMajority = 9500;
         nToCheckBlockUpgradeMajority = 10000;
         nMinerThreads = 1;
-        nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1405166035;
@@ -255,8 +262,8 @@ public:
         nDefaultPort = 15224;
         assert(hashGenesisBlock == uint256("0xf0dae070f24fbc35311533a22aa85c0a616c84a1f22881612304d802acda286f"));
 
-        vFixedSeeds.clear(); // Regtest mode doesn't have any fixed seeds.
-        vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
+        vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
+        vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
@@ -273,17 +280,17 @@ public:
 };
 static CRegTestParams regTestParams;
 
-//
-// Unit test
-//
+/**
+ * Unit test
+ */
 class CUnitTestParams : public CMainParams, public CModifiableParams {
 public:
     CUnitTestParams() {
         networkID = CBaseChainParams::UNITTEST;
         strNetworkID = "unittest";
         nDefaultPort = 18445;
-        vFixedSeeds.clear();
-        vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
+        vFixedSeeds.clear(); //! Unit test mode doesn't have any fixed seeds.
+        vSeeds.clear();  //! Unit test mode doesn't have any DNS seeds.
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
@@ -298,7 +305,7 @@ public:
         return data;
     }
 
-    // Published setters to allow changing values in unit test cases
+    //! Published setters to allow changing values in unit test cases
     virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval)  { nSubsidyHalvingInterval=anSubsidyHalvingInterval; }
     virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)  { nEnforceBlockUpgradeMajority=anEnforceBlockUpgradeMajority; }
     virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)  { nRejectBlockOutdatedMajority=anRejectBlockOutdatedMajority; }
