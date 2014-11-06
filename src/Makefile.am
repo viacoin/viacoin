@@ -87,6 +87,7 @@ BITCOIN_CORE_H = \
   crypter.h \
   crypto/scrypt.h \
   db.h \
+  eccryptoverify.h \
   ecwrapper.h \
   hash.h \
   init.h \
@@ -102,6 +103,7 @@ BITCOIN_CORE_H = \
   noui.h \
   pow.h \
   protocol.h \
+  pubkey.h \
   random.h \
   rpcclient.h \
   rpcprotocol.h \
@@ -222,12 +224,14 @@ libbitcoin_common_a_SOURCES = \
   core_read.cpp \
   core_write.cpp \
   crypto/scrypt.cpp \
+  eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
+  pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   script/sigcache.cpp \
@@ -299,13 +303,10 @@ viacoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 # bitcoin-cli binary #
 viacoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
-  $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
   $(BOOST_LIBS) \
   $(SSL_LIBS) \
-  $(CRYPTO_LIBS) \
-  $(MINIUPNPC_LIBS)
+  $(CRYPTO_LIBS)
 
 viacoin_cli_SOURCES = \
   bitcoin-cli.cpp

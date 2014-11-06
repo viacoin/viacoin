@@ -437,8 +437,8 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
-    if (!ProcessBlock(state, NULL, pblock))
-        return error("ViacoinMiner : ProcessBlock, block not accepted");
+    if (!ProcessNewBlock(state, NULL, pblock))
+        return error("ViacoinMiner : ProcessNewBlock, block not accepted");
 
     return true;
 }

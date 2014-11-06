@@ -40,8 +40,15 @@
 #include <boost/unordered_map.hpp>
 
 class CBlockIndex;
+class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
+class CScriptCheck;
+class CValidationInterface;
+class CValidationState;
+
+struct CBlockTemplate;
+struct CNodeStateStats;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 60000;
@@ -129,15 +136,6 @@ extern CBlockIndex *pindexBestHeader;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
-
-class CBlockTreeDB;
-class CScriptCheck;
-class CValidationState;
-class CValidationInterface;
-struct CNodeStateStats;
-
-struct CBlockTemplate;
-
 /** Register a wallet to receive updates from core */
 void RegisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister a wallet from core */
@@ -152,8 +150,16 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
 void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
-/** Process an incoming block */
-bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
+/** Process an incoming block. This only returns after the best known valid
+    block is made active. Note that it does not, however, guarantee that the
+    specific block passed to it has been checked for validity!
+    @param[out]  state   This may be set to an Error state if any error occurred processing it, including during validation/connection/etc of otherwise unrelated blocks during reorganisation; or it may be set to an Invalid state iff pblock is itself invalid (but this is not guaranteed even when the block is checked). If you want to *possibly* get feedback on whether pblock is valid, you must also install a CValidationInterface - this will have its BlockChecked method called whenever *any* block completes validation.
+    @param[in]   pfrom   The node which we are receiving the block from; it is added to mapBlockSource and may be penalised if the block is invalid.
+    @param[in]   pblock  The block we want to process.
+    @param[out]  dbp     If pblock is stored to disk (or already there), this will be set to its location.
+    @return True if state.IsValid()
+*/
+bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
@@ -652,6 +658,7 @@ protected:
     virtual void UpdatedTransaction(const uint256 &hash) {};
     virtual void Inventory(const uint256 &hash) {};
     virtual void ResendWalletTransactions() {};
+    virtual void BlockChecked(const CBlock&, const CValidationState&) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();

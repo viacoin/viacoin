@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOINRPC_SERVER_H_
-#define _BITCOINRPC_SERVER_H_
+#ifndef BITCOIN_RPCSERVER_H
+#define BITCOIN_RPCSERVER_H
 
 #include "amount.h"
-#include "uint256.h"
 #include "rpcprotocol.h"
+#include "uint256.h"
 
 #include <list>
 #include <map>
@@ -44,6 +44,13 @@ void StartDummyRPCThread();
 void StopRPCThreads();
 /* Query whether RPC is running */
 bool IsRPCRunning();
+
+/* Set the RPC warmup status.  When this is done, all RPC calls will error out
+ * immediately with RPC_IN_WARMUP.
+ */
+void SetRPCWarmupStatus(const std::string& newStatus);
+/* Mark warmup as done.  RPC calls will be processed from now on.  */
+void SetRPCWarmupFinished();
 
 /**
  * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
@@ -213,4 +220,4 @@ extern json_spirit::Value gettxout(const json_spirit::Array& params, bool fHelp)
 extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getchaintips(const json_spirit::Array& params, bool fHelp);
 
-#endif // _BITCOINRPC_SERVER_H_
+#endif // BITCOIN_RPCSERVER_H
