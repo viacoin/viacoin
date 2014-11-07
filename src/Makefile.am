@@ -172,6 +172,7 @@ libbitcoin_server_a_SOURCES = \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
+  script/sigcache.cpp \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
@@ -234,7 +235,6 @@ libbitcoin_common_a_SOURCES = \
   pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
-  script/sigcache.cpp \
   script/sign.cpp \
   script/standard.cpp \
   $(BITCOIN_CORE_H)
@@ -329,9 +329,7 @@ if USE_LIBSECP256K1
 endif
 
   viacoin_tx_LDADD += $(BOOST_LIBS) \
-  $(SSL_LIBS) \
-  $(CRYPTO_LIBS) \
-  $(MINIUPNPC_LIBS)
+  $(CRYPTO_LIBS)
 
 viacoin_tx_SOURCES = bitcoin-tx.cpp
 viacoin_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
