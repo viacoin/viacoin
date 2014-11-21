@@ -40,12 +40,13 @@ void StartRPCThreads();
  * If real RPC threads have already been started this is a no-op.
  */
 void StartDummyRPCThread();
-/* Stop RPC threads */
+/** Stop RPC threads */
 void StopRPCThreads();
-/* Query whether RPC is running */
+/** Query whether RPC is running */
 bool IsRPCRunning();
 
-/* Set the RPC warmup status.  When this is done, all RPC calls will error out
+/** 
+ * Set the RPC warmup status.  When this is done, all RPC calls will error out
  * immediately with RPC_IN_WARMUP.
  */
 void SetRPCWarmupStatus(const std::string& newStatus);
@@ -194,6 +195,7 @@ extern json_spirit::Value getinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getwalletinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblockchaininfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getnetworkinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setmocktime(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value makekeypair(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendalert(const json_spirit::Array& params, bool fHelp);
 
@@ -219,5 +221,11 @@ extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool
 extern json_spirit::Value gettxout(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getchaintips(const json_spirit::Array& params, bool fHelp);
+
+// in rest.cpp
+extern bool HTTPReq_REST(AcceptedConnection *conn,
+                  std::string& strURI,
+                  std::map<std::string, std::string>& mapHeaders,
+                  bool fRun);
 
 #endif // BITCOIN_RPCSERVER_H
