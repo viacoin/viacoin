@@ -91,7 +91,6 @@ BITCOIN_CORE_H = \
   core/transaction.h \
   core_io.h \
   crypter.h \
-  crypto/scrypt.h \
   db.h \
   eccryptoverify.h \
   ecwrapper.h \
@@ -205,10 +204,12 @@ crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha1.cpp \
   crypto/sha2.cpp \
+  crypto/scrypt.cpp \
   crypto/ripemd160.cpp \
   crypto/common.h \
   crypto/sha2.h \
   crypto/sha1.h \
+  crypto/scrypt.h \
   crypto/ripemd160.h
 
 # univalue JSON library
@@ -232,7 +233,6 @@ libbitcoin_common_a_SOURCES = \
   core/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
-  crypto/scrypt.cpp \
   eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
@@ -346,6 +346,7 @@ libbitcoinconsensus_la_SOURCES = \
   core/transaction.cpp \
   crypto/sha1.cpp \
   crypto/sha2.cpp \
+  crypto/scrypt.cpp \
   crypto/ripemd160.cpp \
   eccryptoverify.cpp \
   ecwrapper.cpp \
