@@ -68,7 +68,7 @@ script: |
   done
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd viacoin
   BASEPREFIX=`pwd`/depends
 
   mkdir -p ${BASEPREFIX}/SDKs
@@ -104,7 +104,7 @@ script: |
     make ${MAKEOPTS}
     make install-strip
     make deploy
-    ${WRAP_DIR}/dmg dmg Bitcoin-Qt.dmg ${OUTDIR}/Bitcoin-Qt.dmg
+    ${WRAP_DIR}/dmg dmg Viacoin-Qt.dmg ${OUTDIR}/Viacoin-Qt.dmg
     cd ..
   done
   mkdir -p $OUTDIR/src

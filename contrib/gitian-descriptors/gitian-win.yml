@@ -64,7 +64,7 @@ script: |
   done
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd viacoin
   BASEPREFIX=`pwd`/depends
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -96,7 +96,7 @@ script: |
     make ${MAKEOPTS}
     make deploy
     make install-strip
-    cp -f bitcoin-*setup*.exe $OUTDIR/
+    cp -f viacoin-*setup*.exe $OUTDIR/
     cd ..
   done
   mkdir -p $OUTDIR/src
