@@ -150,14 +150,9 @@ void Shutdown()
 
     {
         LOCK(cs_main);
-#ifdef ENABLE_WALLET
-        if (pwalletMain)
-            pwalletMain->SetBestChain(chainActive.GetLocator());
-#endif
-        if (pblocktree)
-            pblocktree->Flush();
-        if (pcoinsTip)
-            pcoinsTip->Flush();
+        if (pcoinsTip != NULL) {
+            FlushStateToDisk();
+        }
         delete pcoinsTip;
         pcoinsTip = NULL;
         delete pcoinsdbview;
@@ -357,6 +352,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += "\n" + _("RPC server options:") + "\n";
     strUsage += "  -server                " + _("Accept command line and JSON-RPC commands") + "\n";
+    strUsage += "  -rest                  " + strprintf(_("Accept public REST requests (default: %u)"), 0) + "\n";
     strUsage += "  -rpcbind=<addr>        " + _("Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)") + "\n";
     strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
@@ -860,10 +856,8 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
 
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy);
-        if (!IsLimited(NET_IPV6))
-            SetProxy(NET_IPV6, addrProxy);
+        SetProxy(NET_IPV4, addrProxy);
+        SetProxy(NET_IPV6, addrProxy);
         SetNameProxy(addrProxy);
         fProxy = true;
     }

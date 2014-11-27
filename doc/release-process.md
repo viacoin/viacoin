@@ -54,48 +54,23 @@ Release Process
   
 	./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
-	pushd build/out
-        zip -r viacoin-${VERSION}-linux-gitian.zip *
-	mv viacoin-${VERSION}-linux-gitian.zip ../../../
-	popd
-        ./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-win.yml
+	mv build/out/viacoin-*.tar.gz build/out/src/viacoin-*.tar.gz ../
+	./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-win.yml
-	pushd build/out
-        zip -r viacoin-${VERSION}-win-gitian.zip *
-        mv viacoin-${VERSION}-win-gitian.zip ../../../
+	mv build/out/viacoin-*.zip build/out/viacoin-*.exe ../
+	./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
+	mv build/out/viacoin-*-unsigned.tar.gz inputs
+	mv build/out/viacoin-*.tar.gz build/out/viacoin-*.dmg ../
 	popd
-        ./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
-        ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
-	pushd build/out
-        mv Viacoin-Qt.dmg ../../../
-	popd
-	popd
-
+viacoin-0.9.99-osx-unsigned.tar.gz
   Build output expected:
 
-  1. linux 32-bit and 64-bit binaries + source (viacoin-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit and 64-bit binaries + installer + source (viacoin-${VERSION}-win-gitian.zip)
-  3. OSX installer (Bitcoin-Qt.dmg)
-  4. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx>/(your gitian key)/
-
-repackage gitian builds for release as stand-alone zip/tar/installer exe
-
-**Linux .tar.gz:**
-
-        unzip viacoin-${VERSION}-linux-gitian.zip -d viacoin-${VERSION}-linux
-        tar czvf viacoin-${VERSION}-linux.tar.gz viacoin-${VERSION}-linux
-        rm -rf viacoin-${VERSION}-linux
-
-**Windows .zip and setup.exe:**
-
-        unzip viacoin-${VERSION}-win-gitian.zip -d viacoin-${VERSION}-win
-        mv viacoin-${VERSION}-win/viacoin-*-setup.exe .
-        zip -r viacoin-${VERSION}-win.zip viacoin-${VERSION}-win
-        rm -rf viacoin-${VERSION}-win
-
-**Mac OS X .dmg:**
-
-	mv Viacoin-Qt.dmg viacoin-${VERSION}-osx.dmg
+  1. source tarball (viacoin-${VERSION}.tar.gz)
+  2. linux 32-bit and 64-bit binaries dist tarballs (viacoin-${VERSION}-linux[32|64].tar.gz)
+  3. windows 32-bit and 64-bit installers and dist zips (viacoin-${VERSION}-win[32|64]-setup.exe, bitcoin-${VERSION}-win[32|64].zip)
+  4. OSX unsigned installer (viacoin-${VERSION}-osx-unsigned.dmg)
+  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
 
 ###Next steps:
 
@@ -104,7 +79,28 @@ Commit your signature to gitian.sigs:
 	pushd gitian.sigs
 	git add ${VERSION}-linux/${SIGNER}
 	git add ${VERSION}-win/${SIGNER}
-	git add ${VERSION}-osx/${SIGNER}
+	git add ${VERSION}-osx-unsigned/${SIGNER}
+	git commit -a
+	git push  # Assuming you can push to the gitian.sigs tree
+	popd
+
+Wait for OSX detached signature:
+	Once the OSX build has 3 matching signatures, Gavin will sign it with the apple App-Store key.
+	He will then upload a detached signature to be combined with the unsigned app to create a signed binary.
+
+Create the signed OSX binary:
+	pushd ./gitian-builder
+	# Fetch the signature as instructed by Gavin
+	cp signature.tar.gz inputs/
+	./bin/gbuild -i ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	mv build/out/bitcoin-${VERSION}-osx.dmg ../
+	popd
+
+Commit your signature for the signed OSX binary:
+
+	pushd gitian.sigs
+	git add ${VERSION}-osx-signed/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd

@@ -1,17 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/algorithm/string.hpp>
-#include "rpcserver.h"
-#include "streams.h"
-#include "utilstrencodings.h"
 #include "core/block.h"
 #include "core/transaction.h"
-#include "version.h"
 #include "main.h"
+#include "rpcserver.h"
+#include "streams.h"
 #include "sync.h"
+#include "utilstrencodings.h"
+#include "version.h"
+
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace json_spirit;
@@ -99,7 +100,7 @@ static bool rest_block(AcceptedConnection *conn,
     switch (rf) {
     case RF_BINARY: {
         string binaryBlock = ssBlock.str();
-        conn->stream() << HTTPReply(HTTP_OK, binaryBlock, fRun, true, "application/octet-stream") << binaryBlock << std::flush;
+        conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, binaryBlock.size(), "application/octet-stream") << binaryBlock << std::flush;
         return true;
     }
 
@@ -147,7 +148,7 @@ static bool rest_tx(AcceptedConnection *conn,
     switch (rf) {
     case RF_BINARY: {
         string binaryTx = ssTx.str();
-        conn->stream() << HTTPReply(HTTP_OK, binaryTx, fRun, true, "application/octet-stream") << binaryTx << std::flush;
+        conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, binaryTx.size(), "application/octet-stream") << binaryTx << std::flush;
         return true;
     }
 
@@ -163,7 +164,7 @@ static bool rest_tx(AcceptedConnection *conn,
         string strJSON = write_string(Value(objTx), false) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
-     }
+    }
     }
 
     // not reached
@@ -187,6 +188,10 @@ bool HTTPReq_REST(AcceptedConnection *conn,
                   bool fRun)
 {
     try {
+        std::string statusmessage;
+        if(RPCIsInWarmup(&statusmessage))
+            throw RESTERR(HTTP_SERVICE_UNAVAILABLE, "Service temporarily unavailable: "+statusmessage);
+        
         for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++) {
             unsigned int plen = strlen(uri_prefixes[i].prefix);
             if (strURI.substr(0, plen) == uri_prefixes[i].prefix) {
@@ -203,4 +208,3 @@ bool HTTPReq_REST(AcceptedConnection *conn,
     conn->stream() << HTTPError(HTTP_NOT_FOUND, false) << std::flush;
     return false;
 }
-
