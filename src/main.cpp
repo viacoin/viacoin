@@ -2573,7 +2573,6 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = NULL;
-    int64_t timeframe;
 
     if (miSelf != mapBlockIndex.end()) {
         // Block header is already known.
