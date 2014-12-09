@@ -76,23 +76,17 @@ CBlockHeader CBlockIndex::GetBlockHeader(const std::map<uint256, boost::shared_p
     CBlockHeader block;
 
     if (nVersion & BLOCK_VERSION_AUXPOW) {
-        bool foundInDirty = false;
-        {
-            LOCK(cs_main);
             std::map<uint256, boost::shared_ptr<CAuxPow> >::const_iterator it = mapDirtyAuxPow.find(*phashBlock);
             if (it != mapDirtyAuxPow.end()) {
                 block.auxpow = it->second;
-                foundInDirty = true;
-            }
-        }
-        if (!foundInDirty) {
-            CDiskBlockIndex diskblockindex;
-            // auxpow is not in memory, load CDiskBlockHeader
-            // from database to get it
+            } else {
+                CDiskBlockIndex diskblockindex;
+                // auxpow is not in memory, load CDiskBlockHeader
+                // from database to get it
 
-            pblocktree->ReadDiskBlockIndex(*phashBlock, diskblockindex);
-            block.auxpow = diskblockindex.auxpow;
-        }
+                pblocktree->ReadDiskBlockIndex(*phashBlock, diskblockindex);
+                block.auxpow = diskblockindex.auxpow;
+            }
     }
 
     block.nVersion       = nVersion;

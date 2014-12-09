@@ -6,6 +6,7 @@
 #include "primitives/block.h"
 #include "chainparams.h"
 #include "util.h"
+#include "base58.h"
 
 using namespace std;
 using namespace boost;
@@ -118,5 +119,18 @@ void CBlockHeader::SetAuxPow(CAuxPow* pow)
     else
         nVersion &= ~BLOCK_VERSION_AUXPOW;
     auxpow.reset(pow);
+}
+
+CKeyID GetAuxpowMiningKey()
+{
+    CKeyID result;
+    CBitcoinAddress auxminingaddr(GetArg("-auxminingaddr", ""));
+    if (!auxminingaddr.GetKeyID(result)) {
+        CReserveKey reservekey(pwalletMain);
+        CPubKey pubkey;
+        reservekey.GetReservedKey(pubkey);
+        result = pubkey.GetID();
+    }
+    return result;
 }
 

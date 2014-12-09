@@ -65,4 +65,5 @@ template<typename Stream> void SerReadWrite(Stream& s, boost::shared_ptr<CAuxPow
 
 extern void RemoveMergedMiningHeader(std::vector<unsigned char>& vchAux);
 extern int GetAuxPowStartBlock();
+extern CKeyID GetAuxpowMiningKey();
 #endif

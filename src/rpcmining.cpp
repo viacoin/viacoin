@@ -14,7 +14,6 @@
 #include "rpcserver.h"
 #include "timedata.h"
 #include "util.h"
-#include "base58.h"
 #include "auxpow.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
@@ -716,14 +715,7 @@ Value getauxblock(const Array& params, bool fHelp)
 
             // Create new block with nonce = 0 and extraNonce = 1
             // TODO replace with P2PKH to configured address
-            CKeyID keyID;
-            CBitcoinAddress auxminingaddr(GetArg("-auxminingaddr", ""));
-            if (!auxminingaddr.GetKeyID(keyID)) {
-                CPubKey pubkey;
-                if (!reservekey.GetReservedKey(pubkey))
-                    throw JSONRPCError(-7, "Out of memory");
-                keyID = pubkey.GetID();
-            }
+            static const CKeyID keyID = GetAuxpowMiningKey();
             CScript scriptCoinbase = GetScriptForDestination(keyID);
             pblocktemplate = CreateNewBlock(scriptCoinbase);
             if (!pblocktemplate)
