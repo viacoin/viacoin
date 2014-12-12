@@ -989,7 +989,11 @@ bool AppInit2(boost::thread_group& threadGroup)
                     pblocktree->WriteReindexing(true);
 
                 if (!LoadBlockIndex()) {
-                    strLoadError = _("Error loading block database");
+                    bool fAuxPow;
+                    if (!pblocktree->ReadFlag("auxpow", fAuxPow) || !fAuxPow)
+                        strLoadError = _("You need to rebuild the database using -reindex to enable auxpow support");
+                    else
+                        strLoadError = _("Error loading block database");
                     break;
                 }
 

@@ -9,11 +9,6 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
-int GetOurChainID()
-{
-    return 0x56;
-}
-
 uint256 CBlockHeader::GetHash() const
 {
     return Hash(BEGIN(nVersion), END(nNonce));

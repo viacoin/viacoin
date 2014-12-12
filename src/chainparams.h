@@ -14,8 +14,6 @@
 
 #include <vector>
 
-extern int GetOurChainID();
-
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
 struct CDNSSeedData {

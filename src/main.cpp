@@ -1889,7 +1889,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
             if (pindex->nVersion > CBlock::CURRENT_VERSION &&
-                pindex->nVersion != (CBlockHeader::CURRENT_VERSION | (GetOurChainID() * BLOCK_VERSION_CHAIN_START)))
+                pindex->nVersion != (CBlockHeader::CURRENT_VERSION | (AUXPOW_CHAIN_ID * BLOCK_VERSION_CHAIN_START)))
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
@@ -3064,6 +3064,10 @@ void UnloadBlockIndex()
 bool LoadBlockIndex()
 {
     // Load block index from databases
+    bool fAuxPow;
+    if (!fReindex && (!pblocktree->ReadFlag("auxpow", fAuxPow) || !fAuxPow)) {
+        return false;
+    }
     if (!fReindex && !LoadBlockIndexDB())
         return false;
     return true;
@@ -3079,6 +3083,9 @@ bool InitBlockIndex() {
     // Use the provided setting for -txindex in the new database
     fTxIndex = GetBoolArg("-txindex", false);
     pblocktree->WriteFlag("txindex", fTxIndex);
+
+    pblocktree->WriteFlag("auxpow", true);
+
     LogPrintf("Initializing databases...\n");
 
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
