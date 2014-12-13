@@ -3156,8 +3156,11 @@ bool InitBlockIndex() {
     // Use the provided setting for -txindex in the new database
     fTxIndex = GetBoolArg("-txindex", false);
     pblocktree->WriteFlag("txindex", fTxIndex);
+
+    // Use the provided settings for -addrindex in the new database
     fAddrIndex = GetBoolArg("-addrindex", false);
     pblocktree->WriteFlag("addrindex", fAddrIndex);
+    
     LogPrintf("Initializing databases...\n");
 
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
