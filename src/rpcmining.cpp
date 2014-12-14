@@ -699,7 +699,7 @@ Value getauxblock(const Array& params, bool fHelp)
         static CBlock* pblock;
         static CBlockTemplate* pblocktemplate;
         if (pindexPrev != chainActive.Tip() ||
-            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
+            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
         {
             if (pindexPrev != chainActive.Tip())
             {
@@ -714,7 +714,6 @@ Value getauxblock(const Array& params, bool fHelp)
             nStart = GetTime();
 
             // Create new block with nonce = 0 and extraNonce = 1
-            // TODO replace with P2PKH to configured address
             static const CKeyID keyID = GetAuxpowMiningKey();
             CScript scriptCoinbase = GetScriptForDestination(keyID);
             pblocktemplate = CreateNewBlock(scriptCoinbase);
@@ -742,7 +741,7 @@ Value getauxblock(const Array& params, bool fHelp)
         uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
         Object result;
-        result.push_back(Pair("target", hashTarget.GetHex()));
+        result.push_back(Pair("target", HexStr(BEGIN(hashTarget), END(hashTarget))));
         result.push_back(Pair("hash", pblock->GetHash().GetHex()));
         result.push_back(Pair("chainid", pblock->GetChainID()));
         return result;
@@ -761,14 +760,34 @@ Value getauxblock(const Array& params, bool fHelp)
         CBlock* pblock = mapNewBlock[hash];
         pblock->SetAuxPow(pow);
 
-        if (!ProcessBlockFound(pblock, *pwalletMain, reservekey))
-        {
-            return false;
+        BlockMap::iterator mi = mapBlockIndex.find(hash);
+        if (mi != mapBlockIndex.end()) {
+            CBlockIndex *pindex = mi->second;
+            if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+                return "duplicate";
+            if (pindex->nStatus & BLOCK_FAILED_MASK)
+                return "duplicate-invalid";
         }
-        else
+
+        CValidationState state;
+        submitblock_StateCatcher sc(pblock->GetHash());
+        RegisterValidationInterface(&sc);
+
+        bool fAccepted = ProcessNewBlock(state, NULL, pblock);
+        UnregisterValidationInterface(&sc);
+        if (mi != mapBlockIndex.end())
         {
-            return true;
+            if (fAccepted && !sc.found)
+                return "duplicate-inconclusive";
+            return "duplicate";
         }
+        if (fAccepted)
+        {
+            if (!sc.found)
+                return "inconclusive";
+            state = sc.state;
+        }
+        return BIP22ValidationResult(state);
     }
 }
 
