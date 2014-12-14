@@ -3064,10 +3064,6 @@ void UnloadBlockIndex()
 bool LoadBlockIndex()
 {
     // Load block index from databases
-    bool fAuxPow;
-    if (!fReindex && (!pblocktree->ReadFlag("auxpow", fAuxPow) || !fAuxPow)) {
-        return false;
-    }
     if (!fReindex && !LoadBlockIndexDB())
         return false;
     return true;

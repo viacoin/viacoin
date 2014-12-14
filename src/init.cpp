@@ -988,23 +988,32 @@ bool AppInit2(boost::thread_group& threadGroup)
                 if (fReindex)
                     pblocktree->WriteReindexing(true);
 
-                if (!LoadBlockIndex()) {
-                    bool fAuxPow;
-                    if (!pblocktree->ReadFlag("auxpow", fAuxPow) || !fAuxPow)
-                        strLoadError = _("You need to rebuild the database using -reindex to enable auxpow support");
-                    else
-                        strLoadError = _("Error loading block database");
+                bool fAuxPow;
+                fAuxPow = pblocktree->ReadFlag("auxpow", fAuxPow) && fAuxPow;
+                if (fAuxPow && !LoadBlockIndex()) {
+                    strLoadError = _("Error loading block database");
                     break;
                 }
+
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().HashGenesisBlock()) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
+                int nLastBlockFile = 0;
+                bool dbEmpty = !pblocktree->ReadLastBlockFile(nLastBlockFile);
+
                 // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!InitBlockIndex()) {
+                if ((fAuxPow || dbEmpty) && !InitBlockIndex()) {
                     strLoadError = _("Error initializing block database");
+                    break;
+                }
+
+                fAuxPow = pblocktree->ReadFlag("auxpow", fAuxPow) && fAuxPow;
+
+                if (!fAuxPow) {
+                    strLoadError = _("You need to rebuild the database using -reindex to enable auxpow support");
                     break;
                 }
 
