@@ -688,7 +688,6 @@ Value getauxblock(const Array& params, bool fHelp)
 
     static map<uint256, CBlock*> mapNewBlock;
     static vector<CBlockTemplate*> vNewBlockTemplate;
-    static CReserveKey reservekey(pwalletMain);
 
     if (params.size() == 0)
     {
@@ -699,7 +698,7 @@ Value getauxblock(const Array& params, bool fHelp)
         static CBlock* pblock;
         static CBlockTemplate* pblocktemplate;
         if (pindexPrev != chainActive.Tip() ||
-            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 20))
         {
             if (pindexPrev != chainActive.Tip())
             {
@@ -755,7 +754,7 @@ Value getauxblock(const Array& params, bool fHelp)
         CAuxPow* pow = new CAuxPow();
         ss >> *pow;
         if (!mapNewBlock.count(hash))
-            return ::error("getauxblock() : block not found");
+            return "stale-work";
 
         CBlock* pblock = mapNewBlock[hash];
         pblock->SetAuxPow(pow);
