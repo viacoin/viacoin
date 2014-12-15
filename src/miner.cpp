@@ -12,6 +12,7 @@
 #include "main.h"
 #include "net.h"
 #include "pow.h"
+#include "auxpow.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"

@@ -8,6 +8,7 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "primitives/block.h"
+#include "auxpow.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -181,6 +182,28 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     if (hash > bnTarget)
         return error("CheckProofOfWork() : hash doesn't match nBits");
 
+    return true;
+}
+
+bool CheckBlockProofOfWork(const CBlockHeader *pblock)
+{
+    if (!Params().AllowMinDifficultyBlocks() && pblock->GetChainID() != AUXPOW_CHAIN_ID)
+        return error("CheckBlockProofOfWork() : block does not have our chain ID");
+
+    if (pblock->auxpow.get() != NULL)
+    {
+        if (!pblock->auxpow->Check(pblock->GetHash(), pblock->GetChainID()))
+            return error("CheckBlockProofOfWork() : AUX POW is not valid");
+        // Check proof of work matches claimed amount
+        if (!CheckProofOfWork(pblock->auxpow->GetParentBlockHash(), pblock->nBits))
+            return error("CheckBlockProofOfWork() : AUX proof of work failed");
+    } 
+    else
+    {
+        // Check proof of work matches claimed amount
+        if (!CheckProofOfWork(pblock->GetPoWHash(), pblock->nBits))
+            return error("CheckBlockProofOfWork() : proof of work failed");
+    }
     return true;
 }
 
