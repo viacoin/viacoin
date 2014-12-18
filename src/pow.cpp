@@ -187,7 +187,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
 bool CheckBlockProofOfWork(const CBlockHeader *pblock)
 {
-    if (!Params().AllowMinDifficultyBlocks() && pblock->GetChainID() != AUXPOW_CHAIN_ID)
+    if (!Params().AllowMinDifficultyBlocks() && (pblock->nVersion & BLOCK_VERSION_AUXPOW && pblock->GetChainID() != AUXPOW_CHAIN_ID))
         return error("CheckBlockProofOfWork() : block does not have our chain ID");
 
     if (pblock->auxpow.get() != NULL)
