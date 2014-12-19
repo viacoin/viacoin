@@ -1122,6 +1122,8 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
                 if (!ReadTransaction(txOut, postx, hashBlock))
                     return false;
                 CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+                if (file.IsNull())
+                    return error("%s: OpenBlockFile failed", __func__);
                 CBlockHeader header;
                 try {
                     file >> header;
