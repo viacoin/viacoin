@@ -113,6 +113,7 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
+        nCLTVStartBlock = 99999999;
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -193,6 +194,7 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
+        nCLTVStartBlock = 502664;
         bnProofOfWorkLimit = ~uint256(0) >> 19;
         genesis.nBits = 0x1e1fffff;
 
@@ -249,6 +251,7 @@ public:
         nMinerThreads = 1;
         nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
+        nCLTVStartBlock = 2;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1405166035;
         genesis.nBits = 0x207fffff;

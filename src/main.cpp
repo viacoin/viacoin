@@ -1761,7 +1761,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // NOP2 is redefined as CHECKLOCKTIMEVERIFY in blocks with nVersion >= 3
     //
     // Introduce CHECKLOCKTIMEVERIFY at the same time as AuxPow.
-    if ((block.nVersion & (BLOCK_VERSION_AUXPOW -1)) >= 3 && pindex->nHeight >= GetAuxPowStartBlock())
+    if ((block.nVersion & 0xff) >= 3 && pindex->nHeight >= Params().CLTVStartBlock())
     {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
@@ -2651,7 +2651,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Hard fork to introduce OP_CHECKLOCKTIMEVERIFY at the same time as AuxPow
     // Reject block.nVersion=2 once we reach the correct height
-    if ((block.nVersion & (BLOCK_VERSION_AUXPOW - 1)) < 3 && nHeight >= GetAuxPowStartBlock())
+    if ((block.nVersion & 0xff) < 3 && nHeight >= Params().CLTVStartBlock())
     {
         return state.Invalid(error("AcceptBlock() : rejected nVersion=2 block"),
                 REJECT_OBSOLETE, "bad-version");
