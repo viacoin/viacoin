@@ -1758,6 +1758,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
+    // NOP2 is redefined as CHECKLOCKTIMEVERIFY in blocks with nVersion >= 3
+    //
+    // Introduce CHECKLOCKTIMEVERIFY at the same time as AuxPow.
+    if (block.nVersion & (BLOCK_VERSION_AUXPOW -1) >= 3 && block.nHeight >= GetAuxPowStartBlock())
+    {
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
@@ -2639,6 +2647,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     {
         return state.Invalid(error("%s : rejected nVersion=1 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
+    }
+
+    // Hard fork to introduce OP_CHECKLOCKTIMEVERIFY at the same time as AuxPow
+    // Reject block.nVersion=2 once we reach the correct height
+    if (block.nVersion & (BLOCK_VERSION_AUXPOW - 1) < 3 && block.nHeight >= GetAuxPowStartBlock())
+    {
+        return state.Invalid(error("AcceptBlock() : rejected nVersion=2 block"),
+                REJECT_OBSOLETE, "bad-version");
     }
 
     return true;
