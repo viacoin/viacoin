@@ -20,7 +20,7 @@
       <string notr="true">QLabel { font-style:italic; }</string>
      </property>
      <property name="text">
-      <string>Welcome to Bitcoin Core.</string>
+      <string>Welcome to Viacoin Core.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
