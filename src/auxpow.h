@@ -7,7 +7,7 @@
 #include "wallet.h"
 
 const int AUXPOW_START_TESTNET = 452608;
-const int AUXPOW_START_MAINNET = INT_MAX;
+const int AUXPOW_START_MAINNET = 498725;
 
 class CAuxPow : public CMerkleTx
 {
