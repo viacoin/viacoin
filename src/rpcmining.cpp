@@ -788,7 +788,8 @@ Value getauxblock(const Array& params, bool fHelp)
                 return "inconclusive";
             state = sc.state;
         }
-        return BIP22ValidationResult(state);
+        Value result = BIP22ValidationResult(state);
+        return result.is_null() ? true : result;
     }
 }
 
