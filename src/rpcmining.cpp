@@ -697,7 +697,7 @@ Value getauxblock(const Array& params, bool fHelp)
         static uint64_t nStart;
         static CBlock* pblock;
         static CBlockTemplate* pblocktemplate;
-        if (pindexPrev->nHeight < GetAuxPowStartBlock() - 1)
+        if (chainActive.Tip()->nHeight < GetAuxPowStartBlock() - 1)
             throw JSONRPCError(-1, "Merged mining not enabled at current block height yet");
         if (pindexPrev != chainActive.Tip() ||
             (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 20))
