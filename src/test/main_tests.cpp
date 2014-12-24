@@ -6,7 +6,6 @@
 #include "main.h"
 
 #include <boost/test/unit_test.hpp>
-
 BOOST_AUTO_TEST_SUITE(main_tests)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
@@ -18,7 +17,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         nSum += nSubsidy * 1000;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK(nSum == 2099999997690000ULL);
+    BOOST_CHECK(nSum == 5779800000000000ULL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
