@@ -22,13 +22,40 @@ class TxnMallTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Start with split network:
-        return super(TxnMallTest, self).setup_network(True)
+        # Viacoin: start with joined network, split after initial balances setup
+        return super(TxnMallTest, self).setup_network(False)
 
     def run_test(self):
+        # Viacoin: burn 43750 coins on every node to match original test start conditions.
+        # Fees going to node2.
+        for n in range(4):
+            burn = 45000-1250
+            # 10 blocks of node0 will mature on burn mining
+            if n == 0:
+                burn += 500
+            (total, inputs) = gather_inputs(self.nodes[n], burn)
+            assert_equal(total, burn)
+            for i in range(0, len(inputs), 25):
+                irange = inputs[i:i+25]
+                rawtx = self.nodes[n].createrawtransaction(irange, {"t8z1Mviz3y2rchHxr7RLNVwuxjTBoBZsrQ": len(irange)*50-0.2})
+                tx = self.nodes[n].signrawtransaction(rawtx)
+                self.nodes[n].sendrawtransaction(tx["hex"])
+        self.sync_all()
+        # Mine burns
+        self.nodes[2].setgenerate(True, 10)
+        self.sync_all()
+        for n in range(4):
+            assert_equal(len(self.nodes[n].getrawmempool()), 0)
+        # Split the network
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        super(TxnMallTest, self).setup_network(True)
+
         # All nodes should start with 1,250 BTC:
         starting_balance = 1250
         for i in range(4):
-            assert_equal(self.nodes[i].getbalance(), starting_balance)
+            if i != 2:
+                assert_equal(self.nodes[i].getbalance(), starting_balance)
             self.nodes[i].getnewaddress("")  # bug workaround, coins generated assigned to first getnewaddress!
         
         # Assign coins to foo and bar accounts:
@@ -45,7 +72,7 @@ class TxnMallTest(BitcoinTestFramework):
         change_address = self.nodes[0].getnewaddress("foo")
         outputs = {}
         outputs[change_address] = 40
-        outputs[node1_address] = 1210
+        outputs[node1_address] = 1210 - 1 #Viacoin: add fee
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         doublespend = self.nodes[0].signrawtransaction(rawtx)
         assert_equal(doublespend["complete"], True)
@@ -114,7 +141,7 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("bar"), 30)
 
         # Node1's "from" account balance should be just the mutated send:
-        assert_equal(self.nodes[1].getbalance("from0"), 1210)
+        assert_equal(self.nodes[1].getbalance("from0"), 1210 - 1)
 
 if __name__ == '__main__':
     TxnMallTest().main()

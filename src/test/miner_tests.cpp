@@ -492,8 +492,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         if (i == 1 || i >= 3599) {
             // Viacoin needs coinbase value reset after first block; diff change starts at block 3600
-            delete pblocktemplate;
             uint256 hashPrevBlock = pblocktemplate->block.hashPrevBlock;
+            delete pblocktemplate;
             BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey));
             pblocktemplate->block.hashPrevBlock = hashPrevBlock;
         }

@@ -244,7 +244,7 @@ public:
         pchMessageStart[1] = 0x97;
         pchMessageStart[2] = 0x7b;
         pchMessageStart[3] = 0x37;
-        nSubsidyHalvingInterval = 150;
+        nSubsidyHalvingInterval = 5400;
         nEnforceBlockUpgradeMajority = 7500;
         nRejectBlockOutdatedMajority = 9500;
         nToCheckBlockUpgradeMajority = 10000;
