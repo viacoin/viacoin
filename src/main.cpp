@@ -1251,6 +1251,22 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex)
 
 CAmount GetBlockValue(int nHeight, const CAmount& nFees)
 {
+    // In -regtest mode use Bitcoin schedule
+    if (Params().MineBlocksOnDemand() && Params().AllowMinDifficultyBlocks()) {
+        CAmount nSubsidy = 50 * COIN;
+        int halvings = nHeight / Params().SubsidyHalvingInterval();
+
+        // Force block reward to zero when right shift is undefined.
+        if (halvings >= 64)
+            return nFees;
+
+        // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        nSubsidy >>= halvings;
+
+        return nSubsidy + nFees;
+    }
+
+    // Viacoin schedule
     CAmount nSubsidy = 0;
     int tHeight = 5256000; // reduction frequency: 3600 * 365 * 4
 
@@ -2647,7 +2663,8 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     }
 
     // Prevent blocks from too far in the future (timewarp)
-    if(Params().AllowMinDifficultyBlocks() || nHeight >= 100) {
+    // Check disabled in -regtest mode because in tests GetMedianTimePast() drifts too far in the future
+    if (!Params().MineBlocksOnDemand() && (Params().AllowMinDifficultyBlocks() || nHeight >= 100)) {
         if (block.GetBlockTime() > GetAdjustedTime() + timeframe) {
             return error("AcceptBlock() : block's timestamp too far in the future");
         }

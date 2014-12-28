@@ -339,21 +339,23 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     string reason;
     BOOST_CHECK(IsStandardTx(t, reason));
 
-    t.vout[0].nValue = 501; // dust
+    // Viacoin minRelayTxFee is 100000, typical tx is dust below 54600 sat
+    t.vout[0].nValue = 50100; // dust
     BOOST_CHECK(!IsStandardTx(t, reason));
 
-    t.vout[0].nValue = 601; // not dust
+    // Viacoin minRelayTxFee is 100000, typical tx is dust below 54600 sat
+    t.vout[0].nValue = 60100; // not dust
     BOOST_CHECK(IsStandardTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
     BOOST_CHECK(!IsStandardTx(t, reason));
 
-    // 120-byte TX_NULL_DATA (standard)
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    // Viacoin: 120-byte TX_NULL_DATA (standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     BOOST_CHECK(IsStandardTx(t, reason));
 
-    // 121-byte TX_NULL_DATA (non-standard)
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
+    // Viacoin: 121-byte TX_NULL_DATA (non-standard)
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
     BOOST_CHECK(!IsStandardTx(t, reason));
 
     // TX_NULL_DATA w/o PUSHDATA

@@ -42,7 +42,9 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].setgenerate(True, 1)
 
         self.sync_all()
-        self.nodes[1].setgenerate(True, 101)
+        for i in range(36):
+            self.nodes[1].setgenerate(True, 100)
+        self.nodes[1].setgenerate(True, 1)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -58,8 +60,9 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].setgenerate(True, 1)
         self.sync_all()
 
-        # Have node1 generate 100 blocks (so node0 can recover the fee)
-        self.nodes[1].setgenerate(True, 100)
+        # Have node1 generate 3600 blocks (so node0 can recover the fee)
+        for i in range(36):
+            self.nodes[1].setgenerate(True, 100)
         self.sync_all()
 
         # node0 should end up with 100 btc in block rewards plus fees, but

@@ -64,7 +64,7 @@ def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
-    with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
+    with open(os.path.join(datadir, "viacoin.conf"), 'w') as f:
         f.write("regtest=1\n");
         f.write("rpcuser=rt\n");
         f.write("rpcpassword=rt\n");
@@ -100,17 +100,17 @@ def initialize_chain(test_dir):
                 sys.stderr.write("Error connecting to "+url+"\n")
                 sys.exit(1)
 
-        # Create a 200-block-long chain; each of the 4 nodes
-        # gets 25 mature blocks and 25 immature.
-        # blocks are created with timestamps 10 minutes apart, starting
-        # at 1 Jan 2014
-        block_time = 1388534400
+        # Create a 7200-block-long chain; each of the 4 nodes
+        # gets 900 mature blocks and 900 immature.
+        # blocks are created with timestamps 25 seconds apart, starting
+        # at 12 Jul 2014
+        block_time = 1405164800
         for i in range(2):
             for peer in range(4):
-                for j in range(25):
+                for j in range(900):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].setgenerate(True, 1)
-                    block_time += 10*60
+                    block_time += 25
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
 
