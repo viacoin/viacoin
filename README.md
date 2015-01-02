@@ -5,6 +5,11 @@ Viacoin Core integration/staging tree
 
 http://viacoin.org
 
+Quickstart
+----------
+
+See the [quickstart guide](doc/build-quickstart.md) to compiling on Debian/Ubuntu.
+
 What is Viacoin?
 ----------------
 
