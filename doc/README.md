@@ -1,14 +1,9 @@
-Bitcoin 0.10.0 BETA
+Viacoin Core 0.10
 =====================
-
-Copyright (c) 2009-2014 Bitcoin Developers
-Copyright (c) 2013-2014 Viacoin Developers
-
 
 Setup
 ---------------------
-[Viacoin Core](http://viacoin.org/en/download) is the original Viacoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Viacoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. Thankfully you only have to do this once. If you would like the process to go faster you can [download the blockchain directly](bootstrap.md).
-
+[Viacoin Core](http://viacoin.org/) is the original Viacoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Viacoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. Thankfully you only have to do this once. If you would like the process to go faster you can [download the blockchain directly](bootstrap.md).
 
 Running
 ---------------------
@@ -37,10 +32,7 @@ Drag Viacoin-Qt to your applications folder, and then run Viacoin-Qt.
 
 ### Need Help?
 
-* See the documentation at the [Viacoin Wiki](https://en.viacoin.org/wiki/Main_Page)
-for help and more information.
 * Ask for help on [#viacoin](http://webchat.freenode.net?channels=viacoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=viacoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
 
 Building
 ---------------------
@@ -62,7 +54,6 @@ The Viacoin repo's [root README](https://github.com/viacoin/viacoin/blob/master/
 - [Unit Tests](unit-tests.md)
 
 ### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
 * Discuss on [#viacoin-dev](http://webchat.freenode.net/?channels=viacoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=viacoin-dev).
 
 ### Miscellaneous
