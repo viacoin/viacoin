@@ -10,7 +10,7 @@ packages:
 reference_datetime: "2013-06-01 00:00:00"
 remotes: []
 files:
-- "viacoin-0.9.99-osx-unsigned.tar.gz"
+- "viacoin-osx-unsigned.tar.gz"
 - "signature.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
@@ -28,10 +28,10 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=`echo bitcoin-*.tar.gz`
-  SIGNED=`echo ${UNSIGNED} | sed 's/.tar.*//' | sed 's/-unsigned//'`.dmg
+  UNSIGNED=viacoin-osx-unsigned.tar.gz
+  SIGNED=viacoin-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   ./detached-sig-apply.sh ${UNSIGNED} signature.tar.gz
-  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "Bitcoin-Qt" -no-pad -r -apple -o uncompressed.dmg signed-app
+  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "Viacoin-Qt" -no-pad -r -apple -o uncompressed.dmg signed-app
   ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}

@@ -68,7 +68,7 @@ Release Process
 	mv build/out/viacoin-*.zip build/out/viacoin-*.exe ../
 	./bin/gbuild --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
-	mv build/out/viacoin-*-unsigned.tar.gz inputs
+	mv build/out/viacoin-*-unsigned.tar.gz inputs/viacoin-osx-unsigned.tar.gz
 	mv build/out/viacoin-*.tar.gz build/out/viacoin-*.dmg ../
 	popd
   Build output expected:
@@ -100,9 +100,9 @@ Commit your signature to gitian.sigs:
 	pushd ./gitian-builder
 	# Fetch the signature as instructed by Gavin
 	cp signature.tar.gz inputs/
-	./bin/gbuild -i ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	mv build/out/bitcoin-${VERSION}-osx.dmg ../
+	./bin/gbuild -i ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	mv build/out/viacoin-osx-signed.dmg ../viacoin-${VERSION}-osx.dmg
 	popd
 
 Commit your signature for the signed OSX binary:
