@@ -1490,8 +1490,8 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingSignatureChecker(*ptxTo, nIn, cacheStore), &error)) {
-        return ::error("CScriptCheck() : %s:%d VerifySignature failed: %s", ptxTo->GetHash().ToString(), nIn, ScriptErrorString(error));
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, cacheStore), &error)) {
+        return ::error("CScriptCheck(): %s:%d VerifySignature failed: %s", ptxTo->GetHash().ToString(), nIn, ScriptErrorString(error));
     }
     return true;
 }
@@ -1805,9 +1805,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // NOP2 is redefined as CHECKLOCKTIMEVERIFY in blocks with nVersion >= 3
     //
     // Introduce CHECKLOCKTIMEVERIFY at the same time as AuxPow.
-    if ((block.nVersion & 0xff) >= 3 && pindex->nHeight >= Params().CLTVStartBlock())
-    {
+    if ((block.nVersion & 0xff) >= 3 && pindex->nHeight >= Params().CLTVStartBlock()) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    }
+
+    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=4 blocks, when 75% of the network has upgraded:
+    if ((block.nVersion >= 4 && 0xff) && CBlockIndex::IsSuperMajority(4, pindex->pprev, Params().EnforceBlockUpgradeMajority())) {
+        flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     CBlockUndo blockundo;
@@ -2700,10 +2704,16 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Hard fork to introduce OP_CHECKLOCKTIMEVERIFY at the same time as AuxPow
     // Reject block.nVersion=2 once we reach the correct height
-    if ((block.nVersion & 0xff) < 3 && nHeight >= Params().CLTVStartBlock())
-    {
+    if ((block.nVersion & 0xff) < 3 && nHeight >= Params().CLTVStartBlock()) {
         return state.Invalid(error("AcceptBlock() : rejected nVersion=2 block"),
                 REJECT_OBSOLETE, "bad-version");
+    }
+
+    // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
+    if ((block.nVersion < 4 && 0xff) && CBlockIndex::IsSuperMajority(3, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    {
+        return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
+                             REJECT_OBSOLETE, "bad-version");
     }
 
     return true;
@@ -4706,12 +4716,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             LogPrintf("Peer=%d is stalling block download, disconnecting\n", pto->id);
             pto->fDisconnect = true;
         }
-        // In case there is a block that has been in flight from this peer for (1 + 0.5 * N) times the block interval
+        // In case there is a block that has been in flight from this peer for (2 + 0.5 * N) times the block interval
         // (with N the number of validated blocks that were in flight at the time it was requested), disconnect due to
         // timeout. We compensate for in-flight blocks to prevent killing off peers due to our own downstream link
         // being saturated. We only count validated in-flight blocks so peers can't advertize nonexisting block hashes
         // to unreasonably increase our timeout.
-        if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0 && state.vBlocksInFlight.front().nTime < nNow - 500000 * Params().TargetSpacing() * (2 + state.vBlocksInFlight.front().nValidatedQueuedBefore)) {
+        if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0 && state.vBlocksInFlight.front().nTime < nNow - 500000 * Params().TargetSpacing() * (4 + state.vBlocksInFlight.front().nValidatedQueuedBefore)) {
             LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", state.vBlocksInFlight.front().hash.ToString(), pto->id);
             pto->fDisconnect = true;
         }
