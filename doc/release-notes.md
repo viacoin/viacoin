@@ -279,7 +279,7 @@ key and script operations easily accessible via command line.
 Mining and relay policy enhancements
 ------------------------------------
 
-Viacoin Core's block templates are now for version 3 blocks only, and any mining
+Viacoin Core's block templates are now for version 4 blocks only, and any mining
 software relying on its `getblocktemplate` must be updated in parallel to use
 libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
 If you are solo mining, this will affect you the moment you upgrade Bitcoin
@@ -321,9 +321,9 @@ required if implementations would want to remove all of OpenSSL from the
 consensus code.
 
 The same miner-voting mechanism as in BIP 34 is used: when 751 out of a
-sequence of 1001 blocks have version number 3 or higher, the new consensus
+sequence of 1001 blocks have version number 4 or higher, the new consensus
 rule becomes active for those blocks. When 951 out of a sequence of 1001
-blocks have version number 3 or higher, it becomes mandatory for all blocks.
+blocks have version number 4 or higher, it becomes mandatory for all blocks.
 
 Backward compatibility with current mining software is NOT provided, thus miners
 should read the first paragraph of "Mining and relay policy enhancements" above.
