@@ -2839,7 +2839,7 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     unsigned int nFound = 0;
     for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
     {
-        if (pstart->nVersion >= minVersion)
+        if ((pstart->nVersion & 0xFF) >= (minVersion & 0xFF))
             ++nFound;
         pstart = pstart->pprev;
     }
