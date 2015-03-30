@@ -1820,7 +1820,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=4 blocks, when 75% of the network has upgraded:
-    if ((block.nVersion >= 4 && 0xff) && CBlockIndex::IsSuperMajority(4, pindex->pprev, Params().EnforceBlockUpgradeMajority())) {
+    if ((block.nVersion >= 4 & 0xff) && CBlockIndex::IsSuperMajority(4, pindex->pprev, Params().EnforceBlockUpgradeMajority())
+        && pindex->nHeight >= Params().BIP66MinStartBlock()) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
@@ -2723,9 +2724,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     }
 
     // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
-    if ((block.nVersion < 4 && 0xff) && CBlockIndex::IsSuperMajority(3, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    if ((block.nVersion < 4 & 0xff) && CBlockIndex::IsSuperMajority(4, pindexPrev, Params().RejectBlockOutdatedMajority())
+            && block.nVersion >= Params().BIP66MinStartBlock())
     {
-        return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
+        return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
     }
 

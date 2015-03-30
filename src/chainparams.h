@@ -70,6 +70,7 @@ public:
     int64_t TargetSpacing() const { return nTargetSpacing; }
     int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
     int CLTVStartBlock() const { return nCLTVStartBlock; }
+    int BIP66MinStartBlock() const { return nBIP66MinStartBlock; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** In the future use NetworkIDString() for RPC fields */
@@ -96,6 +97,7 @@ protected:
     int64_t nTargetTimespan;
     int64_t nTargetSpacing;
     int nCLTVStartBlock;
+    int nBIP66MinStartBlock;
     int nMinerThreads;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
