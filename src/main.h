@@ -126,6 +126,7 @@ extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fAddrIndex;
 extern bool fIsBareMultisigStd;
+extern bool fCheckBlockIndex;
 extern unsigned int nCoinCacheSize;
 extern CFeeRate minRelayTxFee;
 
