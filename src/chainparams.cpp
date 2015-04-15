@@ -114,6 +114,7 @@ public:
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
         nCLTVStartBlock = 598725;
+        nBIP66MinStartBlock = 1200000;
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -147,6 +148,7 @@ public:
         assert(genesis.hashMerkleRoot == uint256("0x0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200"));
 
         vSeeds.push_back(CDNSSeedData("viacoin.net", "seed.viacoin.net"));
+        vSeeds.push_back(CDNSSeedData("zzy.su", "seed.zzy.su"));
         vSeeds.push_back(CDNSSeedData("bootstap.viacoin.net", "mainnet.viacoin.net"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(71);
@@ -159,8 +161,8 @@ public:
 
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
-        fDefaultCheckMemPool = false;
         fAllowMinDifficultyBlocks = false;
+        fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fSkipProofOfWorkCheck = false;
@@ -195,6 +197,7 @@ public:
         nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
         nCLTVStartBlock = 502664;
+        nBIP66MinStartBlock = 800000;
         bnProofOfWorkLimit = ~uint256(0) >> 19;
         genesis.nBits = 0x1e1fffff;
 
@@ -219,8 +222,8 @@ public:
 
         fRequireRPCPassword = true;
         fMiningRequiresPeers = true;
-        fDefaultCheckMemPool = false;
         fAllowMinDifficultyBlocks = true;
+        fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
@@ -252,6 +255,7 @@ public:
         nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
         nCLTVStartBlock = 1;
+        nBIP66MinStartBlock = 1;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1405166035;
         genesis.nBits = 0x207fffff;
@@ -265,8 +269,8 @@ public:
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
-        fDefaultCheckMemPool = true;
         fAllowMinDifficultyBlocks = true;
+        fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
@@ -292,7 +296,7 @@ public:
 
         fRequireRPCPassword = false;
         fMiningRequiresPeers = false;
-        fDefaultCheckMemPool = true;
+        fDefaultConsistencyChecks = true;
         fAllowMinDifficultyBlocks = false;
         fMineBlocksOnDemand = true;
     }
@@ -308,7 +312,7 @@ public:
     virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)  { nEnforceBlockUpgradeMajority=anEnforceBlockUpgradeMajority; }
     virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)  { nRejectBlockOutdatedMajority=anRejectBlockOutdatedMajority; }
     virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority)  { nToCheckBlockUpgradeMajority=anToCheckBlockUpgradeMajority; }
-    virtual void setDefaultCheckMemPool(bool afDefaultCheckMemPool)  { fDefaultCheckMemPool=afDefaultCheckMemPool; }
+    virtual void setDefaultConsistencyChecks(bool afDefaultConsistencyChecks)  { fDefaultConsistencyChecks=afDefaultConsistencyChecks; }
     virtual void setAllowMinDifficultyBlocks(bool afAllowMinDifficultyBlocks) {  fAllowMinDifficultyBlocks=afAllowMinDifficultyBlocks; }
     virtual void setSkipProofOfWorkCheck(bool afSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = afSkipProofOfWorkCheck; }
 };
