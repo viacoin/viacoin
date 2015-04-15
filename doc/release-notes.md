@@ -64,6 +64,7 @@ Block (database) and transaction handling:
 - `c91c660` fix InvalidateBlock to repopulate setBlockIndexCandidates
 - `002c8a2` fix possible block db breakage during re-index
 - `a1f425b` Add (optional) consistency check for the block chain data structures
+- `1c62e84` Keep mempool consistent during block-reorgs
 
 P2P protocol and network code:
 - BIP66 softfork
@@ -97,6 +98,8 @@ Tests:
 Miscellaneous:
 - `c9e022b` Initialization: set Boost path locale in main thread
 - `23126a0` Sanitize command strings before logging them.
+- `98add71` Add new DNS seed.
+- `470c2f2` Change ECDSA signing string.
 
 Credits
 =======
@@ -107,8 +110,10 @@ Thanks to everyone who contributed to this release:
 - Cory Fields
 - dexX7
 - fsb4000
+- Gavin Andresen
 - Gregory Maxwell
 - Ivan Pustogarov
+- Jonas Nick
 - Jonas Schnelli
 - Pieter Wuille
 - Ruben de Vries

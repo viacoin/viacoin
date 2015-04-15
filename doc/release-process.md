@@ -132,28 +132,12 @@ rm SHA256SUMS
 (the digest algorithm is forced to sha256 to avoid confusion of the `Hash:` header that GPG adds with the SHA256 used for the files)
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+  into `/var/www/bin/bitcoin-core-${VERSION}`
 
 - Update viacoin.org version
 
-  - Make a pull request to add a file named `YYYY-MM-DD-vX.Y.Z.md` with the release notes
-  to https://github.com/viacoin/viacoin.org/tree/master/_releases
-   ([Example for 0.9.2.1](https://raw.githubusercontent.com/viacoin/viacoin.org/master/_releases/2014-06-19-v0.9.2.1.md)).
-
-  - After the pull request is merged, the website will automatically show the newest version, as well
-    as update the OS download links. Ping Saivann in case anything goes wrong
-
 - Announce the release:
 
-  - Release sticky on bitcointalk: https://bitcointalk.org/index.php?board=1.0
+  - Update title of #viacoin on Freenode IRC
 
-  - Viacoin-development mailing list
-
-  - Update title of #bitcoin on Freenode IRC
-
-  - Optionally reddit /r/Bitcoin, ... but this will usually sort out itself
-
-- Notify BlueMatt so that he can start building [https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin](the PPAs)
-
-- Add release notes for the new version to the directory `doc/release-notes` in git master
-
-- Celebrate 
+  - Optionally reddit /r/Viacoin, ... but this will usually sort out itself
