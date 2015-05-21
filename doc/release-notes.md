@@ -1,8 +1,8 @@
-Viacoin Core version 0.10.7 is now available from:
+Viacoin Core version 0.10.7.1 is now available from:
 
   https://github.com/viacoin/viacoin/releases
 
-This is a new minor version release, bringing bug fixes and translation 
+This is a new minor version release, bringing minor bug fixes and translation 
 updates. It is recommended to upgrade to this version.
 
 Please report bugs using the issue tracker at github:
@@ -48,101 +48,44 @@ Notable changes
 
 This is a minor release and hence there are no notable changes.
 For the notable changes in 0.10, refer to the release notes for the
-0.10.7 release at https://github.com/viacoin/viacoin/blob/v0.10.7/doc/release-notes.md
+0.10.7.1 release at https://github.com/viacoin/viacoin/blob/v0.10.7.1/doc/release-notes.md
 
-0.10.7 Change log
-=================
+0.10.7.1 Change log
+
+This fixes a serious problem on Windows with data directories that have non-ASCII
+characters (https://github.com/bitcoin/bitcoin/issues/6078).
+
+For other platforms there are no notable changes.
+
+For the notable changes in 0.10.7, refer to the release notes
+at https://github.com/viacoin/viacoin/blob/v0.10.7/doc/release-notes.md
+
+0.10.7.1 Change log
 
 Detailed release notes follow. This overview includes changes that affect external
 behavior, not code moves, refactors or string updates.
 
-RPC:
-- `7f502be` fix crash: createmultisig and addmultisigaddress
-- `eae305f` Fix missing lock in submitblock
-
-Block (database) and transaction handling:
-- `1d2cdd2` Fix InvalidateBlock to add chainActive.Tip to setBlockIndexCandidates
-- `c91c660` fix InvalidateBlock to repopulate setBlockIndexCandidates
-- `002c8a2` fix possible block db breakage during re-index
-- `a1f425b` Add (optional) consistency check for the block chain data structures
-- `1c62e84` Keep mempool consistent during block-reorgs
-- `57d1f46` Fix CheckBlockIndex for reindex
-- `bac6fca` Set nSequenceId when a block is fully linked
-
-P2P protocol and network code:
-- BIP66 softfork
-- `78f64ef` don't trickle for whitelisted nodes
-- `ca301bf` Reduce fingerprinting through timestamps in 'addr' messages.
-- `200f293` Ignore getaddr messages on Outbound connections.
-- `d5d8998` Limit message sizes before transfer
-- `aeb9279` Better fingerprinting protection for non-main-chain getdatas.
-- `cf0218f` Make addrman's bucket placement deterministic (countermeasure 1 against eclipse attacks, see http://cs-people.bu.edu/heilman/eclipse/)
-- `0c6f334` Always use a 50% chance to choose between tried and new entries (countermeasure 2 against eclipse attacks)
-- `214154e` Do not bias outgoing connections towards fresh addresses (countermeasure 2 against eclipse attacks)
-- `aa587d4` Scale up addrman (countermeasure 6 against eclipse attacks)
-- `139cd81` Cap nAttempts penalty at 8 and switch to pow instead of a division loop
-
-Validation:
-- `d148f62` Acquire CCheckQueue's lock to avoid race condition
-
-Build system:
-- `8752b5c` 0.10 fix for crashes on OSX 10.6
-
 Wallet:
-- N/A
-
-GUI:
-- `2c08406` some mac specifiy cleanup (memory handling, unnecessary code)
-- `81145a6` fix OSX dock icon window reopening
-- `786cf72` fix a issue where "command line options"-action overwrite "Preference"-action (on OSX)
-
-Tests:
-- `1117378` add RPC test for InvalidateBlock
+- `824c011` fix boost::get usage with boost 1.58
 
 Miscellaneous:
-- `c9e022b` Initialization: set Boost path locale in main thread
-- `23126a0` Sanitize command strings before logging them.
-- `98add71` Add new DNS seed.
-- `470c2f2` Change ECDSA signing string.
-- `323de27` Initialization: setup environment before starting QT tests
-- `7494e09` Initialization: setup environment before starting tests
-- `df45564` Initialization: set fallback locale as environment variable
+- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
+- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Alex Morcos
 - Cory Fields
-- dexX7
-- fsb4000
-- Gavin Andresen
 - Gregory Maxwell
-- Ivan Pustogarov
 - Jonas Schnelli
-- Matt Corallo
-- mrbandrews
-- Pieter Wuille
-- Ruben de Vries
-- Suhas Daftuar
 - Wladimir J. van der Laan
-- reorder
-- btcdrak
 
 And all those who contributed additional code review and/or security research:
-- 21E14
-- Alison Kendler
-- Aviv Zohar
-- Ethan Heilman
-- Evil-Knievel
-- fanquake
-- Jeff Garzik
-- Jonas Nick
-- Luke Dashjr
-- Patrick Strateman
-- Philip Kaufmann
-- Sergio Demian Lerner
-- Sharon Goldberg
+
+- dexX7
+- Pieter Wuille
+- vayvanne
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).

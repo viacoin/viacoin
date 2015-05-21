@@ -1,4 +1,4 @@
-Viacoin Core 0.10
+Viacoin Core 0.10.7.1
 =====================
 
 Setup
