@@ -24,6 +24,19 @@ viacoind/viacoin-qt (on Linux).
 Notable changes
 ===============
 
-0.10.8 Change log
-
 Hard fork introduces subsidy halving every 657000 blocks starting from block 1971001
+
+
+0.10.8 Change log
+=================
+
+Detailed release notes follow. This overview includes changes that affect external
+behavior, not code moves, refactors or string updates.
+
+Wallet:
+- `824c011` fix boost::get usage with boost 1.58
+
+Miscellaneous:
+- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
+- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
+- `220ebb5` Hard fork introduces subsidy halving every 657000 blocks starting from block 1971001
