@@ -1292,7 +1292,6 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees)
 
     // Viacoin schedule
     CAmount nSubsidy = 0;
-    int tHeight = 5256000; // reduction frequency: 3600 * 365 * 4
 
     // different zero block period for testnet and mainnet
     // mainnet not fixed until final release
@@ -1315,24 +1314,15 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees)
     } else if (nHeight <= rampHeight) {
         // every 10800 blocks reduce nSubsidy from 8 to 6
         nSubsidy = (8 - int((nHeight-zeroRewardHeight-1) / 10800)) * COIN;
-    } else if (nHeight <= tHeight) {
-        // first 4 years
+    } else if (nHeight <= 1971000) {
         nSubsidy = 5 * COIN;
-    } else if (nHeight <= (2 * tHeight)) {
-        // next 4 years
-        nSubsidy = 4 * COIN;
-    } else if (nHeight <= (3 * tHeight)) {
-        // next 4 years
-        nSubsidy = 3 * COIN;
-    } else if (nHeight <= (4 * tHeight)) {
-        // next 4 years
-        nSubsidy = 2 * COIN;
-    } else if (nHeight <= (5 * tHeight)) {
-        // next 4 years
-        nSubsidy = 1 * COIN;
-    } else if (nHeight <= (6 * tHeight)) {
-        // next 4 years
-        nSubsidy = 0.5 * COIN;
+    } else { // (nHeight > 1971000)
+        int halvings = nHeight / Params().SubsidyHalvingInterval();
+        // Force block reward to zero when right shift is undefined.
+        if (halvings <= 64) {
+            nSubsidy = 20 * COIN;
+            nSubsidy >>= halvings;
+        }
     }
 
     return nSubsidy + nFees;
