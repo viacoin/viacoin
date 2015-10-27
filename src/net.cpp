@@ -581,7 +581,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                 return false;
 
         if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-            LogPrint("net", "Oversized message from peer=%i, disconnecting", GetId());
+            LogPrint("net", "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
 
@@ -894,6 +894,15 @@ void ThreadSocketHandler()
                 }
                 else
                 {
+                    // According to the internet TCP_NODELAY is not carried into accepted sockets
+                    // on all platforms.  Set it again here just to be sure.
+                    int set = 1;
+#ifdef WIN32
+                    setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
+#else
+                    setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&set, sizeof(int));
+#endif
+
                     CNode* pnode = new CNode(hSocket, addr, "", true);
                     pnode->AddRef();
                     pnode->fWhitelisted = whitelisted;
@@ -1032,10 +1041,14 @@ void ThreadMapPort()
 #ifndef UPNPDISCOVER_SUCCESS
     /* miniupnpc 1.5 */
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
-#else
+#elif MINIUPNPC_API_VERSION < 14
     /* miniupnpc 1.6 */
     int error = 0;
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
+#else
+    /* miniupnpc 1.9.20150730 */
+    int error = 0;
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
 #endif
 
     struct UPNPUrls urls;
@@ -1524,8 +1537,13 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif
     // Allow binding if the port is still in TIME_WAIT state after
-    // the program was closed and restarted. Not an issue on windows!
+    // the program was closed and restarted.
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
+    // Disable Nagle's algorithm
+    setsockopt(hListenSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&nOne, sizeof(int));
+#else
+    setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&nOne, sizeof(int));
+    setsockopt(hListenSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&nOne, sizeof(int));
 #endif
 
     // Set to non-blocking, incoming connections will also inherit this
