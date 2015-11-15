@@ -12,7 +12,7 @@ See the quickstart guide to compile on Debian/Ubuntu [here](build-quickstart.md)
 
 Running
 ---------------------
-The following are some helpful notes on how to run Bitcoin on your native platform. 
+The following are some helpful notes on how to run Bitcoin on your native platform.
 
 ### Unix
 
@@ -31,7 +31,7 @@ Unpack the files into a directory and run:
 
 Unpack the files into a directory, and then run viacoin-qt.exe.
 
-### OSX
+### OS X
 
 Drag Viacoin-Qt to your applications folder, and then run Viacoin-Qt.
 
@@ -43,7 +43,7 @@ Building
 ---------------------
 The following are developer notes on how to build Viacoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
-- [OSX Build Notes](build-osx.md)
+- [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 
 Development

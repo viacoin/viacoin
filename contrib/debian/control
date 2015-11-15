@@ -20,7 +20,8 @@ Build-Depends: debhelper,
  qt4-qmake,
  libqt4-dev,
  libqrencode-dev,
- libprotobuf-dev, protobuf-compiler
+ libprotobuf-dev, protobuf-compiler,
+ python
 Standards-Version: 3.9.2
 Homepage: http://www.viacoin.org/
 Vcs-Git: git://github.com/viacoin/viacoin.git
@@ -55,4 +56,22 @@ Description: peer-to-peer network based digital currency - Qt GUI
  Full transaction history is stored locally at each client.  This
  requires 2+ GB of space, slowly growing.
  .
+<<<<<<< HEAD
  This package provides Viacoin-Qt, a GUI for Bitcoin based on Qt.
+=======
+ This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+
+Package: bitcoin-tx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: peer-to-peer digital currency - standalone transaction tool
+ Bitcoin is a free open source peer-to-peer electronic cash system that
+ is completely decentralized, without the need for a central server or
+ trusted parties.  Users hold the crypto keys to their own money and
+ transact directly with each other, with the help of a P2P network to
+ check for double-spending.
+ .
+ This package provides bitcoin-tx, a command-line transaction creation
+ tool which can be used without a bitcoin daemon.  Some means of
+ exchanging minimal transaction data with peers is still required.
+>>>>>>> bitcoin/0.10

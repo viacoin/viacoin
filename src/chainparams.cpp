@@ -113,6 +113,7 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 1 * 24;
+        nMaxTipAge = 24 * 60 * 60;
         nCLTVStartBlock = 598725;
         nBIP66MinStartBlock = 1200000;
 
@@ -196,6 +197,7 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 14 * 24 * 60 * 60; //! two weeks
         nTargetSpacing = 1 * 24;
+        nMaxTipAge = 0x7fffffff;
         nCLTVStartBlock = 502664;
         nBIP66MinStartBlock = 800000;
         bnProofOfWorkLimit = ~uint256(0) >> 19;
@@ -257,6 +259,7 @@ public:
         nCLTVStartBlock = 1;
         nBIP66MinStartBlock = 1;
         bnProofOfWorkLimit = ~uint256(0) >> 1;
+        nMaxTipAge = 24 * 60 * 60;
         genesis.nTime = 1405166035;
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 0;

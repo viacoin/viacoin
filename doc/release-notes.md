@@ -1,9 +1,16 @@
+<<<<<<< HEAD
 Viacoin Core version 0.10.8 is now available from:
 
   https://github.com/viacoin/viacoin/releases
+=======
+Bitcoin Core version 0.10.4 is now available from:
 
-This is a new minor version release, bringing security fixes and translation 
-updates. It is recommended to upgrade to this version as soon as possible.
+  <https://bitcoin.org/bin/bitcoin-core-0.10.4/>
+>>>>>>> bitcoin/0.10
+
+This is a new minor version release, bringing bug fixes, the BIP65
+(CLTV) consensus change, and relay policy preparation for BIP113. It is
+recommended to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
 
@@ -20,66 +27,73 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Viacoin-Qt (on Mac) or
 viacoind/viacoin-qt (on Linux).
 
-
-Notable changes
-===============
-
-Hard fork introduces subsidy halving every 657000 blocks starting from block 1971001
+Notable changes since 0.10.9
+============================
 
 
-0.10.8 Change log
+Windows bug fix for corrupted UTXO database on unclean shutdowns
+----------------------------------------------------------------
+
+Several Windows users reported that they often need to reindex the
+entire blockchain after an unclean shutdown of Bitcoin Core on Windows
+(or an unclean shutdown of Windows itself). Although unclean shutdowns
+remain unsafe, this release no longer relies on memory-mapped files for
+the UTXO database, which significantly reduced the frequency of unclean
+shutdowns leading to required reindexes during testing.
+
+For more information, see: <https://github.com/bitcoin/bitcoin/pull/6917>
+
+Other fixes for database corruption on Windows are expected in the
+next major release.
+
+0.10.9 Change log
 =================
 
-Detailed release notes follow. This overview includes changes that affect external
-behavior, not code moves, refactors or string updates.
+Detailed release notes follow. This overview includes changes that affect
+behavior, not code moves, refactors and string updates. For convenience in locating
+the code changes and accompanying discussion, both the pull request and
+git merge commit are mentioned.
 
-Wallet:
-- `824c011` fix boost::get usage with boost 1.58
-
-Miscellaneous:
-- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
-- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
-- `220ebb5` Hard fork introduces subsidy halving every 657000 blocks starting from block 1971001
-- #6186 `e4a7d51` Fix two problems in CSubnet parsing
-- #6153 `ebd7d8d` Parameter interaction: disable upnp if -proxy set
-- #6203 `ecc96f5` Remove P2SH coinbase flag, no longer interesting
-- #6226 `181771b` json: fail read_string if string contains trailing garbage
-- #6244 `09334e0` configure: Detect (and reject) LibreSSL
-- #6276 `0fd8464` Fix getbalance * 0
-- #6274 `be64204` Add option `-alerts` to opt out of alert system
-- #6319 `3f55638` doc: update mailing list address
-- #6438 `7e66e9c` openssl: avoid config file load/race
-- #6439 `255eced` Updated URL location of netinstall for Debian
-- #6412 `0739e6e` Test whether created sockets are select()able
-- #6694 `f696ea1` [QT] fix thin space word wrap line brake issue
-- #6704 `743cc9e` Backport bugfixes to 0.10
-- #6769 `1cea6b0` Test LowS in standardness, removes nuisance malleability vector.
-- #6789 `093d7b5` Update miniupnpc to 1.9.20151008
-- #6795 `f2778e0` net: Disable upnp by default
-- #6797 `91ef4d9` Do not store more than 200 timedata samples
-- #6793 `842c48d` Bump minrelaytxfee default
+- #6953 `8b3311f` alias -h for --help
+- #6953 `97546fc` Change URLs to https in debian/control
+- #6953 `38671bf` Update debian/changelog and slight tweak to debian/control
+- #6953 `256321e` Correct spelling mistakes in doc folder
+- #6953 `eae0350` Clarification of unit test build instructions
+- #6953 `90897ab` Update bluematt-key, the old one is long-since revoked
+- #6953 `a2f2fb6` build: disable -Wself-assign
+- #6953 `cf67d8b` Bugfix: Allow mining on top of old tip blocks for testnet (fixes testnet-in-a-box use case)
+- #6953 `b3964e3` Drop "with minimal dependencies" from description
+- #6953 `43c2789` Split bitcoin-tx into its own package
+- #6953 `dfe0d4d` Include bitcoin-tx binary on Debian/Ubuntu
+- #6953 `612efe8` [Qt] Raise debug window when requested
+- #6953 `3ad96bd` Fix locking in GetTransaction
+- #6953 `9c81005` Fix spelling of Qt
+- #6946 `94b67e5` Update LevelDB
+- #6867 `5297194` Set TCP_NODELAY on P2P sockets
+- #6836 `fb818b6` Bring historical release notes up to date
+- #6852 `0b3fd07` build: make sure OpenSSL heeds noexecstack
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Adam Weiss
 - Alex Morcos
-- Casey Rodarmor
-- Cory Fields
-- fanquake
-- Gregory Maxwell
-- Jonas Schnelli
-- J Ross Nicoll
-- Luke Dashjr
-- Pavel Vasin
-- Pieter Wuille
-- randy-waterhouse
 - ฿tcDrak
-- Tom Harding
-- Veres Lajos
+- Daniel Cousens
+- Diego Viola
+- Eric Lombrozo
+- Esteban Ordano
+- Gregory Maxwell
+- Luke Dashjr
+- MarcoFalke
+- Matt Corallo
+- Micha
+- Mitchell Cash
+- Peter Todd
+- Pieter Wuille
 - Wladimir J. van der Laan
+- Zak Wilcox
 
 And all those who contributed additional code review and/or security research:
 
