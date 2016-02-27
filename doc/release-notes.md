@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-Viacoin Core version 0.10.8 is now available from:
+Viacoin Core version 0.10.9 is now available from:
 
   https://github.com/viacoin/viacoin/releases
-=======
-Bitcoin Core version 0.10.4 is now available from:
-
-  <https://bitcoin.org/bin/bitcoin-core-0.10.4/>
->>>>>>> bitcoin/0.10
 
 This is a new minor version release, bringing bug fixes, the BIP65
 (CLTV) consensus change, and relay policy preparation for BIP113. It is
