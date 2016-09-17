@@ -1,14 +1,14 @@
 Viacoin Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+[![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
 
 https://viacoin.org
 
 What is Viacoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
+Viacoin is an experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Viacoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Viacoin Core is the name of open source
