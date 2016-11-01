@@ -62,6 +62,7 @@ src/qt/bitcoin-qt.includes
 .deps
 .dirstamp
 .libs
+.vscode
 .*.swp
 *.*~*
 *.bak
@@ -103,7 +104,6 @@ viacoin_qt_test
 
 # Resources cpp
 qrc_*.cpp
-
 # Mac specific
 .DS_Store
 build
