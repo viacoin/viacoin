@@ -199,8 +199,14 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+               /* Viacoin: Disable PoW Sanity check while loading block index
+                * from disk. Viacoin uses sha256 hash for the block index for performance reasons
+                * CheckProofOfWork() uses the scrypt hash which is discarded after a block is accepted.
+                * requires recomputing every PoW hash during every startup/
+                * opt instead to trust the data that is on your local disk. */
+
+               // if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
+               //     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
                 pcursor->Next();
             } else {
