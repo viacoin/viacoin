@@ -42,11 +42,11 @@ reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equiv
 config file):
 
 	HiddenServiceDir /var/lib/tor/bitcoin-service/
-	HiddenServicePort 8333 127.0.0.1:8333
-	HiddenServicePort 18333 127.0.0.1:18333
+	HiddenServicePort 5223 127.0.0.1:5223
+	HiddenServicePort 25223 127.0.0.1:25223
 
 The directory can be different of course, but (both) port numbers should be equal to
-your bitcoind's P2P listen port (8333 by default).
+your bitcoind's P2P listen port (5223 by default).
 
 	-externalip=X   You can tell bitcoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
