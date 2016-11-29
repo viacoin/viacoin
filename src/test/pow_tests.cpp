@@ -35,12 +35,12 @@ BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
     SelectParams(CBaseChainParams::MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
-    int64_t nLastRetargetTime = 1231006505; // Block #0
+    int64_t nLastRetargetTime = 1401043267; // Block #0
     CBlockIndex pindexLast;
     pindexLast.nHeight = 2015;
-    pindexLast.nTime = 1233061996;  // Block #2015
-    pindexLast.nBits = 0x1d00ffff;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params),0x1d00ffff);
+    pindexLast.nTime = 1405610669;  // Block #2015
+    pindexLast.nBits = 0x1e01ffff;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params),0x1e01ffff;
 }
 
 /* Test the constraint on the lower bound for actual time taken */
