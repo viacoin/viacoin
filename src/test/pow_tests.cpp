@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
     pindexLast.nHeight = 2015;
     pindexLast.nTime = 1405610669;  // Block #2015
     pindexLast.nBits = 0x1e01ffff;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params),0x1e01ffff;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1e01ffff);
 }
 
 /* Test the constraint on the lower bound for actual time taken */
