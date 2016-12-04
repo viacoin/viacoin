@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Zmazať</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Zopakujte nové heslo</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -463,7 +466,7 @@
         <source>Priority</source>
         <translation>Priorita</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -486,7 +489,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Adresa</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -580,6 +583,10 @@
         <translation>Keďže toto je prvé spustenie programu, môžete si vybrať, kam %1 bude ukladať vaše údaje.</translation>
     </message>
     <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 stiahne a uloží kópiu Bitcoin block chain. Minimálne %2GB dát bude uložených v tejto zložke, a bude sa zväčšovať postupom času. Peňaženka bude taktiež uložená v tejto zložke.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Použiť predvolený dátový adresár</translation>
     </message>
@@ -622,7 +629,7 @@
         <source>Select payment request file</source>
         <translation>Vyberte súbor s výzvou k platbe</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -934,6 +941,9 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -988,6 +998,9 @@
     </message>
 </context>
 <context>
+    <name>QRImageWidget</name>
+    </context>
+<context>
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
@@ -1012,6 +1025,10 @@
     <message>
         <source>Using BerkeleyDB version</source>
         <translation>Používa BerkeleyDB verziu</translation>
+    </message>
+    <message>
+        <source>Datadir</source>
+        <translation>Zložka  s dátami</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1135,6 +1152,10 @@
         <translation>Čas odozvy</translation>
     </message>
     <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>Trvanie aktuálneho pingu</translation>
+    </message>
+    <message>
         <source>Ping Wait</source>
         <translation>Čakanie na ping</translation>
     </message>
@@ -1209,6 +1230,10 @@
     <message>
         <source>&amp;Unban Node</source>
         <translation>&amp;odblokovať uzol</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>Vitajte v %1 RPC konzole</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1337,7 +1362,7 @@
         <source>Remove</source>
         <translation>Odstrániť</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1356,7 +1381,10 @@
         <source>&amp;Save Image...</source>
         <translation>Uložiť obrázok...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1507,7 +1535,7 @@
         <source>S&amp;end</source>
         <translation>&amp;Odoslať</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1586,7 +1614,10 @@
         <source>Memo:</source>
         <translation>Poznámka:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1676,7 +1707,7 @@
         <source>Reset all verify message fields</source>
         <translation>Obnoviť všetky polia v overiť správu</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1692,12 +1723,21 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Táto časť obrazovky zobrazuje detailný popis transakcie</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1705,6 +1745,15 @@
         <translation>Jednotka pre zobrazovanie súm. Kliknite pre zvolenie inej jednotky.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1764,6 +1813,10 @@
         <translation>Jadro Bitcoin</translation>
     </message>
     <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee je nastavená veľmi vysoko. Ide o poplatok za transakciu, ktorý môže platiť, keď odhady poplatku nie sú k dispozícii.</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
     </message>
@@ -1778,6 +1831,10 @@
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Distribuované pod softvérovou licenciou MIT, viď sprievodný súbor COPYING alebo &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
+        <translation>Chyba počas načítavania %s: Nemôžete povoliť HD na už existujúcej non-HD peaženke</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -1816,6 +1873,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Uzle na zoznam povolených, ktoré sa pripájajú z danej netmask alebo IP adresy. Môže byť zadané viac krát.</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s je poškodený, záchrana zlyhala</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -1940,6 +2001,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Loading banlist...</source>
         <translation>Načítavam banlist...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Poloha overovacieho cookie súboru (predvolená: zložka s dátami)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2218,6 +2283,10 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Zmazať všetky transakcie z peňaženky...</translation>
     </message>
     <message>
+        <source>ZeroMQ notification options:</source>
+        <translation>Možnosti pripojenia ZeroMQ:</translation>
+    </message>
+    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Heslo pre JSON-rPC spojenia</translation>
     </message>
@@ -2254,8 +2323,36 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Výstupné ladiace informácie (predvolené: %u, dodanie &lt;category&gt; je voliteľné)</translation>
     </message>
     <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Celková dĺžka verzie sieťového reťazca (%i) prekračuje maximálnu dĺžku (%i). Znížte počet a veľkosť komentárov.</translation>
+    </message>
+    <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>Sa snaží držať odchádzajúce prevádzku v rámci daného cieľa (v MB za 24h), 0 = žiadny limit (predvolený: %d)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Nepodporovaný argument -socks nájdený. Nastavenie SOCKS verzie už nie je viac moźné, iba SOCKS5 proxies sú podporované.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Nepodporovaný argument -whitelistalwaysrelay ignorovaný, použite -whitelistrelay a/alebo -whitelistforcerelay.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Použiť samostatný SOCKS5 proxy server na dosiahnutie počítačov cez skryté služby Tor (predvolené: %s)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Užívateľské hash meno a heslo pre JSON-RPC pripojenia. Pole &lt;userpw&gt; je vo formáte &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Kanonický python skript je zahrnutý v share/rpcuser. Toto nastavenie môže byť špecifikované viac krát</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>Varovanie: Neznáma verzia blokov sa doluje! Je možné, že neznáme pravidlá majú efekt</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Varovanie: Peňaženka poškodená, dáta boli zachránené! Originálna %s ako %s v %s; ak váš zostatok alebo transakcie sú nesprávne, mali by ste obnoviť zálohu.</translation>
     </message>
     <message>
         <source>(default: %s)</source>

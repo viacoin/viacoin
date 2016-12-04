@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;حذف</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>تکرار گذرواژهٔ جدید</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -241,6 +244,10 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>بازکردن یک بیت کوین: آدرس یا درخواست پرداخت</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -427,7 +434,7 @@
         <source>Priority</source>
         <translation>اولویت</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -442,7 +449,7 @@
         <source>&amp;Address</source>
         <translation>&amp;نشانی</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -488,6 +495,14 @@
         <source>command-line options</source>
         <translation>گزینه‌های خط فرمان</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>گزینه‌های رابط کاربری:</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>نمایش پنجرهٔ خوشامدگویی در ابتدای اجرای برنامه (پیش‌فرض: %u)</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -522,6 +537,10 @@
         <source>Open URI</source>
         <translation>بازکردن آدرس</translation>
     </message>
+    <message>
+        <source>Select payment request file</source>
+        <translation>انتخاب فایل درخواست پرداخت</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -532,6 +551,10 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;عمومی</translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation>مگابایت</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -673,6 +696,10 @@
         <translation>تراز علی‌الحساب شما</translation>
     </message>
     <message>
+        <source>Pending:</source>
+        <translation>در انتظار:</translation>
+    </message>
+    <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>مجموع تراکنش‌هایی که هنوز تأیید نشده‌اند؛ و هنوز روی تراز علی‌الحساب اعمال نشده‌اند</translation>
     </message>
@@ -706,6 +733,9 @@
     </message>
     </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Ping Time</source>
@@ -717,6 +747,10 @@
     <message>
         <source>Amount</source>
         <translation>مبلغ</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>یک آدرس بیت‌کوین وارد کنید (مثلاً %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -747,6 +781,9 @@
         <translation>%1 میلیونم ثانیه</translation>
     </message>
 </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -794,6 +831,10 @@
         <translation>تعداد فعلی بلوک‌ها</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>استخر حافظه</translation>
+    </message>
+    <message>
         <source>Memory usage</source>
         <translation>مصرف حافظه</translation>
     </message>
@@ -812,6 +853,14 @@
     <message>
         <source>Services</source>
         <translation>سرویس ها</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>مدت اتصال</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>ارسال شده آخرین بار</translation>
     </message>
     <message>
         <source>Last Receive</source>
@@ -909,6 +958,14 @@
         <translation>پیام:</translation>
     </message>
     <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>برای درخواست پرداخت از این فرم استفاده کنید.تمام قسمت ها &lt;b&gt;اختیاری&lt;b&gt; هستند.</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>تمام قسمت های فرم را خالی کن.</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>پاک‌کردن</translation>
     </message>
@@ -917,10 +974,14 @@
         <translation>نمایش</translation>
     </message>
     <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>حذف ورودی های انتخاب‌شده از لیست</translation>
+    </message>
+    <message>
         <source>Remove</source>
         <translation>حذف کردن</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -935,12 +996,23 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;ذخیره عکس...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
         <translation>ارسال سکه</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>ورودی‌ها...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation>به طور خودکار انتخاب شدند</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
@@ -979,8 +1051,20 @@
         <translation>هزینهٔ تراکنش:</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>انتخاب...</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>در هر کیلوبایت</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation>پنهان کردن</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>در مجموع حداقل</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -1011,6 +1095,10 @@
         <translation>&amp;دریافت‌کنندهٔ جدید</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>تمام قسمت های فرم را خالی کن.</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>پاکسازی &amp;همه</translation>
     </message>
@@ -1026,7 +1114,7 @@
         <source>S&amp;end</source>
         <translation>&amp;ارسال</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1081,7 +1169,10 @@
         <source>Memo:</source>
         <translation>یادداشت:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1167,7 +1258,7 @@
         <source>Reset all verify message fields</source>
         <translation>بازنشانی تمام فیلدهای پیام</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1183,14 +1274,32 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>این پانل شامل توصیف کاملی از جزئیات تراکنش است</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
     </context>
 <context>
     <name>bitcoin-core</name>
@@ -1369,6 +1478,10 @@
     <message>
         <source>Loading addresses...</source>
         <translation>بار گیری آدرس ها</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(پیش‌فرض %s)</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>

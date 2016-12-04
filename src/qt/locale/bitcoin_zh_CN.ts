@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>删除(&amp;D)</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>重复新密码</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -115,6 +118,10 @@
         <translation>&amp;关于 %1</translation>
     </message>
     <message>
+        <source>Show information about %1</source>
+        <translation>显示 %1 相关信息</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>关于Qt(&amp;Q)</translation>
     </message>
@@ -125,6 +132,10 @@
     <message>
         <source>&amp;Options...</source>
         <translation>选项(&amp;O)...</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for %1</source>
+        <translation>修改%1配置选项</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -255,6 +266,14 @@
         <translation><numerusform>%n 个到比特币网络的活动连接</numerusform></translation>
     </message>
     <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>正在为数据块建立索引...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>正在处理数据块...</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>沒有可用的区块来源...</translation>
     </message>
@@ -309,6 +328,10 @@
     <message>
         <source>Up to date</source>
         <translation>已是最新</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1 客戶</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -439,7 +462,7 @@
         <source>Priority</source>
         <translation>优先级</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -462,7 +485,7 @@
         <source>&amp;Address</source>
         <translation>地址(&amp;A)</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -495,6 +518,10 @@
     <message>
         <source>(%1-bit)</source>
         <translation>(%1 位)</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>關於 %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -532,12 +559,25 @@
         <source>Show splash screen on startup (default: %u)</source>
         <translation>显示启动画面（默认：%u）</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>重置图形界面所有的变更设置</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
         <source>Welcome</source>
         <translation>欢迎</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>
+歡迎來到 %1</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>由于这是第一次启动此程序，您可以选择%1的数据所存储的位置</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -582,7 +622,7 @@
         <source>Select payment request file</source>
         <translation>选择付款请求文件 </translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -874,6 +914,9 @@
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -927,6 +970,9 @@
         <translation>%1 毫秒</translation>
     </message>
 </context>
+<context>
+    <name>QRImageWidget</name>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1264,7 +1310,7 @@
         <source>Remove</source>
         <translation>移除</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1283,7 +1329,10 @@
         <source>&amp;Save Image...</source>
         <translation>保存图片(&amp;S)...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1434,7 +1483,7 @@
         <source>S&amp;end</source>
         <translation>发送(&amp;E)</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1513,7 +1562,10 @@
         <source>Memo:</source>
         <translation>便条：</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -1607,7 +1659,7 @@
         <source>Reset all verify message fields</source>
         <translation>清空所有验证消息栏</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1623,12 +1675,21 @@
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>当前面板显示了交易的详细信息</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1636,6 +1697,15 @@
         <translation>金额单位。单击选择别的单位。</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1738,10 +1808,6 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>当最佳区块变化时执行命令 (命令行中的 %s 会被替换成区块哈希值)</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even they violate local relay policy (default: %d)</source>
-        <translation>强制关联来自白名单同行的交易即使他们违反本地关联政策(默认: %d)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -1878,10 +1944,6 @@
     <message>
         <source>Location of the auth cookie (default: data dir)</source>
         <translation>认证Cookie的位置 (默认: data目录)</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>我们关联和挖掘的每sigop的最低交易字节(默认: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>

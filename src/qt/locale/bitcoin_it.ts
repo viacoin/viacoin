@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Fare clic con il tasto destro del mouse per modificare l'indirizzo o l'etichetta</translation>
+        <translation>Fare clic con il tasto destro del mouse per modificare l'indirizzo o l'etichettadefault</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -41,7 +41,10 @@
         <source>&amp;Delete</source>
         <translation>&amp;Elimina</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -60,7 +63,7 @@
         <source>Repeat new passphrase</source>
         <translation>Ripeti la nuova passphrase</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -463,7 +466,7 @@
         <source>Priority</source>
         <translation>Priorità</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -486,7 +489,7 @@
         <source>&amp;Address</source>
         <translation>&amp;Indirizzo</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -519,6 +522,10 @@
     <message>
         <source>(%1-bit)</source>
         <translation>(%1-bit)</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>Informazioni %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -576,6 +583,10 @@
         <translation>Dato che questa è la prima volta che il programma viene lanciato, puoi scegliere dove %1 salverà i suoi dati.</translation>
     </message>
     <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>%1 scaricherà e salverà una copia della Blockchain di Bitcoin. Saranno salvati almeno %2GB di dati in questo percorso e continueranno ad aumentare col tempo. Anche il portafoglio verrà salvato in questo percorso.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Usa la cartella dati predefinita</translation>
     </message>
@@ -618,7 +629,7 @@
         <source>Select payment request file</source>
         <translation>Seleziona il file di richiesta di pagamento</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -632,6 +643,10 @@
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
         <translation>Avvia automaticamente %1 una volta effettuato l'accesso al sistema.</translation>
+    </message>
+    <message>
+        <source>&amp;Start %1 on system login</source>
+        <translation>&amp;Start %1 all'accesso al sistema</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -771,6 +786,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>&amp;Finestra</translation>
     </message>
     <message>
+        <source>Hide tray icon</source>
+        <translation>Nascondi l'icona della barra applicazioni</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Mostra solo nella tray bar quando si riduce ad icona.</translation>
     </message>
@@ -789,6 +808,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Lingua Interfaccia Utente:</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>La lingua dell'interfaccia utente può essere impostata qui. L'impostazione avrà effetto dopo il riavvio %1.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -915,6 +938,9 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
 </context>
 <context>
+    <name>PaymentServer</name>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>User Agent</source>
@@ -969,6 +995,9 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
 </context>
 <context>
+    <name>QRImageWidget</name>
+    </context>
+<context>
     <name>RPCConsole</name>
     <message>
         <source>N/A</source>
@@ -993,6 +1022,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Using BerkeleyDB version</source>
         <translation>Versione BerkeleyDB in uso</translation>
+    </message>
+    <message>
+        <source>Datadir</source>
+        <translation>Datadir</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1077,6 +1110,18 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Apri il file log del debug di %1 dalla cartella dati attuale. Può richiedere alcuni secondi per file di log di grandi dimensioni.</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Riduci dimensioni font.</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Aumenta dimensioni font</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1181,6 +1226,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>&amp;Unban Node</source>
         <translation>&amp;Elimina Ban Nodo</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>Benvenuto nella console RPC di %1.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1309,7 +1358,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Remove</source>
         <translation>Rimuovi</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -1328,7 +1377,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>&amp;Save Image...</source>
         <translation>&amp;Salva Immagine...</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>RecentRequestsTableModel</name>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1479,7 +1531,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>S&amp;end</source>
         <translation>&amp;Invia</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1558,9 +1610,16 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>SendConfirmationDialog</name>
+    </context>
 <context>
     <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down...</source>
+        <translation>Arresto di %1 in corso...</translation>
+    </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Non spegnere il computer fino a quando questa finestra non si sarà chiusa.</translation>
@@ -1652,7 +1711,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Reset all verify message fields</source>
         <translation>Reimposta tutti i campi della verifica messaggio</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>SplashScreen</name>
     <message>
@@ -1668,12 +1727,21 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
 </context>
 <context>
+    <name>TransactionDesc</name>
+    </context>
+<context>
     <name>TransactionDescDialog</name>
     <message>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Questo pannello mostra una descrizione dettagliata della transazione</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>TransactionTableModel</name>
+    </context>
+<context>
+    <name>TransactionView</name>
+    </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
@@ -1681,6 +1749,15 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Unità con cui visualizzare gli importi. Clicca per selezionare un'altra unità.</translation>
     </message>
 </context>
+<context>
+    <name>WalletFrame</name>
+    </context>
+<context>
+    <name>WalletModel</name>
+    </context>
+<context>
+    <name>WalletView</name>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -1752,6 +1829,18 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Bitcoin Core</translation>
     </message>
     <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee è impostato su un valore molto elevato! Questa è la commissione che potresti pagare quando la stima della commissione non è disponibile.</translation>
+    </message>
+    <message>
+        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
+        <translation>Un importo (in %s/kB) che sarà utilizzato quando la stima delle commissioni non ha abbastanza dati (default: %s)</translation>
+    </message>
+    <message>
+        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
+        <translation>Accetta le transazioni trasmesse ricevute da peers in whitelist anche se non si stanno trasmettendo transazioni (default: %d)</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Associa all'indirizzo indicato e resta permanentemente in ascolto su di esso. Usa la notazione [host]:porta per l'IPv6</translation>
     </message>
@@ -1764,8 +1853,36 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Distribuito secondo la licenza software MIT, vedi il file COPYING incluso oppure &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
+        <source>Equivalent bytes per sigop in transactions for relay and mining (default: %u)</source>
+        <translation>Byte equivalenti per ottimizzazione segnale dedicati a ritrasmissione ed estrazione (default: %u)</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
+        <translation>Errore caricamento %s: Non puoi abilitare HD in un portafoglio non-HD già esistente</translation>
+    </message>
+    <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Errore lettura %s! Tutte le chiavi sono state lette correttamente, ma i dati delle transazioni o della rubrica potrebbero essere mancanti o non corretti.</translation>
+    </message>
+    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Esegue un comando quando lo stato di una transazione del portamonete cambia (%s in cmd è sostituito da TxID)</translation>
+    </message>
+    <message>
+        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
+        <translation>Regolazione della massima differenza media di tempo dei peer consentita. L'impostazione dell'orario locale può essere impostata in avanti o indietro di questa quantità. (default %u secondi)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Totale massimo di commissioni (in %s) da usare in una transazione singola o di gruppo del wallet; valori troppo bassi possono abortire grandi transazioni (default: %s)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Per favore controllate che la data del computer e l'ora siano corrette! Se il vostro orologio è sbagliato %s non funzionerà correttamente.</translation>
+    </message>
+    <message>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation>Per favore contribuite se ritenete %s utile. Visitate %s per maggiori informazioni riguardo il software.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -1778,6 +1895,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Questa versione è una compilazione pre-rilascio - usala a tuo rischio - non utilizzarla per la generazione o per applicazioni di commercio</translation>
+    </message>
+    <message>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Impossibile riportare il database ad un livello pre-fork. Dovrai riscaricare tutta la blockchain</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
@@ -1796,6 +1917,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Inserisce in whitelist i peer che si connettono da un dato indirizzo IP o netmask. Può essere specificato più volte.</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
+        <translation>È necessario ricostruire il database usando -reindex per cambiare -txindex</translation>
+    </message>
+    <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrotto, recupero fallito</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool deve essere almeno %d MB</translation>
     </message>
@@ -1804,8 +1933,24 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Valori possibili per &lt;category&gt;:</translation>
     </message>
     <message>
+        <source>Append comment to the user agent string</source>
+        <translation>Aggiungi commento alla stringa dell'applicazione utente</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
+        <translation>Prova a recuperare le chiavi private da un portafoglio corrotto all'avvio</translation>
+    </message>
+    <message>
         <source>Block creation options:</source>
         <translation>Opzioni creazione blocco:</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Impossobile risolvere l'indirizzo -%s: '%s'</translation>
+    </message>
+    <message>
+        <source>Change index out of range</source>
+        <translation>Cambio indice fuori paramentro</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
@@ -1814,6 +1959,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Connection options:</source>
         <translation>Opzioni di connessione:</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Copyright (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1848,12 +1997,32 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Abilita pubblicazione transazione raw in &lt;address&gt;</translation>
     </message>
     <message>
+        <source>Enable transaction replacement in the memory pool (default: %u)</source>
+        <translation>Abilita la sostituzione della transazione nel pool della memoria (default: %u)</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Errore durante l'inizializzazione del database dei blocchi</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
         <translation>Errore durante l'inizializzazione dell'ambiente del database del portamonete %s!</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation>Errore caricamento %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Errore caricamento %s: Portafoglio corrotto</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Errore caricamento %s: il Portafoglio richiede una versione aggiornata di %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't disable HD on a already existing HD wallet</source>
+        <translation>Errore caricamento %s: Non puoi disabilitare HD in un portafoglio HD già esistente</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -1880,12 +2049,32 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Blocco genesi non corretto o non trovato. È possibile che la cartella dati appartenga ad un'altra rete.</translation>
     </message>
     <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>Test di integrità iniziale fallito. %s si arresterà.</translation>
+    </message>
+    <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>Indirizzo -onion non valido: '%s'</translation>
     </message>
     <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Importo non valido per -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Importo non valido per -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Mantieni la memory pool delle transazioni al di sotto di &lt;n&gt; megabytes (default: %u)</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Caricamento bloccati...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Posizione del cookie di aiutorizzazione (default: data dir)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -1896,6 +2085,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Connessione ai soli nodi appartenenti alla rete &lt;net&gt; (ipv4, ipv6 o Tor)</translation>
     </message>
     <message>
+        <source>Print this help message and exit</source>
+        <translation>Mostra questo messaggio di aiuto ed esci</translation>
+    </message>
+    <message>
+        <source>Print version and exit</source>
+        <translation>Mostra la versione ed esci</translation>
+    </message>
+    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation>La modalità prune non può essere configurata con un valore negativo.</translation>
     </message>
@@ -1904,8 +2101,24 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>La modalità prune è incompatibile con l'opzione -txindex.</translation>
     </message>
     <message>
+        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
+        <translation>Ricostruisci lo stato della catena e l'indice dei blocchi partendo dai file blk*.dat presenti sul disco</translation>
+    </message>
+    <message>
+        <source>Rebuild chain state from the currently indexed blocks</source>
+        <translation>Ricrea l'indice della catena dei blocchi partendo da quelli già indicizzati</translation>
+    </message>
+    <message>
+        <source>Rewinding blocks...</source>
+        <translation>Verifica blocchi...</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Imposta la dimensione della cache del database in megabyte (%d a %d, predefinito: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>Imposta la dimensione massima del blocco BIP141 (default: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
@@ -1914,6 +2127,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Specifica il file del portamonete (all'interno della cartella dati)</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation>Il codice sorgente è disponibile in %s</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Impossibile collegarsi a %s su questo computer. Probabilmente %s è già in esecuzione.</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -1946,6 +2167,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Il portamonete %s si trova al di fuori dalla cartella dati %s</translation>
+    </message>
+    <message>
+        <source>Wallet debugging/testing options:</source>
+        <translation>Opzioni di Debug/Test del portafoglio:</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Il portamonete necessita di essere riscritto: riavviare %s per completare</translation>
     </message>
     <message>
         <source>Wallet options:</source>
@@ -2014,6 +2243,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Questo prodotto include software sviluppato dal progetto OpenSSL per l'uso del Toolkit OpenSSL &lt;https://www.openssl.org/&gt;, software crittografico scritto da Eric Young e software UPnP scritto da Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Use hierarchical deterministic key generation (HD) after BIP32. Only has effect during wallet creation/first start</source>
+        <translation>Usa la generazione gerarchica deterministica (HD) della chiave dopo BIP32. Valido solamente durante la creazione del portafoglio o al primo avvio</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -2152,6 +2385,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Attenzione</translation>
     </message>
     <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Attenzione: nuove regole non conosciute attivate (versionbit %i)</translation>
+    </message>
+    <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>
         <translation>Imposta se operare in modalità solo blocchi (default: %u)</translation>
     </message>
@@ -2232,12 +2469,24 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Argomento -socks non supportato. Non è più possibile impostare la versione SOCKS, solamente i proxy SOCKS5 sono supportati.</translation>
     </message>
     <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Argomento non supportato -whitelistalwaysrelay è stato ignorato, utilizzare -whitelistrelay e/o -whitelistforcerelay.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Usa un proxy SOCKS5 a parte per raggiungere i peer attraverso gli hidden services di Tor (predefinito: %s)</translation>
     </message>
     <message>
         <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
         <translation>Username e hash password per connessioni JSON-RPC. Il campo &lt;userpw&gt; utilizza il formato: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Uno script python standard è incluso in share/rpcuser. Questa opzione può essere specificata più volte</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>Attenzione: si stanno minando versioni sconocsiute di blocchi! E' possibile che siano attive regole sconosciute</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Attenzione: file del Portafoglio corrotto, dati recuperati! %s originale salvato come %s in %s; se il saldo o le transazioni non sono corrette effettua un ripristino da un backup.</translation>
     </message>
     <message>
         <source>(default: %s)</source>
