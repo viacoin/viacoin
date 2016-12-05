@@ -1,4 +1,4 @@
-Source: viacoin
+Source: bitcoin
 Section: utils
 Priority: optional
 Maintainer: Jonas Smedegaard <dr@jones.dk>
@@ -23,45 +23,45 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://viacoin.org/
-Vcs-Git: git://github.com/viacoin/viacoin.git
-Vcs-Browser: https://github.com/viacoin/viacoin
+Homepage: https://bitcoincore.org/
+Vcs-Git: git://github.com/bitcoin/bitcoin.git
+Vcs-Browser: https://github.com/bitcoin/bitcoin
 
-Package: viacoind
+Package: bitcoind
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
  Bitcoin is an experimental new digital currency that enables instant
- payments to anyone, anywhere in the world. Viacoin uses peer-to-peer
+ payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Viacoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides the daemon, viacoind, and the CLI tool
+ This package provides the daemon, bitcoind, and the CLI tool
  bitcoin-cli to interact with the daemon.
 
-Package: viacoin-qt
+Package: bitcoin-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Viacoin is an experimental new digital currency that enables instant
- payments to anyone, anywhere in the world. Viacoin uses peer-to-peer
+ Bitcoin is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Viacoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides Viacoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
 
 Package: bitcoin-tx
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer digital currency - standalone transaction tool
- Viacoin is an experimental new digital currency that enables instant
- payments to anyone, anywhere in the world. Viacoin uses peer-to-peer
+ Bitcoin is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Viacoin Core
+ and issuing money are carried out collectively by the network. Bitcoin Core
  is the name of the open source software which enables the use of this currency.
  .
- This package provides viacoin-tx, a command-line transaction creation
- tool which can be used without a viacoin daemon.  Some means of
+ This package provides bitcoin-tx, a command-line transaction creation
+ tool which can be used without a bitcoin daemon.  Some means of
  exchanging minimal transaction data with peers is still required.
