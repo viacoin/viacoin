@@ -75,6 +75,7 @@ bool fPruneMode = false;
 bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
+bool fWitnessEnabled = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
@@ -2271,6 +2272,7 @@ VersionBitsCache versionbitscache;
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
+    /*
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
@@ -2281,6 +2283,8 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     }
 
     return nVersion;
+    */
+    return 5;
 }
 
 /**
@@ -2407,11 +2411,15 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
+    // for block.nVersion=5 blocks, when 75% of the network has upgraded:
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (block.nVersion >= 5 && IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
+
+        // Start enforcing WITNESS rules
+        fWitnessEnabled = true;
     }
 
     // Start enforcing WITNESS rules using versionbits logic.
@@ -3467,7 +3475,8 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
-    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+    return fWitnessEnabled;
+    //return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
 // Compute at which vout of the block's coinbase transaction the witness
@@ -3565,10 +3574,15 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     }
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    for (int32_t version = 3; version < 5; ++version) // check for version 2, 3 and 4 upgrades
+    for (int32_t version = 3; version < 4; ++version) // check for version 2, 3 and 4 upgrades
         if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", version - 1),
                                  strprintf("rejected nVersion=0x%08x block", version - 1));
+
+    // Reject outdated version 4 blocks when 75% of the network has upgraded to nVersion=5
+    if (block.nVersion < 5 && IsSuperMajority(5, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+        return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
+                strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
     return true;
 }
