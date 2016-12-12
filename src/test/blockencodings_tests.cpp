@@ -29,7 +29,7 @@ static CBlock BuildBlockTestCase() {
     block.vtx[0] = tx;
     block.nVersion = 1;
     block.hashPrevBlock = GetRandHash();
-    block.nBits = 0x1e7fffff;
+    block.nBits = 0x1e01ffff;
 
     tx.vin[0].prevout.hash = GetRandHash();
     tx.vin[0].prevout.n = 0;
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     block.vtx[0] = coinbase;
     block.nVersion = 1;
     block.hashPrevBlock = GetRandHash();
-    block.nBits = 0x1e7fffff;
+    block.nBits = 0x1e01ffff;
 
     bool mutated;
     block.hashMerkleRoot = BlockMerkleRoot(block, &mutated);
