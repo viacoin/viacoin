@@ -115,6 +115,7 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x0317d32e01a2adf6f2ac6f58c7cdaab6c656edc6fdb45986c739290053275200"));
 
         vSeeds.push_back(CDNSSeedData("viacoin.net", "seed.viacoin.net"));
+        vSeeds.push_back(CDNSSeedData("zzy.su", "seed.zzy.su"));
         vSeeds.push_back(CDNSSeedData("bootstap.viacoin.net", "mainnet.viacoin.net"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,71);
