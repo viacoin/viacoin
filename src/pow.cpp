@@ -75,7 +75,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     bnNew.SetCompact(pindexLast->nBits);
     bnOld = bnNew;
     // intermediate uint256 can overflow by 1 bit
-    bool fShift = bnNew.bits() > 235;
+    bool fShift = bnNew.bits() > 232;
     if (fShift)
         bnNew >>= 1;
     bnNew *= nActualTimespan;
