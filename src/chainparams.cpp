@@ -76,7 +76,7 @@ public:
         consensus.nMajorityWindow = 20000;
         consensus.BIP34Height = 71000;
         consensus.BIP34Hash = uint256S("124d1e06f76e506bdcf9a739afec39f7587933d168a3f074d13f53a6f1040020");
-        consensus.powLimit = uint256S("000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("000080fffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //~uint256(0) >> 23;
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -157,7 +157,7 @@ public:
         consensus.nMajorityWindow = 1000;
         consensus.BIP34Height = 400000;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"); //change this hash
-        consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("0000f8ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 19
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -235,7 +235,7 @@ public:
         consensus.nMajorityWindow = 10000;
         consensus.BIP34Height = -1; // BIP34 has not necessarily activated on regtest
         consensus.BIP34Hash = uint256();
-        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("feffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); //~uint256(0) >> 1
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = true;
