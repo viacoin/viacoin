@@ -93,7 +93,7 @@ bool AppInit(int argc, char* argv[])
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
-        return false;
+        return true;
     }
 
     try
@@ -126,8 +126,13 @@ bool AppInit(int argc, char* argv[])
 
         if (fCommandLine)
         {
+<<<<<<< HEAD
             fprintf(stderr, "Error: There is no RPC client functionality in viacoind anymore. Use the viacoin-cli utility instead.\n");
             exit(1);
+=======
+            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
+            exit(EXIT_FAILURE);
+>>>>>>> 423659c95... Merge #9264: 0.13.2 backports
         }
 #ifndef WIN32
         fDaemon = GetBoolArg("-daemon", false);
@@ -187,5 +192,5 @@ int main(int argc, char* argv[])
     // Connect bitcoind signal handlers
     noui_connect();
 
-    return (AppInit(argc, argv) ? 0 : 1);
+    return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
