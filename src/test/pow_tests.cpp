@@ -21,12 +21,12 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     SelectParams(CBaseChainParams::MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
-    int64_t nLastRetargetTime = 1435312481; // Block #1209599
+    int64_t nLastRetargetTime = 1436524265; // Block #1259999
     CBlockIndex pindexLast;
-    pindexLast.nHeight = 1229759;
-    pindexLast.nTime = 1435797007;  // Block #1229759
-    pindexLast.nBits = 0x1b0d6191;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1b0d7dc7);
+    pindexLast.nHeight = 1310399;
+    pindexLast.nTime = 1437735639;  // Block #1310399
+    pindexLast.nBits = 0x1b017bd6;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1b0ef230);
 }
 
 /* Test the constraint on the upper bound for next work */
