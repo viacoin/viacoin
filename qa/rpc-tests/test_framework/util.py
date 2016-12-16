@@ -157,7 +157,7 @@ def initialize_datadir(dirname, n):
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     rpc_u, rpc_p = rpc_auth_pair(n)
-    with open(os.path.join(datadir, "bitcoin.conf"), 'w', encoding='utf8') as f:
+    with open(os.path.join(datadir, "viacoin.conf"), 'w', encoding='utf8') as f:
         f.write("regtest=1\n")
         f.write("rpcuser=" + rpc_u + "\n")
         f.write("rpcpassword=" + rpc_p + "\n")
@@ -242,21 +242,21 @@ def initialize_chain(test_dir, num_nodes):
                 sys.stderr.write("Error connecting to "+url+"\n")
                 sys.exit(1)
 
-        # Create a 200-block-long chain; each of the 4 first nodes
-        # gets 25 mature blocks and 25 immature.
+        # Create a 7200-block-long chain; each of the 4 first nodes
+        # gets 900 mature blocks and 900 immature.
         # Note: To preserve compatibility with older versions of
         # initialize_chain, only 4 nodes will generate coins.
         #
-        # blocks are created with timestamps 10 minutes apart
-        # starting from 2010 minutes in the past
+        # blocks are created with timestamps 25 seconds apart
+        # starting at 12 Jul 2014
         enable_mocktime()
-        block_time = get_mocktime() - (201 * 10 * 60)
+        block_time = 1405164800
         for i in range(2):
             for peer in range(4):
-                for j in range(25):
+                for j in range(900):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
-                    block_time += 10*60
+                    block_time += 25
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
 
