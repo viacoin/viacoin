@@ -186,12 +186,15 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         def check_announcement_of_new_block(node, peer, predicate):
             peer.clear_block_announcement()
-            node.generate(1)
-            got_message = wait_until(lambda: peer.block_announced, timeout=30)
+            block_hash = int(node.generate(1)[0], 16)
+            peer.wait_for_block_announcement(block_hash, timeout=30)
             assert(peer.block_announced)
             assert(got_message)
+
             with mininode_lock:
-                assert(predicate(peer))
+                assert predicate(peer), (
+                    "block_hash={!r}, cmpctblock={!r}, inv={!r}".format(
+                        block_hash, peer.last_cmpctblock, peer.last_inv))
 
         # We shouldn't get any block announcements via cmpctblock yet.
         check_announcement_of_new_block(node, test_node, lambda p: p.last_cmpctblock is None)
@@ -300,8 +303,8 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert(segwit_tx_generated) # check that our test is not broken
 
         # Wait until we've seen the block announcement for the resulting tip
-        tip = int(self.nodes[0].getbestblockhash(), 16)
-        assert(self.test_node.wait_for_block_announcement(tip))
+        tip = int(node.getbestblockhash(), 16)
+        assert(test_node.wait_for_block_announcement(tip))
 
         # Now mine a block, and look at the resulting compact block.
         test_node.clear_block_announcement()
@@ -648,6 +651,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         node.generate(1)
         wait_until(test_node.received_block_announcement, timeout=30)
         test_node.clear_block_announcement()
+        with mininode_lock:
+            test_node.last_block = None
         test_node.send_message(msg_getdata([CInv(4, int(new_blocks[0], 16))]))
         success = wait_until(lambda: test_node.last_block is not None, timeout=30)
         assert(success)
