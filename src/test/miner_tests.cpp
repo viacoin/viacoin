@@ -629,6 +629,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     std::vector<CTransaction*>txFirst;
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
+        if (i == 1 || i >= 3599) {
+             // Viacoin needs coinbase value reset after first block; diff change starts at block 3600
+            uint256 hashPrevBlock = pblocktemplate->block.hashPrevBlock;
+            delete pblocktemplate;
+            BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
+            pblocktemplate->block.hashPrevBlock = hashPrevBlock;
+        }
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
         pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
@@ -636,6 +643,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         txCoinbase.nVersion = 1;
         txCoinbase.vin[0].scriptSig = CScript();
         txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
+        txCoinbase.vin[0].scriptSig.push_back(chainActive.Height() >> 8);
         txCoinbase.vin[0].scriptSig.push_back(chainActive.Height());
         txCoinbase.vout[0].scriptPubKey = CScript();
         pblock->vtx[0] = CTransaction(txCoinbase);
@@ -910,7 +918,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
 
     BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5);
+    // Viacoin block 2 has zero coinbase value, cannot be spent.
+    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 2);
     delete pblocktemplate;
 
     chainActive.Tip()->nHeight--;
