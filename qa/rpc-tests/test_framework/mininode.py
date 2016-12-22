@@ -1595,8 +1595,8 @@ class NodeConn(asyncore.dispatcher):
         b"blocktxn": msg_blocktxn
     }
     MAGIC_BYTES = {
-        "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
-        "testnet3": b"\x0b\x11\x09\x07",  # testnet3
+        "mainnet": b"\x0f\x68\xc6\xcb",   # mainnet
+        "testnet3": b"\xfc\xc1\xb7\xdc",  # testnet3
         "regtest": b"\xfa\xbf\xb5\xda",   # regtest
     }
 
@@ -1625,7 +1625,7 @@ class NodeConn(asyncore.dispatcher):
         vt.addrFrom.ip = "0.0.0.0"
         vt.addrFrom.port = 0
         self.send_message(vt, True)
-        print('MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
+        print('MiniNode: Connecting to Viacoin Node IP # ' + dstaddr + ':' \
             + str(dstport))
 
         try:
