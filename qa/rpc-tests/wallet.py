@@ -242,14 +242,14 @@ class WalletTest (BitcoinTestFramework):
         txObj = self.nodes[0].gettransaction(txId)
         assert_equal(txObj['amount'], Decimal('-2'))
 
-        txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "0.0001")
+        txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "0.001")
         txObj = self.nodes[0].gettransaction(txId)
-        assert_equal(txObj['amount'], Decimal('-0.0001'))
+        assert_equal(txObj['amount'], Decimal('-0.001'))
 
         #check if JSON parser can handle scientific notation in strings
-        txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "1e-4")
+        txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "1e-3")
         txObj = self.nodes[0].gettransaction(txId)
-        assert_equal(txObj['amount'], Decimal('-0.0001'))
+        assert_equal(txObj['amount'], Decimal('-0.001'))
 
         try:
             txId  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), "1f-4")
