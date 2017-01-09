@@ -551,7 +551,7 @@ public:
         do
         {
             result.insert(result.end(), pc2, pc);
-            while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
+            while (static_cast<size_t>(end() - pc) >= b.size() && std::equal(b.begin(), b.end(), pc))
             {
                 pc = pc + b.size();
                 ++nFound;
