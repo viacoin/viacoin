@@ -497,13 +497,8 @@ void BitcoinApplication::shutdownResult(int retval)
 
 void BitcoinApplication::handleRunawayException(const QString &message)
 {
-<<<<<<< HEAD
-    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Viacoin can no longer continue safely and will quit.") + QString("\n\n") + message);
-    ::exit(1);
-=======
     QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. Bitcoin can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(EXIT_FAILURE);
->>>>>>> 423659c95... Merge #9264: 0.13.2 backports
 }
 
 WId BitcoinApplication::getMainWinId() const
