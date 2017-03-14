@@ -1,5 +1,7 @@
 Viacoin Core integration/staging tree
 =====================================
+Viacoin Core development is temporarily on Gitlab instead of Github. 
+When 0.13.2 is done, it will be available on Github again.
 
 [![Build Status](https://travis-ci.org/romanornr/viacoin.svg?branch=master)](https://travis-ci.org/romanornr/viacoin)
 
