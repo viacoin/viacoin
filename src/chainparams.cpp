@@ -127,6 +127,7 @@ public:
         // Note that of those with the service bits flag, most only support a subset of possible options
         // TODO - LED - Check which viacoin nodes support service bits and add the 'true' flag
         vSeeds.push_back(CDNSSeedData("viacoin.net", "seed.viacoin.net"));
+        vSeeds.push_back(CDNSSeedData("barbatos.fr", "viaseeder.barbatos.fr"));
         vSeeds.push_back(CDNSSeedData("zzy.su", "seed.zzy.su"));
         vSeeds.push_back(CDNSSeedData("bootstap.viacoin.net", "mainnet.viacoin.net"));
 
