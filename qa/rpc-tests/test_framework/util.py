@@ -51,7 +51,7 @@ MOCKTIME = 0
 
 def enable_mocktime():
     #For backwared compatibility of the python scripts
-    #with previous versions of the cache, set MOCKTIME
+    #with previous versions of the cache, set MOCKTIME 
     #to Jan 1, 2014 + (201 * 10 * 60)
     global MOCKTIME
     MOCKTIME = 1388534400 + (201 * 10 * 60)
@@ -183,8 +183,8 @@ def rpc_url(i, rpchost=None):
 
 def wait_for_bitcoind_start(process, url, i):
     '''
-    Wait for viacoind to start. This means that RPC is accessible and fully initialized.
-    Raise an exception if viacoind exits during initialization.
+    Wait for bitcoind to start. This means that RPC is accessible and fully initialized.
+    Raise an exception if bitcoind exits during initialization.
     '''
     while True:
         if process.poll() is not None:
@@ -221,7 +221,7 @@ def initialize_chain(test_dir, num_nodes):
             if os.path.isdir(os.path.join("cache","node"+str(i))):
                 shutil.rmtree(os.path.join("cache","node"+str(i)))
 
-        # Create cache directories, run viacoinds:
+        # Create cache directories, run bitcoinds:
         for i in range(MAX_NODES):
             datadir=initialize_datadir("cache", i)
             args = [ os.getenv("VIACOIND", "viacoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
@@ -242,21 +242,21 @@ def initialize_chain(test_dir, num_nodes):
                 sys.stderr.write("Error connecting to "+url+"\n")
                 sys.exit(1)
 
-        # Create a 7200-block-long chain; each of the 4 first nodes
-        # gets 900 mature blocks and 900 immature.
+        # Create a 200-block-long chain; each of the 4 first nodes
+        # gets 25 mature blocks and 25 immature.
         # Note: To preserve compatibility with older versions of
         # initialize_chain, only 4 nodes will generate coins.
         #
-        # blocks are created with timestamps 25 seconds apart
-        # starting at 12 Jul 2014
+        # blocks are created with timestamps 10 minutes apart
+        # starting from 2010 minutes in the past
         enable_mocktime()
-        block_time = 1405164800
+        block_time = get_mocktime() - (201 * 10 * 60)
         for i in range(2):
             for peer in range(4):
-                for j in range(900):
+                for j in range(25):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
-                    block_time += 25
+                    block_time += 10*60
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
 
@@ -329,7 +329,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
 
 def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
-    Start multiple viacoinds, return RPC connections to them
+    Start multiple bitcoinds, return RPC connections to them
     """
     if extra_args is None: extra_args = [ None for _ in range(num_nodes) ]
     if binary is None: binary = [ None for _ in range(num_nodes) ]
@@ -367,7 +367,7 @@ def set_node_times(nodes, t):
         node.setmocktime(t)
 
 def wait_bitcoinds():
-    # Wait for all viacoinds to cleanly exit
+    # Wait for all bitcoinds to cleanly exit
     for bitcoind in bitcoind_processes.values():
         bitcoind.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
     bitcoind_processes.clear()
@@ -508,10 +508,14 @@ def assert_greater_than(thing1, thing2):
         raise AssertionError("%s <= %s"%(str(thing1),str(thing2)))
 
 def assert_raises(exc, fun, *args, **kwds):
+    assert_raises_message(exc, None, fun, *args, **kwds)
+
+def assert_raises_message(exc, message, fun, *args, **kwds):
     try:
         fun(*args, **kwds)
-    except exc:
-        pass
+    except exc as e:
+        if message is not None and message not in e.error['message']:
+            raise AssertionError("Expected substring not found:"+e.error['message'])
     except Exception as e:
         raise AssertionError("Unexpected exception raised: "+type(e).__name__)
     else:

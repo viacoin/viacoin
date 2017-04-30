@@ -6,7 +6,7 @@
 IF="eth0"
 #limit of the network interface in question
 LINKCEIL="1gbit"
-#limit outbound Bitcoin protocol traffic to this rate
+#limit outbound Viacoin protocol traffic to this rate
 LIMIT="160kbit"
 #defines the address space for which you wish to disable rate limiting
 LOCALNET="192.168.0.0/16"
@@ -36,7 +36,7 @@ tc filter add dev ${IF} parent 1: protocol ip prio 2 handle 2 fw classid 1:11
 #	ret=$?
 #done
 
-#limit outgoing traffic to and from port 8333. but not when dealing with a host on the local network
+#limit outgoing traffic to and from port 9333. but not when dealing with a host on the local network
 #	(defined by $LOCALNET)
 #	--set-mark marks packages matching these criteria with the number "2"
 #	these packages are filtered by the tc filter with "handle 2"

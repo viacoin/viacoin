@@ -21,12 +21,12 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     SelectParams(CBaseChainParams::MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
-    int64_t nLastRetargetTime = 1436524265; // Block #1259999
+    int64_t nLastRetargetTime = 1358118740; // Block #278207
     CBlockIndex pindexLast;
-    pindexLast.nHeight = 1310399;
-    pindexLast.nTime = 1437735639;  // Block #1310399
-    pindexLast.nBits = 0x1b017bd6;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1b0ef230);
+    pindexLast.nHeight = 280223;
+    pindexLast.nTime = 1358378777;  // Block #280223
+    pindexLast.nBits = 0x1c0ac141;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1c02b050);
 }
 
 /* Test the constraint on the upper bound for next work */
@@ -35,11 +35,11 @@ BOOST_AUTO_TEST_CASE(get_next_work_pow_limit)
     SelectParams(CBaseChainParams::MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
-    int64_t nLastRetargetTime = 1401043267; // Block #0
+    int64_t nLastRetargetTime = 1317972665; // Block #0
     CBlockIndex pindexLast;
     pindexLast.nHeight = 2015;
-    pindexLast.nTime = 1405610669;  // Block #2015
-    pindexLast.nBits = 0x1e01ffff;
+    pindexLast.nTime = 1318480354;  // Block #2015
+    pindexLast.nBits = 0x1e0ffff0;
     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1e01ffff);
 }
 
@@ -49,12 +49,12 @@ BOOST_AUTO_TEST_CASE(get_next_work_lower_limit_actual)
     SelectParams(CBaseChainParams::MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
-    int64_t nLastRetargetTime = 1279008237; // Block #66528
+    int64_t nLastRetargetTime = 1401682934; // NOTE: Not an actual block time
     CBlockIndex pindexLast;
-    pindexLast.nHeight = 68543;
-    pindexLast.nTime = 1279297671;  // Block #68543
-    pindexLast.nBits = 0x1c05a3f4;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1c0168fd);
+    pindexLast.nHeight = 578591;
+    pindexLast.nTime = 1401757934;  // Block #578591
+    pindexLast.nBits = 0x1b075cf1;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1b01d73c);
 }
 
 /* Test the constraint on the upper bound for actual time taken */
@@ -63,12 +63,12 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     SelectParams(CBaseChainParams::MAIN);
     const Consensus::Params& params = Params().GetConsensus();
 
-    int64_t nLastRetargetTime = 1263163443; // NOTE: Not an actual block time
+    int64_t nLastRetargetTime = 1463690315; // NOTE: Not an actual block time
     CBlockIndex pindexLast;
-    pindexLast.nHeight = 46367;
-    pindexLast.nTime = 1269211443;  // Block #46367
-    pindexLast.nBits = 0x1c387f6f;
-    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1d00e1fd);
+    pindexLast.nHeight = 1001951;
+    pindexLast.nTime = 1464900315;  // Block #1001951
+    pindexLast.nBits = 0x1b015318;
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, params), 0x1b015334);
 }
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)

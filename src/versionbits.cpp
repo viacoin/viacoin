@@ -3,8 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "versionbits.h"
-
-#include "consensus/params.h"
+#include "chain.h"
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {
@@ -17,7 +16,7 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
     },
     {
         /*.name =*/ "segwit",
-        /*.gbt_force =*/ false,
+        /*.gbt_force =*/ true,
     }
 };
 

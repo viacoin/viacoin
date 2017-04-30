@@ -1,7 +1,11 @@
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 TESTS += test/test_viacoin
 bin_PROGRAMS += test/test_viacoin
 TEST_SRCDIR = test
-TEST_BINARY=test/test_bitcoin$(EXEEXT)
+TEST_BINARY=test/test_viacoin$(EXEEXT)
 
 
 EXTRA_DIST += \
@@ -44,7 +48,6 @@ BITCOIN_TESTS =\
   test/base58_tests.cpp \
   test/base64_tests.cpp \
   test/bip32_tests.cpp \
-  test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
@@ -73,8 +76,8 @@ BITCOIN_TESTS =\
   test/script_P2SH_tests.cpp \
   test/script_tests.cpp \
   test/scriptnum_tests.cpp \
-  test/serialize_tests.cpp \
   test/scrypt_tests.cpp \
+  test/serialize_tests.cpp \
   test/sighash_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \

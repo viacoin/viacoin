@@ -10,11 +10,11 @@
 #include <stdint.h>
 #include <vector>
 
-static const int64_t DEFAULT_MAX_TIME_ADJUSTMENT = 14 * 60;
+static const int64_t DEFAULT_MAX_TIME_ADJUSTMENT = 14 * 60; // adjust time to 14 minutes mitigating against time attack
 
 class CNetAddr;
 
-/** 
+/**
  * Median filter over a stream of values.
  * Returns the median of the last N numbers
  */

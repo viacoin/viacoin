@@ -198,7 +198,7 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           help="viacoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
                           default=os.getenv("VIACOIND", "viacoind"),
-                          help="bitcoind binary to use for reference nodes (if any)")
+                          help="viacoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
         self.nodes = start_nodes(

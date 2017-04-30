@@ -60,7 +60,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         resp = conn.getresponse()
         assert_equal(resp.status==401, False)
         conn.close()
-
+        
         #Use new authpair to confirm both work
         headers = {"Authorization": "Basic " + str_to_b64str(authpairnew)}
 

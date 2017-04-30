@@ -5,11 +5,12 @@
 #ifndef BITCOIN_CONSENSUS_VERSIONBITS
 #define BITCOIN_CONSENSUS_VERSIONBITS
 
-#include "chain.h"
+//#include "chain.h"
+#include "consensus/params.h"
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
-static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4;
+static const int32_t VERSIONBITS_LAST_OLD_BLOCK_VERSION = 5;
 /** What bits to set in version for versionbits blocks */
 static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 /** What bitmask determines whether versionbits is in use */
@@ -24,6 +25,8 @@ enum ThresholdState {
     THRESHOLD_ACTIVE,
     THRESHOLD_FAILED,
 };
+
+class CBlockIndex;
 
 // A map that gives the state for blocks whose height is a multiple of Period().
 // The map is indexed by the block's parent, however, so all keys in the map

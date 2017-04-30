@@ -106,6 +106,40 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("versionHex", strprintf("%08x", block.nVersion)));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+
+    if (block.IsAuxPow()) {
+       // this block includes auxpow
+       UniValue auxpow(UniValue::VOBJ);
+       auxpow.push_back(Pair("size", (int)::GetSerializeSize(*block.auxpow, SER_NETWORK, PROTOCOL_VERSION)));
+
+       UniValue coinbasetx(UniValue::VOBJ);
+       TxToJSON(*block.auxpow, uint256(), coinbasetx);
+       auxpow.push_back(Pair("coinbasetx", coinbasetx));
+
+       UniValue coinbaseMerkle(UniValue::VARR);
+       BOOST_FOREACH(const uint256 &hash, block.auxpow->vMerkleBranch)
+           coinbaseMerkle.push_back(hash.GetHex());
+       auxpow.push_back(Pair("coinbaseMerkleBranch", coinbaseMerkle));
+       auxpow.push_back(Pair("coinbaseIndex", block.auxpow->nIndex));
+
+       UniValue chainMerkle(UniValue::VARR);
+       BOOST_FOREACH(const uint256 &hash, block.auxpow->vChainMerkleBranch)
+           chainMerkle.push_back(hash.GetHex());
+       auxpow.push_back(Pair("chainMerkleBranch", chainMerkle));
+       auxpow.push_back(Pair("chainIndex", (boost::uint64_t)block.auxpow->nChainIndex));
+
+       UniValue parent_block(UniValue::VOBJ);
+       parent_block.push_back(Pair("hash", block.auxpow->parentBlockHeader.GetHash().GetHex()));
+       parent_block.push_back(Pair("version", (boost::uint64_t)block.auxpow->parentBlockHeader.nVersion));
+       parent_block.push_back(Pair("previousblockhash", block.auxpow->parentBlockHeader.hashPrevBlock.GetHex()));
+       parent_block.push_back(Pair("merkleroot", block.auxpow->parentBlockHeader.hashMerkleRoot.GetHex()));
+       parent_block.push_back(Pair("time", (boost::int64_t)block.auxpow->parentBlockHeader.nTime));
+       parent_block.push_back(Pair("bits", strprintf("%08x", block.auxpow->parentBlockHeader.nBits)));
+       parent_block.push_back(Pair("nonce", (boost::uint64_t)block.auxpow->parentBlockHeader.nNonce));
+       auxpow.push_back(Pair("parent_block", parent_block));
+       result.push_back(Pair("auxpow", auxpow));
+   }
+
     UniValue txs(UniValue::VARR);
     BOOST_FOREACH(const CTransaction&tx, block.vtx)
     {
@@ -125,6 +159,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("bits", strprintf("%08x", block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
+    result.push_back(Pair("PoW", block.GetPoWHash().GetHex()));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
@@ -484,6 +519,7 @@ UniValue getblockhash(const UniValue& params, bool fHelp)
     return pblockindex->GetBlockHash().GetHex();
 }
 
+//TODO LED This is new code in 0.13. Make this work for auxpow too
 UniValue getblockheader(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
@@ -535,7 +571,7 @@ UniValue getblockheader(const UniValue& params, bool fHelp)
     if (!fVerbose)
     {
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
-        ssBlock << pblockindex->GetBlockHeader();
+        ssBlock << pblockindex->GetBlockHeader(mapDirtyAuxPow);
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
         return strHex;
     }
@@ -731,7 +767,7 @@ UniValue gettxout(const UniValue& params, bool fHelp)
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
             "     \"addresses\" : [          (array of string) array of viacoin addresses\n"
-            "        \"viacoinaddress\"     (string) viacoin address\n"
+            "        \"viacoinaddress\"      (string) viacoin address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -1009,7 +1045,7 @@ UniValue getchaintips(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 
     /*
-     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them. 
+     * Idea:  the set of chain tips is chainActive.tip, plus orphan blocks which do not have another orphan building off of them.
      * Algorithm:
      *  - Make one pass through mapBlockIndex, picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
      *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.

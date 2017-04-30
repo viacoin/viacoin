@@ -1108,7 +1108,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 3600)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
@@ -1591,6 +1591,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     return res;
 }
 
+
 /** Return transaction in txOut, and if it was found inside a block, its hash is placed in hashBlock */
 bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
 {
@@ -1703,7 +1704,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (!CheckBlockProofOfWork(&block,  consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -1721,14 +1722,54 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    // In -regtest mode use Bitcoin schedule
+    if (Params().MineBlocksOnDemand() && consensusParams.fPowAllowMinDifficultyBlocks) {
+        int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings >= 64)
+                return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+        CAmount nSubsidy = 50 * COIN;
+        // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        nSubsidy >>= halvings;
+        return nSubsidy;
+    }
+
+    // Viacoin schedule
+    CAmount nSubsidy = 0;
+
+    // different zero block period for testnet and mainnet
+    // mainnet not fixed until final release
+    int zeroRewardHeight = consensusParams.fPowAllowMinDifficultyBlocks ? 2001 : 10001;
+
+    int rampHeight = 43200 + zeroRewardHeight; // 4 periods of 10800
+
+    if (nHeight == 0) {
+        // no reward for genesis block
+        nSubsidy = 0;
+    } else if (nHeight == 1) {
+        // first distribution
+        nSubsidy = 10000000 * COIN;
+    } else if (nHeight <= zeroRewardHeight) {
+        // no block reward to allow difficulty to scale up and prevent instamining
+        nSubsidy = 0;
+    } else if (nHeight <= (zeroRewardHeight + 10800)) {
+        // first 10800 block after zero reward period is 10 coins per block
+        nSubsidy = 10 * COIN;
+    } else if (nHeight <= rampHeight) {
+        // every 10800 blocks reduce nSubsidy from 8 to 6
+        nSubsidy = (8 - int((nHeight-zeroRewardHeight-1) / 10800)) * COIN;
+    } else if (nHeight <= 1971000) {
+        nSubsidy = 5 * COIN;
+    } else { // (nHeight > 1971000)
+        int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings <= 64) {
+            nSubsidy = 20 * COIN;
+            nSubsidy >>= halvings;
+        }
+    }
+
     return nSubsidy;
 }
 
@@ -2290,6 +2331,7 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     return nVersion;
 }
 
+
 /**
  * Threshold condition checker that triggers when unknown versionbits are seen on the network.
  */
@@ -2373,9 +2415,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
     bool fEnforceBIP30 = true;
-                         //(!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
-                         // !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
-                         //  (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
+                        //(!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
+                        //  !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
+                        //   (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
 
     // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
     // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
@@ -2396,22 +2438,29 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         }
     }
 
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
+    // BIP16 didn't become active until Oct 1 2012
+    int64_t nBIP16SwitchTime = 1349049600;
     bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
 
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
-    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
-    // when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
-        flags |= SCRIPT_VERIFY_DERSIG;
+    // NOP2 is redefined as CHECKLOCKTIMEVERIFY in blocks with nVersion >= 3
+    //
+    // Introduce CHECKLOCKTIMEVERIFY at the same time as AuxPow.
+    if (block.nVersion < VERSIONBITS_TOP_BITS
+        && (block.nVersion & 0xff) >= 3
+        && pindex->nHeight >= chainparams.GetConsensus().nCLTVStartBlock)
+    {
+        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
-    // blocks, when 75% of the network has upgraded:
-    if (block.nVersion >= 4 && IsSuperMajority(4, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
-        flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
+    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=4 blocks, when 75% of the network has upgraded:
+    if (block.nVersion < VERSIONBITS_TOP_BITS
+        && (block.nVersion & 0xff) >= 4
+        && IsSuperMajority(4, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())
+        && pindex->nHeight >= chainparams.GetConsensus().nBIP66MinStartBlock)
+    {
+        flags |= SCRIPT_VERIFY_DERSIG;
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
@@ -2509,7 +2558,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             blockundo.vtxundo.push_back(CTxUndo());
         }
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
-
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
@@ -2551,8 +2599,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
 
     if (fTxIndex)
-        if (!pblocktree->WriteTxIndex(vPos))
-            return AbortNode(state, "Failed to write transaction index");
+        if(!pblocktree->WriteTxIndex(vPos))
+            return AbortNode(state, _("Failed to write transaction index"));
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -2656,8 +2704,11 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
                 vBlocks.push_back(*it);
                 setDirtyBlockIndex.erase(it++);
             }
-            if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
+            if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks, mapDirtyAuxPow)) {
                 return AbortNode(state, "Files to write to block index database");
+            }
+            for (std::vector<const CBlockIndex*>::const_iterator it = vBlocks.begin(); it != vBlocks.end(); it++) {
+                mapDirtyAuxPow.erase((*it)->GetBlockHash());
             }
         }
         // Finally remove any pruned files
@@ -2736,7 +2787,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
-            if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
+            if ((pindex->nVersion & 0xff) > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
@@ -3238,10 +3289,11 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     }
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
+    if (pindexBestHeader == NULL || CBlockIndexWorkComparator()(pindexBestHeader, pindexNew))
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);
+    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
 
     return pindexNew;
 }
@@ -3260,6 +3312,7 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
+    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
 
     if (pindexNew->pprev == NULL || pindexNew->pprev->nChainTx) {
         // If pindexNew is the genesis block or all parents are BLOCK_VALID_TRANSACTIONS.
@@ -3386,7 +3439,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckBlockProofOfWork(&block, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
@@ -3529,6 +3582,13 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex * const pindexPrev, int64_t nAdjustedTime)
 {
+    int nHeight = pindexPrev->nHeight+1;
+
+    // Check if auxpow is allowed at this height if block has it
+    if (block.auxpow && block.auxpow.get() != NULL && nHeight < GetAuxPowStartBlock(consensusParams))
+        return state.DoS(100, error("%s : premature auxpow block", __func__),
+                         REJECT_INVALID, "time-too-new");
+
     // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
@@ -3541,37 +3601,47 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
-    // Viacoin-> Reject block.nVersion1 blocks
-    const int nHeight = pindexPrev->nHeight+1;
-    bool enforceV2 = false;
-    if (block.nVersion <2) {
-        if (consensusParams.BIP34Height != -1) {
-            //Mainnet, Testnet
-            if (nHeight >= consensusParams.BIP34Height)
-            enforceV2 = true;
+    int64_t timeframe;
+    if ((consensusParams.fPowAllowMinDifficultyBlocks && nHeight < 300000) || nHeight < 451000) {
+        timeframe = 15 * 60;
+    } else {
+        timeframe = 5 * 60;
+    }
+
+    // Prevent blocks from too far in the future (timewarp)
+    // Check disabled in -regtest mode because in tests GetMedianTimePast() drifts too far in the future
+    if (!Params().MineBlocksOnDemand() && (consensusParams.fPowAllowMinDifficultyBlocks || nHeight >= 100)) {
+        if (block.GetBlockTime() > GetAdjustedTime() + timeframe) {
+            return error("AcceptBlock() : block's timestamp too far in the future");
         }
-        else {
-            // Regtest and Unittest: use Viacoin's supermajority rule
-            if (IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-            enforceV2 = true;
+
+        // Check timestamp is not too far in the past (timewarp)
+        if (block.GetBlockTime() <= pindexPrev->GetBlockTime() - timeframe) {
+            return error("AcceptBlock() : block's timestamp is too early compare to last block");
         }
     }
 
-    if (enforceV2) {
+    // Hard fork to introduce OP_CHECKLOCKTIMEVERIFY at the same time as AuxPow
+    // Reject block.nVersion=2 once we reach the correct height
+    if (block.nVersion < VERSIONBITS_TOP_BITS
+        && (block.nVersion & 0xff) < 3
+        && nHeight >= consensusParams.nCLTVStartBlock) {
         return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
-                strprintf("rejected nVersion=0x%08x block", block.nVersion));
+                             strprintf("rejected nVersion=0x%08x block", block.nVersion));
     }
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    for (int32_t version = 3; version < 5; ++version) // check for version 2, 3 and 4 upgrades
-        if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", version - 1),
-                                 strprintf("rejected nVersion=0x%08x block", version - 1));
+    for (int32_t version = 4; version <= 6; ++version) // Viacoin check for version 3, 4 and 5 upgrades
+        if (block.nVersion < VERSIONBITS_TOP_BITS
+            && (block.nVersion & 0xff) < version
+            && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
+                                 strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
-    // Reject outdated version 4 blocks when 75% of the network (BIP 9) has upgraded:
-    // if (block.nVersion < VERSIONBITS_TOP_BITS && IsWitnessEnabled(pindexPrev, consensusParams))
-    //     return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),"))
-    //                           strprintf("rejected nVersion=0x%08x block", block.nVersion));
+    // Reject outdated version blocks when 75% of the network (BIP9 rules) has upgraded:
+    if (block.nVersion < VERSIONBITS_TOP_BITS && IsWitnessEnabled(pindexPrev, consensusParams))
+        return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
+                             strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
     return true;
 }
@@ -3600,7 +3670,23 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+    bool checkHeightMismatch = false;
+    if (block.nVersion >= 2)
+    {
+        if (consensusParams.BIP34Height != -1)
+        {
+            if (nHeight >= consensusParams.BIP34Height)
+                checkHeightMismatch = true;
+        }
+        else
+        {
+            // Regtest and Unittest: use Bitcoin's supermajority rule
+            if (IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+                checkHeightMismatch = true;
+        }
+    }
+
+    if (checkHeightMismatch)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -3778,7 +3864,8 @@ static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned 
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
-        if (pstart->nVersion >= minVersion)
+        // Viacoin mask off the Chain_ID and AuxPow version
+        if ((pstart->nVersion & 0xFF) >= (minVersion & 0xFF))
             ++nFound;
         pstart = pstart->pprev;
     }
@@ -4140,7 +4227,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
 
     // Verify blocks in the best chain
     if (nCheckDepth <= 0)
-        nCheckDepth = 1000000000; // suffices until the year 19000
+        nCheckDepth = 1000000000;
     if (nCheckDepth > chainActive.Height())
         nCheckDepth = chainActive.Height();
     nCheckLevel = std::max(0, std::min(4, nCheckLevel));
@@ -4175,7 +4262,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
         if (nCheckLevel >= 1 && !CheckBlock(block, state, chainparams.GetConsensus()))
-            return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__, 
+            return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__,
                          pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
@@ -4351,7 +4438,7 @@ bool LoadBlockIndex()
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams) 
+bool InitBlockIndex(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
@@ -4365,6 +4452,9 @@ bool InitBlockIndex(const CChainParams& chainparams)
     // Use the provided setting for -txindex in the new database
     fTxIndex = GetBoolArg("-txindex", DEFAULT_TXINDEX);
     pblocktree->WriteFlag("txindex", fTxIndex);
+
+    pblocktree->WriteFlag("auxpow", true);
+
     LogPrintf("Initializing databases...\n");
 
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
@@ -5027,6 +5117,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             vRecv >> LIMITED_STRING(pfrom->strSubVer, MAX_SUBVERSION_LENGTH);
             pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
         }
+
+        if (pfrom->cleanSubVer.find("/Satoshi:0.10.0/") != std::string::npos)
+        {
+            LogPrintf("Client %s runs obsolete version 0.10.0, disconnecting\n", pfrom->addr.ToString());
+            pfrom->fDisconnect = true;
+            return true;
+        }
+
         if (!vRecv.empty()) {
             vRecv >> pfrom->nStartingHeight;
         }
@@ -5411,7 +5509,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         BlockTransactionsRequest req;
         vRecv >> req;
-        
+
         LOCK(cs_main);
 
         BlockMap::iterator it = mapBlockIndex.find(req.blockhash);
@@ -5489,7 +5587,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LogPrint("net", "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->id);
         for (; pindex; pindex = chainActive.Next(pindex))
         {
-            vHeaders.push_back(pindex->GetBlockHeader());
+            vHeaders.push_back(pindex->GetBlockHeader(mapDirtyAuxPow));
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
                 break;
         }
@@ -5769,9 +5867,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 }
 
                 if (!fAlreadyInFlight && mapBlocksInFlight.size() == 1 && pindex->pprev->IsValid(BLOCK_VALID_CHAIN)) {
-                     // We seem to be rather well-synced, so it appears pfrom was the first to provide us
-                     // with this block! Let's get them to announce using compact blocks in the future.
-                     MaybeSetPeerAsAnnouncingHeaderAndIDs(nodestate, pfrom);
+                    // We seem to be rather well-synced, so it appears pfrom was the first to provide us
+                    // with this block! Let's get them to announce using compact blocks in the future.
+                    MaybeSetPeerAsAnnouncingHeaderAndIDs(nodestate, pfrom);
                 }
 
                 BlockTransactionsRequest req;
@@ -6650,14 +6748,14 @@ bool SendMessages(CNode* pto)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
-                        vHeaders.push_back(pindex->GetBlockHeader());
+                        vHeaders.push_back(pindex->GetBlockHeader(mapDirtyAuxPow));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == NULL || PeerHasHeader(&state, pindex->pprev)) {
                         // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.push_back(pindex->GetBlockHeader());
+                        vHeaders.push_back(pindex->GetBlockHeader(mapDirtyAuxPow));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.

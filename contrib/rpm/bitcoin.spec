@@ -356,7 +356,7 @@ fi
 if [ $1 -eq 0 ]; then
 	if [ `%{_sbindir}/sestatus |grep -c "disabled"` -eq 0 ]; then
 	%{_sbindir}/semanage port -d -p tcp 5222
-	%{_sbindir}/semanage port -d -p tcp 5223
+	%{_sbindir}/semanage port -d -p tcp 5223 
 	%{_sbindir}/semanage port -d -p tcp 25222
 	%{_sbindir}/semanage port -d -p tcp 25223
 	for selinuxvariant in %{selinux_variants}; do

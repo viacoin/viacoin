@@ -50,7 +50,7 @@ except ImportError:
 
 USER_AGENT = "AuthServiceProxy/0.1"
 
-HTTP_TIMEOUT = 60
+HTTP_TIMEOUT = 30
 
 log = logging.getLogger("BitcoinRPC")
 

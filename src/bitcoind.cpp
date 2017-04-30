@@ -126,13 +126,8 @@ bool AppInit(int argc, char* argv[])
 
         if (fCommandLine)
         {
-<<<<<<< HEAD
             fprintf(stderr, "Error: There is no RPC client functionality in viacoind anymore. Use the viacoin-cli utility instead.\n");
-            exit(1);
-=======
-            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
             exit(EXIT_FAILURE);
->>>>>>> 423659c95... Merge #9264: 0.13.2 backports
         }
 #ifndef WIN32
         fDaemon = GetBoolArg("-daemon", false);

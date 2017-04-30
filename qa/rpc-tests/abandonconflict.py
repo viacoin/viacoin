@@ -32,7 +32,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         sync_blocks(self.nodes)
         newbalance = self.nodes[0].getbalance()
-        assert(balance - newbalance < Decimal("0.01")) #no more than fees lost
+        assert(balance - newbalance < Decimal("0.1")) #no more than fees lost
         balance = newbalance
 
         url = urllib.parse.urlparse(self.nodes[1].url)
@@ -49,7 +49,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         inputs.append({"txid":txB, "vout":nB})
         outputs = {}
 
-        outputs[self.nodes[0].getnewaddress()] = Decimal("14.98")
+        outputs[self.nodes[0].getnewaddress()] = Decimal("14.998")
         outputs[self.nodes[1].getnewaddress()] = Decimal("5")
         signed = self.nodes[0].signrawtransaction(self.nodes[0].createrawtransaction(inputs, outputs))
         txAB1 = self.nodes[0].sendrawtransaction(signed["hex"])
@@ -121,7 +121,7 @@ class AbandonConflictTest(BitcoinTestFramework):
 
         # Remove using high relay fee again
         stop_node(self.nodes[0],0)
-        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.001"])
+        self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-logtimemicros","-minrelaytxfee=0.01"])
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         newbalance = self.nodes[0].getbalance()
         assert_equal(newbalance, balance - Decimal("24.96"))

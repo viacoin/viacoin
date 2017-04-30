@@ -17,7 +17,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Viacoin"
-            VALUE "FileDescription",    "viacoind (Bitcoin node with a JSON-RPC server)"
+            VALUE "FileDescription",    "viacoind (Viacoin node with a JSON-RPC server)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "viacoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR

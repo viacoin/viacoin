@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
+#include "txdb.h"
 
 using namespace std;
 
@@ -21,6 +22,47 @@ void CChain::SetTip(CBlockIndex *pindex) {
         pindex = pindex->pprev;
     }
 }
+
+std::string CDiskBlockIndex::ToString() const
+{
+    std::string str = "CDiskBlockIndex(";
+    str += CBlockIndex::ToString();
+    str += strprintf("\n                hashBlock=%s, hashPrev=%s, hashParentBlock=%s)",
+        GetBlockHash().ToString(),
+        hashPrev.ToString(),
+        (auxpow.get() != NULL) ? auxpow->GetParentBlockHash().ToString() : "-");
+    return str;
+}
+
+CBlockHeader CBlockIndex::GetBlockHeader(const std::map<uint256, std::shared_ptr<CAuxPow> >& mapDirtyAuxPow) const
+{
+    extern CBlockTreeDB *pblocktree;
+    CBlockHeader block;
+
+    if (nVersion & AuxPow::BLOCK_VERSION_AUXPOW) {
+            std::map<uint256, std::shared_ptr<CAuxPow> >::const_iterator it = mapDirtyAuxPow.find(*phashBlock);
+            if (it != mapDirtyAuxPow.end()) {
+                block.auxpow = it->second;
+            } else {
+                CDiskBlockIndex diskblockindex;
+                // auxpow is not in memory, load CDiskBlockHeader
+                // from database to get it
+
+                pblocktree->ReadDiskBlockIndex(*phashBlock, diskblockindex);
+                block.auxpow = diskblockindex.auxpow;
+            }
+    }
+
+    block.nVersion       = nVersion;
+    if (pprev)
+        block.hashPrevBlock = pprev->GetBlockHash();
+    block.hashMerkleRoot = hashMerkleRoot;
+    block.nTime          = nTime;
+    block.nBits          = nBits;
+    block.nNonce         = nNonce;
+    return block;
+}
+
 
 CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
     int nStep = 1;

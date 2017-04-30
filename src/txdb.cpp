@@ -8,6 +8,7 @@
 #include "chainparams.h"
 #include "hash.h"
 #include "pow.h"
+#include "auxpow/auxpow.h"
 #include "uint256.h"
 
 #include <stdint.h>
@@ -20,6 +21,7 @@ static const char DB_COINS = 'c';
 static const char DB_BLOCK_FILES = 'f';
 static const char DB_TXINDEX = 't';
 static const char DB_BLOCK_INDEX = 'b';
+static const char DB_BLOCK_INDEX_AUXPOW = 'a';
 
 static const char DB_BEST_BLOCK = 'B';
 static const char DB_FLAG = 'F';
@@ -27,7 +29,7 @@ static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
 
-CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
+CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true)
 {
 }
 
@@ -136,6 +138,7 @@ void CCoinsViewDBCursor::Next()
         keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
 }
 
+/*
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
     CDBBatch batch(*this);
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
@@ -147,6 +150,31 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     }
     return WriteBatch(batch, true);
 }
+*/
+
+bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo, const std::map<uint256, std::shared_ptr<CAuxPow> >& auxpows) {
+    CDBBatch batch(*this);
+    for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
+        batch.Write(make_pair(DB_BLOCK_FILES, it->first), *it->second);
+    }
+    batch.Write(DB_LAST_BLOCK, nLastFile);
+    for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+        const std::map<uint256, std::shared_ptr<CAuxPow> >::const_iterator auxIt = auxpows.find((*it)->GetBlockHash());
+        if (auxIt != auxpows.end()) {
+//                LogPrint("txdb", "CBlockTreeDB::WriteBatchSync(): writing an auxpow block (%s)) \n", (*it)->GetBlockHash().ToString()); // LEDTMP
+            batch.Write(make_pair(make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), DB_BLOCK_INDEX_AUXPOW), CDiskBlockIndex(*it, auxIt->second));
+        }
+//                LogPrint("txdb", "CBlockTreeDB::WriteBatchSync(): writing a normal block (%s)) \n", (*it)->GetBlockHash().ToString()); // LEDTMP
+        batch.Write(make_pair(make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), DB_BLOCK_INDEX), **it);
+    }
+    return WriteBatch(batch, true);
+}
+
+bool CBlockTreeDB::ReadDiskBlockIndex(const uint256 &blkid, CDiskBlockIndex &diskblockindex)
+{
+    return Read(make_pair(make_pair(DB_BLOCK_INDEX, blkid), DB_BLOCK_INDEX_AUXPOW), diskblockindex);
+}
+
 
 bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
     return Read(make_pair(DB_TXINDEX, txid), pos);
@@ -175,38 +203,50 @@ bool CBlockTreeDB::LoadBlockIndexGuts(boost::function<CBlockIndex*(const uint256
 {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 
-    pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
+    auto ssKeySet(std::make_pair(std::make_pair(DB_BLOCK_INDEX, uint256()), DB_BLOCK_INDEX_AUXPOW));
+    pcursor->Seek(ssKeySet);
+//    LogPrint("txdb", "ssKeySet: '%x%s%x'\n", ssKeySet.first.first, ssKeySet.first.second.ToString(), ssKeySet.second); // LEDTMP
 
     // Load mapBlockIndex
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
-        std::pair<char, uint256> key;
-        if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
+        std::pair < std::pair < char, uint256 > , char > key;
+        if (pcursor->GetKey(key) && key.first.first == DB_BLOCK_INDEX) {
+
+            assert(key.second == DB_BLOCK_INDEX_AUXPOW);
+
+//            LogPrint("txdb", "key: '%x%s%x'\n", key.first.first, key.first.second.ToString(), key.second); // LEDTMP
+
             CDiskBlockIndex diskindex;
             if (pcursor->GetValue(diskindex)) {
-                // Construct block index object
-                CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
+
+                // Construct immutable parts of block index object
+                uint256 hash = key.first.second;
+                CBlockIndex* pindexNew = insertBlockIndex(hash);
+//                LogPrint("txdb", "                    hash: '%s'\n", hash.ToString()); // LEDTMP
+//                LogPrint("txdb", "diskindex.GetBlockHash(): '%s'\n", diskindex.GetBlockHash().ToString()); // LEDTMP
+                assert(diskindex.GetBlockHash() == *pindexNew->phashBlock); // paranoia check
+
                 pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
-                pindexNew->nFile          = diskindex.nFile;
-                pindexNew->nDataPos       = diskindex.nDataPos;
-                pindexNew->nUndoPos       = diskindex.nUndoPos;
                 pindexNew->nVersion       = diskindex.nVersion;
                 pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
                 pindexNew->nTime          = diskindex.nTime;
                 pindexNew->nBits          = diskindex.nBits;
                 pindexNew->nNonce         = diskindex.nNonce;
-                pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-               /* Viacoin: Disable PoW Sanity check while loading block index
-                * from disk. Viacoin uses sha256 hash for the block index for performance reasons
-                * CheckProofOfWork() uses the scrypt hash which is discarded after a block is accepted.
-                * requires recomputing every PoW hash during every startup/
-                * opt instead to trust the data that is on your local disk. */
+                pcursor->Next(); // now we should be on the 'b' subkey
+                assert(pcursor->Valid());
 
-               // if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
-               //     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                pcursor->GetKey(key);
+                assert(key.first.second == hash);     // next key's hash must be the same
+                assert(key.second == DB_BLOCK_INDEX); // next key must be a 'b' subkey of the same b block
+
+//            LogPrint("txdb", "    key2: '%x%s%x'\n", key.first.first, key.first.second.ToString(), key.second); // LEDTMP
+
+                // read all mutable data
+                pcursor->GetValue(*pindexNew);
 
                 pcursor->Next();
             } else {

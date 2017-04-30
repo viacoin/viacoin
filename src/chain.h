@@ -7,6 +7,8 @@
 #define BITCOIN_CHAIN_H
 
 #include "arith_uint256.h"
+#include "auxpow/auxpow.h"
+#include "auxpow/serialize.h"
 #include "primitives/block.h"
 #include "pow.h"
 #include "tinyformat.h"
@@ -14,12 +16,14 @@
 
 #include <vector>
 
+
 class CBlockFileInfo
 {
 public:
     unsigned int nBlocks;      //!< number of blocks stored in file
     unsigned int nSize;        //!< number of used bytes of block file
     unsigned int nUndoSize;    //!< number of used bytes in the undo file
+
     unsigned int nHeightFirst; //!< lowest height of block in file
     unsigned int nHeightLast;  //!< highest height of block in file
     uint64_t nTimeFirst;       //!< earliest time of block in file
@@ -240,6 +244,24 @@ public:
         nNonce         = block.nNonce;
     }
 
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        /* mutable stuff goes here, immutable stuff
+         * has SERIALIZE functions in CDiskBlockIndex */
+        if (!(nType & SER_GETHASH))
+              READWRITE(VARINT(nVersion));
+    
+        READWRITE(VARINT(nStatus));
+        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
+            READWRITE(VARINT(nFile));
+        if (nStatus & BLOCK_HAVE_DATA)
+            READWRITE(VARINT(nDataPos));
+        if (nStatus & BLOCK_HAVE_UNDO)
+            READWRITE(VARINT(nUndoPos));
+    }
+
     CDiskBlockPos GetBlockPos() const {
         CDiskBlockPos ret;
         if (nStatus & BLOCK_HAVE_DATA) {
@@ -258,6 +280,7 @@ public:
         return ret;
     }
 
+    /*
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
@@ -270,16 +293,19 @@ public:
         block.nNonce         = nNonce;
         return block;
     }
+    */
+
+    CBlockHeader GetBlockHeader(const std::map<uint256, std::shared_ptr<CAuxPow> >& auxpows) const;
 
     uint256 GetBlockHash() const
     {
         return *phashBlock;
     }
 
-    uint256 GetBlockPoWHash() const
-    {
-        return GetBlockHeader().GetPoWHash();
-    }
+//    uint256 GetBlockPoWHash() const
+//    {
+//        return GetBlockHeader().GetPoWHash();
+//    }
 
     int64_t GetBlockTime() const
     {
@@ -351,30 +377,29 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
 
+    // if this is an aux work block
+    std::shared_ptr<CAuxPow> auxpow;
+
     CDiskBlockIndex() {
         hashPrev = uint256();
     }
 
-    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+    explicit CDiskBlockIndex(const CBlockIndex* pindex, const std::shared_ptr<CAuxPow>& auxpow) : CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
+        this->auxpow = auxpow;
     }
 
     ADD_SERIALIZE_METHODS;
 
+    /* immutable stuff goes here, mutable stuff
+     * has SERIALIZE functions in CBlockIndex */
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         if (!(nType & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
         READWRITE(VARINT(nHeight));
-        READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
-        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
-            READWRITE(VARINT(nFile));
-        if (nStatus & BLOCK_HAVE_DATA)
-            READWRITE(VARINT(nDataPos));
-        if (nStatus & BLOCK_HAVE_UNDO)
-            READWRITE(VARINT(nUndoPos));
 
         // block header
         READWRITE(this->nVersion);
@@ -383,6 +408,10 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        nVersion = this->nVersion;
+        // auxpow is not part of the block hash
+        if ((!(nType & SER_GETHASH)) && this->IsAuxPow())
+            READWRITE(auxpow);
     }
 
     uint256 GetBlockHash() const
@@ -394,19 +423,17 @@ public:
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
+        block.auxpow          = auxpow;
         return block.GetHash();
     }
 
-
-    std::string ToString() const
+    inline bool IsAuxPow() const
     {
-        std::string str = "CDiskBlockIndex(";
-        str += CBlockIndex::ToString();
-        str += strprintf("\n                hashBlock=%s, hashPrev=%s)",
-            GetBlockHash().ToString(),
-            hashPrev.ToString());
-        return str;
+            return nVersion & AuxPow::BLOCK_VERSION_AUXPOW;
     }
+
+
+    std::string ToString() const;
 };
 
 /** An in-memory indexed chain of blocks. */

@@ -227,7 +227,7 @@
     </message>
     <message>
         <location line="-56"/>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your viacoinss from being stolen by malware infecting your computer.</source>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your viacoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -297,7 +297,7 @@
     </message>
 </context>
 <context>
-    <name>ViacoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+341"/>
         <source>Sign &amp;message...</source>
@@ -409,7 +409,7 @@
         <translation>Reindexing blocks on disk...</translation>
     </message>
     <message>
-        <location line="-457"/>
+        <location line="-463"/>
         <source>Send coins to a Viacoin address</source>
         <translation>Send coins to a Viacoin address</translation>
     </message>
@@ -3777,7 +3777,7 @@
     </message>
 </context>
 <context>
-    <name>viacoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+297"/>
         <source>Options:</source>

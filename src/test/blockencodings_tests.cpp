@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         vtx_missing[0] = block.vtx[0];
         CBlock block3;
         BOOST_CHECK(partialBlock.FillBlock(block3, vtx_missing) == READ_STATUS_OK);
-        BOOST_CHECK_EQUAL(block.GetHash().ToString(), block3.GetHash().ToString());
+        BOOST_CHECK_EQUAL(block.GetPoWHash().ToString(), block3.GetPoWHash().ToString());
         BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(block3, &mutated).ToString());
         BOOST_CHECK(!mutated);
 

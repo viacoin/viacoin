@@ -100,7 +100,7 @@ namespace boost {
 using namespace std;
 
 const char * const BITCOIN_CONF_FILENAME = "viacoin.conf";
-const char * const BITCOIN_PID_FILENAME = "viacoind.pid";
+const char * const BITCOIN_PID_FILENAME = "viacoin.pid";
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -807,7 +807,7 @@ std::string CopyrightHolders(const std::string& strPrefix)
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
         std::string strYear = strPrefix;
         strYear.replace(strYear.find("2014"), sizeof("2014")-1, "2009");
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+        strCopyrightHolders += "\n" + strYear + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;
 }

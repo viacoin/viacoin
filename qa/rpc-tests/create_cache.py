@@ -11,12 +11,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 
 class CreateCache(BitcoinTestFramework):
-    def __init__(self):
-        super().__init__()
-
-        # Test network and test nodes are not required:
-        self.num_nodes = 0
-        self.nodes = []
 
     def __init__(self):
         super().__init__()

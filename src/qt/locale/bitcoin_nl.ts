@@ -232,7 +232,7 @@
     </message>
 </context>
 <context>
-    <name>ViacoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>&amp;Onderteken bericht...</translation>
@@ -398,8 +398,8 @@
         <translation>Tab-werkbalk</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and Viacoin: URIs)</source>
-        <translation>Vraag betaling aan (genereert QR-codes en Viacoin: URI's)</translation>
+        <source>Request payments (generates QR codes and viacoin: URIs)</source>
+        <translation>Vraag betaling aan (genereert QR-codes en viacoin: URI's)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -410,8 +410,8 @@
         <translation>Toon de lijst met gebruikte ontvangst adressen en labels</translation>
     </message>
     <message>
-        <source>Open a Viacoin: URI or payment request</source>
-        <translation>Open een Viacoin: URI of betalingsverzoek</translation>
+        <source>Open a viacoin: URI or payment request</source>
+        <translation>Open een viacoin: URI of betalingsverzoek</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -1283,8 +1283,8 @@
         <translation>Fout bij betalingsverzoek</translation>
     </message>
     <message>
-        <source>Cannot start Viacoin: click-to-pay handler</source>
-        <translation>Kan Viacoin niet starten: click-to-pay handler</translation>
+        <source>Cannot start viacoin: click-to-pay handler</source>
+        <translation>Kan viacoin niet starten: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1987,8 +1987,8 @@
         <translation>totaal ten minste</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for Viacoin transactions than the network can process.</source>
-        <translation>De minimale toeslag betalen is prima mits het transactievolume kleiner is dan de ruimte in de blokken. Let wel op dat dit tot gevolg kan hebben dat een transactie nooit wordt bevestigd als er meer vraag is naar Viacointransacties dan het netwerk kan verwerken.</translation>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for viacoin transactions than the network can process.</source>
+        <translation>De minimale toeslag betalen is prima mits het transactievolume kleiner is dan de ruimte in de blokken. Let wel op dat dit tot gevolg kan hebben dat een transactie nooit wordt bevestigd als er meer vraag is naar viacointransacties dan het netwerk kan verwerken.</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2222,8 +2222,8 @@
         <translation>Vul een label voor dit adres in om het aan de lijst met gebruikte adressen toe te voegen</translation>
     </message>
     <message>
-        <source>A message that was attached to the Viacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Viacoin network.</source>
-        <translation>Een bericht dat werd toegevoegd aan de Viacoin: URI welke wordt opgeslagen met de transactie ter referentie. Opmerking: Dit bericht zal niet worden verzonden over het Viacoinnetwerk.</translation>
+        <source>A message that was attached to the viacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Viacoin network.</source>
+        <translation>Een bericht dat werd toegevoegd aan de viacoin: URI welke wordt opgeslagen met de transactie ter referentie. Opmerking: Dit bericht zal niet worden verzonden over het Viacoinnetwerk.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2268,7 +2268,7 @@
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive viacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>U kunt berichten/overeenkomsten ondertekenen met uw adres om te bewijzen dat u viacoins kunt versturen. Wees voorzichtig met het ondertekenen van iets vaags of willekeurigs, omdat phishingaanvallen u kunnen proberen te misleiden tot het ondertekenen van overeenkomsten om uw identiteit aan hen toe te vertrouwen. Onderteken alleen volledig gedetailleerde verklaringen voordat u akkoord gaat.</translation>
+        <translation>U kunt berichten/overeenkomsten ondertekenen met uw adres om te bewijzen dat u Viacoins kunt versturen. Wees voorzichtig met het ondertekenen van iets vaags of willekeurigs, omdat phishingaanvallen u kunnen proberen te misleiden tot het ondertekenen van overeenkomsten om uw identiteit aan hen toe te vertrouwen. Onderteken alleen volledig gedetailleerde verklaringen voordat u akkoord gaat.</translation>
     </message>
     <message>
         <source>The Viacoin address to sign the message with</source>
@@ -2918,7 +2918,7 @@
     </message>
 </context>
 <context>
-    <name>Viacoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opties:</translation>

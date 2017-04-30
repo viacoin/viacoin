@@ -6,9 +6,16 @@
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
+#include <memory>
 #include "primitives/transaction.h"
+#include "primitives/blockheader.h"
+#include "auxpow/auxpow.h"
+#include "auxpow/consensus.h"
+#include "auxpow/serialize.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "versionbits.h"
+
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -16,60 +23,13 @@
  * to everyone and the block is added to the block chain.  The first transaction
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
+ *
  */
-class CBlockHeader
-{
-public:
-    // header
-    int32_t nVersion;
-    uint256 hashPrevBlock;
-    uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
 
-    CBlockHeader()
-    {
-        SetNull();
-    }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(this->nVersion);
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-    }
-
-    void SetNull()
-    {
-        nVersion = 0;
-        hashPrevBlock.SetNull();
-        hashMerkleRoot.SetNull();
-        nTime = 0;
-        nBits = 0;
-        nNonce = 0;
-    }
-
-    bool IsNull() const
-    {
-        return (nBits == 0);
-    }
-
-    uint256 GetHash() const;
-
-    uint256 GetPoWHash() const;
-
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
-    }
-};
-
+/*
+ * A block consists of a BlockHeader followed by Block data (the transaction list)
+ */
 
 class CBlock : public CBlockHeader
 {
@@ -79,6 +39,15 @@ public:
 
     // memory only
     mutable bool fChecked;
+
+    // TODO LED .. fix this. The MerkleTree functions in class CBlock
+    // TODO LED have been ported from 0.10 to 0.13, but 0.13 does things
+    // TODO LED differently now.. see the new MerkleTree handling and
+    // TODO LED associated classes for a hint on a proper fix. This code
+    // TODO LED as is probably won't work. vMerkleTree was replaced with
+    // TODO LED a bool fChecked. So grafting vMerkleTree back in just
+    // TODO LED to be used by the auxpow tree is most likely wrong. 
+    mutable std::vector<uint256> vMerkleTree;
 
     CBlock()
     {
@@ -115,8 +84,18 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
+        block.auxpow         = auxpow;
+                
         return block;
     }
+
+    // TODO LED these two Merkle functions are temporary.
+    // TODO LED BuildMerkleTree, GetMerkleBranch and CheckMerkleBranch
+    // TODO LED The callers of these functions (in auxpow.cpp) need
+    // TODO LED to be ported to the new style Merkle classes
+    uint256 BuildMerkleTree(bool* mutated = NULL) const;
+    std::vector<uint256> GetMerkleBranch(int nIndex) const;
+    static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
 
     std::string ToString() const;
 };

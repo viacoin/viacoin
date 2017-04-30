@@ -61,6 +61,10 @@
 #include "zmq/zmqnotificationinterface.h"
 #endif
 
+#ifdef USE_SSE2
+#include "crypto/scrypt.h"
+#endif
+
 using namespace std;
 
 bool fFeeEstimatesInitialized = false;
@@ -475,6 +479,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE));
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
+    strUsage += HelpMessageOpt("-auxminingaddr=<addr>", _("Address for getauxblock coinbase"));
 
     return strUsage;
 }
@@ -482,7 +487,7 @@ std::string HelpMessage(HelpMessageMode mode)
 std::string LicenseInfo()
 {
     const std::string URL_SOURCE_CODE = "<https://github.com/viacoin/viacoin>";
-    const std::string URL_WEBSITE = "<https://viacore.org>";
+    const std::string URL_WEBSITE = "<https://viacoin.org>";
     // todo: remove urls from translations on next change
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2014, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
@@ -1102,7 +1107,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nStart;
 
 #if defined(USE_SSE2)
-    scrypt_detect_sse2();
+    std::string sse2detect = scrypt_detect_sse2();
+    LogPrintf("%s\n", sse2detect);
 #endif
 
     // ********************************************************* Step 5: verify wallet database integrity
@@ -1321,7 +1327,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                         CleanupBlockRevFiles();
                 }
 
-                if (!LoadBlockIndex()) {
+                bool fAuxPow = false;
+                fAuxPow = pblocktree->ReadFlag("auxpow", fAuxPow) && fAuxPow;
+                if (fAuxPow && !LoadBlockIndex()) {
                     strLoadError = _("Error loading block database");
                     break;
                 }
@@ -1331,9 +1339,19 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(chainparams.GetConsensus().hashGenesisBlock) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
+                int nLastBlockFile = 0;
+                bool dbEmpty = !pblocktree->ReadLastBlockFile(nLastBlockFile);
+
                 // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!InitBlockIndex(chainparams)) {
+                if ((fAuxPow || dbEmpty) && !InitBlockIndex(chainparams)) {
                     strLoadError = _("Error initializing block database");
+                    break;
+                }
+
+                fAuxPow = pblocktree->ReadFlag("auxpow", fAuxPow) && fAuxPow;
+
+                if (!fAuxPow) {
+                    strLoadError = _("You need to rebuild the database using -reindex to enable auxpow support");
                     break;
                 }
 

@@ -46,6 +46,10 @@ struct Params {
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
+    /** CHECKLOCKVERIFY, BIP66 and AuxPow starting heights for Viacoin */
+    int nCLTVStartBlock;
+    int nBIP66MinStartBlock;
+    int nAuxPowStartHeight;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargetting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
