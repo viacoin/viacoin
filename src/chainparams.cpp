@@ -84,7 +84,7 @@ public:
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 47880; // 95% of nMinerConfirmationWindow
+        consensus.nRuleChangeActivationThreshold = 37800; // 75% of nMinerConfirmationWindow
         consensus.nMinerConfirmationWindow = 50400; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nCLTVStartBlock = 598725;
         consensus.nBIP66MinStartBlock = 1200000;
