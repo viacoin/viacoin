@@ -823,6 +823,8 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
         static CBlock* pblock;
         static std::unique_ptr<CBlockTemplate> pblocktemplate;
 
+        LOCK(cs_main);
+
         if (chainActive.Tip()->nHeight < GetAuxPowStartBlock(consensusParams) - 1)
             throw JSONRPCError(-1, "Merged mining not enabled at current block height yet");
         if (pindexPrev != chainActive.Tip() ||
@@ -832,7 +834,7 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
-                for (auto&& pblocktemplate : vNewBlockTemplate) 
+                for (auto&& pblocktemplate : vNewBlockTemplate)
                     pblocktemplate = nullptr;
                 vNewBlockTemplate.clear();
             }
