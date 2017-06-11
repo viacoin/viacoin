@@ -814,6 +814,8 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
     static vector< std::unique_ptr<CBlockTemplate> > vNewBlockTemplate;
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
+    LOCK(cs_main);
+
     if (params.size() == 0)
     {
         // Update block
@@ -822,8 +824,6 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
         static uint64_t nStart;
         static CBlock* pblock;
         static std::unique_ptr<CBlockTemplate> pblocktemplate;
-
-        LOCK(cs_main);
 
         if (chainActive.Tip()->nHeight < GetAuxPowStartBlock(consensusParams) - 1)
             throw JSONRPCError(-1, "Merged mining not enabled at current block height yet");
