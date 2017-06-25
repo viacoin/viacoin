@@ -814,6 +814,8 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
     static vector< std::unique_ptr<CBlockTemplate> > vNewBlockTemplate;
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
+    LOCK(cs_main);
+
     if (params.size() == 0)
     {
         // Update block
@@ -832,7 +834,7 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
-                for (auto&& pblocktemplate : vNewBlockTemplate) 
+                for (auto&& pblocktemplate : vNewBlockTemplate)
                     pblocktemplate = nullptr;
                 vNewBlockTemplate.clear();
             }
