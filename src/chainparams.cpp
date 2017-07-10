@@ -90,9 +90,9 @@ public:
         consensus.nBIP66MinStartBlock = 1200000;
         consensus.nAuxPowStartHeight = AuxPow::START_MAINNET;
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1232032894; // start + (1year/25)
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
@@ -187,9 +187,9 @@ public:
         consensus.nBIP66MinStartBlock = 800000;
         consensus.nAuxPowStartHeight = AuxPow::START_TESTNET;
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1232032894; // start + (1year/25)
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
@@ -275,7 +275,7 @@ public:
         consensus.nBIP66MinStartBlock = 1;
         consensus.nAuxPowStartHeight = AuxPow::START_REGTEST;
 
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;

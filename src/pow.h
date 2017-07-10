@@ -20,6 +20,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 bool CheckBlockProofOfWork(const CBlockHeader *pblock, const Consensus::Params&);
 uint256 GetBlockProof(const CBlockIndex& block, const Consensus::Params&);
+bool CheckAuxPowValidity(const CBlockHeader *pblock, const Consensus::Params&);
 
 // TODO LED TMP temporary public interface for passing the build of test/pow_tests.cpp only
 // TODO LED TMP this code should be removed and test/pow_test.cpp changed to call the

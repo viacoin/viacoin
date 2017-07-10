@@ -219,10 +219,6 @@ bool CheckBlockProofOfWork(const CBlockHeader *pblock, const Consensus::Params& 
 {
     // LogPrint("txdb", "CheckBlockProofOfWork(): block: %s\n", pblock->ToString());  // LEDTMP
 
-    if (!params.fPowAllowMinDifficultyBlocks
-        && (pblock->IsAuxPow() && pblock->GetChainID() != AuxPow::CHAIN_ID))
-        return error("CheckBlockProofOfWork() : block does not have our chain ID");
-
     if (pblock->auxpow && (pblock->auxpow.get() != NULL))
     {
         if (!pblock->auxpow->Check(pblock->GetHash(), pblock->GetChainID(), params))
@@ -236,6 +232,16 @@ bool CheckBlockProofOfWork(const CBlockHeader *pblock, const Consensus::Params& 
         // Check proof of work matches claimed amount
             if (!CheckProofOfWork(pblock->GetPoWHash(), pblock->nBits, params))
             return error("CheckBlockProofOfWork() : proof of work failed");
+    }
+    return true;
+}
+
+bool CheckAuxPowValidity(const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    if (!params.fPowAllowMinDifficultyBlocks)
+    {
+        if (pblock->GetChainID() != AuxPow::CHAIN_ID)
+            return error("CheckAuxPowValidity() : block does not have our chain ID");
     }
     return true;
 }

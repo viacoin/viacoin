@@ -48,11 +48,10 @@ bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID, const Consensus::Params&
     vector<unsigned char> vchRootHash(nRootHash.begin(), nRootHash.end());
     std::reverse(vchRootHash.begin(), vchRootHash.end()); // correct endian
 
-    // TODO LED fix this to call the correct merkle check for 0.13
     // Check that we are in the parent block merkle tree
-    // if (CBlock::CheckMerkleBranch(GetHash(),
-    //                               vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
-    //     return error("Aux POW merkle root incorrect");
+    if (CBlock::CheckMerkleBranch(GetHash(),
+                                  vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
+        return error("Aux POW merkle root incorrect");
 
     const CScript script = vin[0].scriptSig;
 
