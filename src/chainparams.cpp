@@ -84,8 +84,8 @@ public:
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 37800; // 75% of nMinerConfirmationWindow
-        consensus.nMinerConfirmationWindow = 50400; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nRuleChangeActivationThreshold = 8100; // 75% of nMinerConfirmationWindow
+        consensus.nMinerConfirmationWindow = 10800; // 3 days
         consensus.nCLTVStartBlock = 598725;
         consensus.nBIP66MinStartBlock = 1200000;
         consensus.nAuxPowStartHeight = AuxPow::START_MAINNET;
@@ -182,8 +182,8 @@ public:
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 9450; // 75% of nMinerConfirmationWindow
-        consensus.nMinerConfirmationWindow = 12600; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nRuleChangeActivationThreshold = 2700; // 75% of nMinerConfirmationWindow
+        consensus.nMinerConfirmationWindow = 3600; // nPowTargetTimespan / nPowTargetSpacing
         consensus.nCLTVStartBlock = 502664;
         consensus.nBIP66MinStartBlock = 800000;
         consensus.nAuxPowStartHeight = AuxPow::START_TESTNET;
