@@ -75,7 +75,7 @@ public:
 
     inline int GetChainID() const
     {
-        return (nVersion & ~VERSIONBITS_TOP_MASK) / AuxPow::BLOCK_VERSION_CHAIN_START;
+        return nVersion / AuxPow::BLOCK_VERSION_CHAIN_START;
     }
 
     inline bool IsAuxPow() const

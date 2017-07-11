@@ -15,7 +15,7 @@ static const unsigned int MAX_BLOCK_WEIGHT = 4000000; // TODO LED
 /** The maximum allowed size for a block excluding witness data, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_BASE_SIZE = 60000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
-static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
+static const int64_t MAX_BLOCK_SIGOPS_COST = 8000;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 3600;
 

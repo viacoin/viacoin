@@ -1108,7 +1108,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 3600)
+        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
@@ -2447,15 +2447,15 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // NOP2 is redefined as CHECKLOCKTIMEVERIFY in blocks with nVersion >= 3
     //
     // Introduce CHECKLOCKTIMEVERIFY at the same time as AuxPow.
-    if (block.nVersion < VERSIONBITS_TOP_BITS
-        && (block.nVersion & 0xff) >= 3
+    if ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS
+        && (block.nVersion & 0xFF) >= 3
         && pindex->nHeight >= chainparams.GetConsensus().nCLTVStartBlock)
     {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=4 blocks, when 75% of the network has upgraded:
-    if (block.nVersion < VERSIONBITS_TOP_BITS
+    if ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS
         && (block.nVersion & 0xff) >= 4
         && IsSuperMajority(4, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())
         && pindex->nHeight >= chainparams.GetConsensus().nBIP66MinStartBlock)
@@ -3585,6 +3585,15 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     int nHeight = pindexPrev->nHeight+1;
 
     // Check if auxpow is allowed at this height if block has it
+    if (block.auxpow && block.auxpow.get() != NULL)
+    {
+        if (nHeight < GetAuxPowStartBlock(consensusParams))
+            return state.DoS(100, error("%s : premature auxpow block", __func__),
+                             REJECT_INVALID, "time-too-new");
+        if (!CheckAuxPowValidity(&block, consensusParams))
+            return state.DoS(100, error("%s : invalid auxpow block", __func__),
+                             REJECT_INVALID, "bad-auxpow");
+    }
     if (block.auxpow && block.auxpow.get() != NULL && nHeight < GetAuxPowStartBlock(consensusParams))
         return state.DoS(100, error("%s : premature auxpow block", __func__),
                          REJECT_INVALID, "time-too-new");
@@ -3623,8 +3632,8 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Hard fork to introduce OP_CHECKLOCKTIMEVERIFY at the same time as AuxPow
     // Reject block.nVersion=2 once we reach the correct height
-    if (block.nVersion < VERSIONBITS_TOP_BITS
-        && (block.nVersion & 0xff) < 3
+    if ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS
+        && (block.nVersion & 0xFF) < 3
         && nHeight >= consensusParams.nCLTVStartBlock) {
         return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                              strprintf("rejected nVersion=0x%08x block", block.nVersion));
@@ -3632,14 +3641,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     for (int32_t version = 4; version <= 6; ++version) // Viacoin check for version 3, 4 and 5 upgrades
-        if (block.nVersion < VERSIONBITS_TOP_BITS
-            && (block.nVersion & 0xff) < version
+        if ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS
+            && (block.nVersion & 0xFF) < version
             && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
     // Reject outdated version blocks when 75% of the network (BIP9 rules) has upgraded:
-    if (block.nVersion < VERSIONBITS_TOP_BITS && IsWitnessEnabled(pindexPrev, consensusParams))
+    if ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS && IsWitnessEnabled(pindexPrev, consensusParams))
         return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                              strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
