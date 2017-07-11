@@ -30,7 +30,23 @@ void RemoveMergedMiningHeader(vector<unsigned char>& vchAux)
     vchAux.erase(vchAux.begin(), vchAux.begin() + sizeof(pchMergedMiningHeader));
 }
 
-bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID, const Consensus::Params& params)
+uint256 CAuxPow::CheckMerkleBranch(const uint256& hash, const std::vector<uint256>& vMerkleBranch, int nIndex) const
+{
+  uint256 thash = hash;
+  if (nIndex == -1)
+    return uint256();
+  for (std::vector<uint256>::const_iterator it(vMerkleBranch.begin()); it != vMerkleBranch.end(); ++it)
+  {
+    if (nIndex & 1)
+      thash = Hash(BEGIN(*it), END(*it), BEGIN(thash), END(thash));
+    else
+      thash = Hash(BEGIN(thash), END(thash), BEGIN(*it), END(*it));
+    nIndex >>= 1;
+  }
+  return thash;
+}
+
+bool CAuxPow::Check(const uint256& hashAuxBlock, int nChainID, const Consensus::Params& params) const
 {
     if (nIndex != 0)
         return error("AuxPow is not a generate");
@@ -44,13 +60,13 @@ bool CAuxPow::Check(uint256 hashAuxBlock, int nChainID, const Consensus::Params&
         return error("Aux POW chain merkle branch too long");
 
     // Check that the chain merkle root is in the coinbase
-    uint256 nRootHash = CBlock::CheckMerkleBranch(hashAuxBlock, vChainMerkleBranch, nChainIndex);
+    const uint256 nRootHash = CheckMerkleBranch(hashAuxBlock, vChainMerkleBranch, nChainIndex);
     vector<unsigned char> vchRootHash(nRootHash.begin(), nRootHash.end());
     std::reverse(vchRootHash.begin(), vchRootHash.end()); // correct endian
 
     // Check that we are in the parent block merkle tree
-    if (CBlock::CheckMerkleBranch(GetHash(),
-                                  vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
+    if (CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
+
         return error("Aux POW merkle root incorrect");
 
     const CScript script = vin[0].scriptSig;

@@ -40,7 +40,7 @@ import viacoin_scrypt
 from test_framework.siphash import siphash256
 
 BIP0031_VERSION = 60000
-MY_VERSION = 70014  # past bip-31 for ping/pong
+MY_VERSION = 70015  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 
 MAX_INV_SZ = 50000
@@ -540,7 +540,7 @@ class CBlockHeader(object):
             self.calc_sha256()
 
     def set_null(self):
-        self.nVersion = 1
+        self.nVersion = 5
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0
         self.nTime = 0
@@ -1602,8 +1602,8 @@ class NodeConn(asyncore.dispatcher):
     }
     MAGIC_BYTES = {
         "mainnet": b"\x0f\x68\xc6\xcb",   # mainnet
-        "testnet3": b"\xfc\xc1\xb7\xdc",  # testnet3
-        "regtest": b"\xfa\xbf\xb5\xda",   # regtest
+        "testnet3": b"\xa9\xc5\xef\x92",  # testnet3
+        "regtest": b"\x2d\x97\x7b\x37",   # regtest
     }
 
     def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK):

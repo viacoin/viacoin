@@ -178,10 +178,10 @@ unsigned int static AntiGravityWave(int64_t version, const CBlockIndex* pindexLa
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-    // -regtest mode: always use testnet rules
-    if (params.fPowAllowMinDifficultyBlocks && Params().MineBlocksOnDemand()) {
-        return GetNextWorkRequired_V1(pindexLast, pblock, params);
-    }
+    // -regtest mode
+    if (params.fPowNoRetargeting)
+        return pindexLast->nBits;
+
     if (pindexLast->nHeight+1 >= 451000 || (params.fPowAllowMinDifficultyBlocks && pindexLast->nHeight+1 >= 300000)) {
         return AntiGravityWave(2, pindexLast, pblock, params);
     } else if (pindexLast->nHeight+1 >= 3600) {

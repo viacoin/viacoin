@@ -45,7 +45,8 @@ public:
         READWRITE(parentBlockHeader);
     }
 
-    bool Check(uint256 hashAuxBlock, int nChainID, const Consensus::Params& params);
+    uint256 CheckMerkleBranch(const uint256& hash, const std::vector<uint256>& vMerkleBranch, int nIndex) const;
+    bool Check(const uint256& hashAuxBlock, int nChainID, const Consensus::Params& params) const;
 
     inline uint256 GetParentBlockHash()
     {
