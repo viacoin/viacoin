@@ -45,7 +45,7 @@ public:
         READWRITE(parentBlockHeader);
     }
 
-    bool Check(uint256 hashAuxBlock, int nChainID, const Consensus::Params& params);
+    bool Check(const uint256& hashAuxBlock, int nChainID, const Consensus::Params& params) const;
 
     inline uint256 GetParentBlockHash()
     {
