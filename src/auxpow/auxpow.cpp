@@ -66,6 +66,7 @@ bool CAuxPow::Check(const uint256& hashAuxBlock, int nChainID, const Consensus::
 
     // Check that we are in the parent block merkle tree
     if (CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != parentBlockHeader.hashMerkleRoot)
+
         return error("Aux POW merkle root incorrect");
 
     const CScript script = vin[0].scriptSig;
