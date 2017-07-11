@@ -223,7 +223,7 @@ class SegWitTest(BitcoinTestFramework):
         # Mine a block with an anyone-can-spend coinbase,
         # let it mature, then try to spend it.
         print("\tTesting non-witness transaction")
-        block = self.build_next_block(nVersion=1)
+        block = self.build_next_block(nVersion=5)
         block.solve()
         self.test_node.send_message(msg_block(block))
         self.test_node.sync_with_ping() # make sure the block was processed

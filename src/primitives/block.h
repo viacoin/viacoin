@@ -95,7 +95,6 @@ public:
     // TODO LED to be ported to the new style Merkle classes
     uint256 BuildMerkleTree(bool* mutated = NULL) const;
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
-    static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
 
     std::string ToString() const;
 };
