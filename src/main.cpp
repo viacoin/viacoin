@@ -1161,8 +1161,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     // sure that such transactions will be mined (unless we're on
     // -testnet/-regtest).
     const CChainParams& chainparams = Params();
-    if (fRequireStandard && tx.nVersion >= 2 && VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE ||
-        pindexPrev->nHeight + 1 < consensusParams.nWitnessStartHeight) {
+    if (fRequireStandard && tx.nVersion >= 2 && (VersionBitsTipState(chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV) != THRESHOLD_ACTIVE ||
+        chainActive.Height() + 1 < chainparams.GetConsensus().nWitnessStartHeight)) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
     }
 
@@ -2467,7 +2467,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE ||
-        pindexPrev->nHeight + 1 >= consensusParams.nWitnessStartHeight) {
+        pindex->nHeight >= chainparams.GetConsensus().nWitnessStartHeight) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
@@ -3527,8 +3527,9 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
+    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE ||
-            pindexPrev->nHeight + 1 >= params.nWitnessStartHeight);
+            nHeight >= params.nWitnessStartHeight);
 }
 
 // Compute at which vout of the block's coinbase transaction the witness
@@ -3666,7 +3667,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
     if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE ||
-        pindexPrev->nHeight + 1 >= consensusParams.nWitnessStartHeight) {
+        nHeight >= consensusParams.nWitnessStartHeight) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
