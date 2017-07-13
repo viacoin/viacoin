@@ -66,8 +66,9 @@ class RESTTest (BitcoinTestFramework):
 
         self.nodes[0].generate(1)
         self.sync_all()
-        self.nodes[2].generate(100)
-        self.sync_all()
+        for _ in range(36):
+            self.nodes[2].generate(100)
+            self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
 
@@ -148,7 +149,7 @@ class RESTTest (BitcoinTestFramework):
         hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(64)
 
         assert_equal(bb_hash, hashFromBinResponse) #check if getutxo's chaintip during calculation was fine
-        assert_equal(chainHeight, 102) #chain height must be 102
+        assert_equal(chainHeight, 3602) #chain height must be 102
 
 
         ############################

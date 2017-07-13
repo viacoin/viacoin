@@ -44,7 +44,7 @@ MY_VERSION = 70015  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 
 MAX_INV_SZ = 50000
-MAX_BLOCK_SIZE = 1000000
+MAX_BLOCK_SIZE = 60000
 
 COIN = 100000000 # 1 btc in satoshis
 
