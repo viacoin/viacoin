@@ -140,7 +140,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.test_node.send_and_ping(msg_block(block))
         assert(int(self.nodes[0].getbestblockhash(), 16) == block.sha256)
-        self.nodes[0].generate(100)
+        for _ in range(36):
+            self.nodes[0].generate(100)
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -280,7 +281,9 @@ class CompactBlocksTest(BitcoinTestFramework):
     # bitcoind's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version, use_witness_address):
         # Generate a bunch of transactions.
-        node.generate(101)
+        for _ in range(36):
+            node.generate(100)
+        node.generate(1)
         num_transactions = 25
         address = node.getnewaddress()
         if use_witness_address:

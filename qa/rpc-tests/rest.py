@@ -66,8 +66,9 @@ class RESTTest (BitcoinTestFramework):
 
         self.nodes[0].generate(1)
         self.sync_all()
-        self.nodes[2].generate(3600)
-        self.sync_all()
+        for _ in range(36):
+            self.nodes[2].generate(100)
+            self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
 

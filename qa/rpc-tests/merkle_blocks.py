@@ -34,7 +34,10 @@ class MerkleBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         print("Mining blocks...")
-        self.nodes[0].generate(3605)
+        for _ in range(36):
+            self.nodes[0].generate(100)
+            self.sync_all()
+        self.nodes[0].generate(5)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()

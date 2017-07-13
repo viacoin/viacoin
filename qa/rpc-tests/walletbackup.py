@@ -109,8 +109,9 @@ class WalletBackupTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
         self.nodes[2].generate(1)
         sync_blocks(self.nodes)
-        self.nodes[3].generate(3600)
-        sync_blocks(self.nodes)
+        for _ in range(36):
+            self.nodes[3].generate(100)
+            sync_blocks(self.nodes)
 
         assert_equal(self.nodes[0].getbalance(), 50)
         assert_equal(self.nodes[1].getbalance(), 50)
@@ -136,7 +137,10 @@ class WalletBackupTest(BitcoinTestFramework):
             self.do_one_round()
 
         # Generate 3601 more blocks, so any fees paid mature
-        self.nodes[3].generate(3601)
+        for _ in range(36):
+            self.nodes[3].generate(100)
+            self.sync_all()
+        self.nodes[3].generate(1)
         self.sync_all()
 
         balance0 = self.nodes[0].getbalance()

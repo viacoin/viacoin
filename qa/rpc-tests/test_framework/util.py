@@ -577,7 +577,9 @@ def satoshi_round(amount):
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
 def create_confirmed_utxos(fee, node, count):
-    node.generate(int(0.5*count)+3601)
+    for _ in range(36):
+        node.generate(100)
+    node.generate(int(0.5*count)+1)
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
