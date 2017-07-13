@@ -23,6 +23,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.num_nodes = 1
 
         self.txouts = gen_return_txouts()
+        print(len(self.txouts))
 
     def run_test(self):
         txids = []
