@@ -1254,7 +1254,7 @@ class FullBlockTest(ComparisonTestFramework):
         #
         if self.options.runbarelyexpensive:
             tip(88)
-            LARGE_REORG_SIZE = 1088
+            LARGE_REORG_SIZE = 288
             test1 = TestInstance(sync_every_block=False)
             spend=out[32]
             for i in range(89, LARGE_REORG_SIZE + 89):
