@@ -35,7 +35,7 @@ PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
 
-BITCOIND_PROC_WAIT_TIMEOUT = 60
+BITCOIND_PROC_WAIT_TIMEOUT = 180
 
 
 class PortSeed:
@@ -52,9 +52,9 @@ MOCKTIME = 0
 def enable_mocktime():
     #For backwared compatibility of the python scripts
     #with previous versions of the cache, set MOCKTIME 
-    #to Jan 1, 2014 + (201 * 10 * 60)
+    #to Jul 12, 2014 15:53:56 + (3701 * 12)
     global MOCKTIME
-    MOCKTIME = 1388534400 + (201 * 10 * 60)
+    MOCKTIME = 1405166036 + (3701 * 12)
 
 def disable_mocktime():
     global MOCKTIME
@@ -203,10 +203,9 @@ def wait_for_bitcoind_start(process, url, i):
 
 def initialize_chain(test_dir, num_nodes):
     """
-    Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+    Create a cache of a 3700-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
     """
-
     assert num_nodes <= MAX_NODES
     create_cache = False
     for i in range(MAX_NODES):
@@ -247,18 +246,23 @@ def initialize_chain(test_dir, num_nodes):
         # Note: To preserve compatibility with older versions of
         # initialize_chain, only 4 nodes will generate coins.
         #
-        # blocks are created with timestamps 10 minutes apart
-        # starting from 2010 minutes in the past
+        # blocks are created with timestamps 12 seconds apart
+        # starting from 12*3701 in the past
         enable_mocktime()
-        block_time = get_mocktime() - (201 * 10 * 60)
-        for i in range(2):
+        if os.getenv("PYTHON_DEBUG", ""):
+            print("Mining cache blocks")
+        block_time = get_mocktime() - (3701 * 12)
+        for i in range(37):
             for peer in range(4):
                 for j in range(25):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
-                    block_time += 10*60
+                    block_time += 12
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
+                if os.getenv("PYTHON_DEBUG", ""):
+                    print('.', end = '', flush = True)
+
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
@@ -573,7 +577,9 @@ def satoshi_round(amount):
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
 def create_confirmed_utxos(fee, node, count):
-    node.generate(int(0.5*count)+101)
+    for _ in range(36):
+        node.generate(100)
+    node.generate(int(0.5*count)+1)
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
@@ -608,9 +614,9 @@ def gen_return_txouts():
     script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
     for i in range (512):
         script_pubkey = script_pubkey + "01"
-    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
-    for k in range(128):
+    # concatenate 96 txouts of above script_pubkey which we'll insert before the txout for change
+    txouts = "61"
+    for k in range(96):
         # add txout value
         txouts = txouts + "0000000000000000"
         # add length of script_pubkey

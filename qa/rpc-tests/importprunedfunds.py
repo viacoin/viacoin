@@ -22,7 +22,9 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
     def run_test(self):
         print("Mining blocks...")
-        self.nodes[0].generate(101)
+        for _ in range(36):
+            self.nodes[0].generate(100)
+        self.nodes[0].generate(1)
 
         self.sync_all()
         
@@ -42,7 +44,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.sync_all()
 
         #Node 1 sync test
-        assert_equal(self.nodes[1].getblockcount(),101)
+        assert_equal(self.nodes[1].getblockcount(),3601)
 
         #Address Test - before import
         address_info = self.nodes[1].validateaddress(address1)
