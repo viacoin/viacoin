@@ -3627,7 +3627,9 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    static const int nMaturity = Params().GetConsensus().fPowNoRetargeting ?
+        COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
+    return max(0, (nMaturity+1) - GetDepthInMainChain());
 }
 
 

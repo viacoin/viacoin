@@ -80,7 +80,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_102_1_id = self.nodes[0].sendrawtransaction(spend_102_1_raw)
 
         self.sync_all()
-
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, timelock_tx_id})
 
         for node in self.nodes:

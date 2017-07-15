@@ -2007,6 +2007,8 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
         if (!inputs.HaveInputs(tx))
             return state.Invalid(false, 0, "", "Inputs unavailable");
 
+        static const int nMaturity = ::Params().GetConsensus().fPowNoRetargeting ?
+            COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
         CAmount nValueIn = 0;
         CAmount nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -2017,7 +2019,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
             // If prev is coinbase, check that it's matured
             if (coins->IsCoinBase()) {
-                if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
+                if (nSpendHeight - coins->nHeight < nMaturity)
                     return state.Invalid(false,
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
@@ -2788,8 +2790,9 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         // Check the version of the last 100 blocks to see if we need to upgrade:
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
+
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
-            if ((pindex->nVersion & 0xff) > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
+            if ((pindex->nVersion & 0xFF) > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & 0xFF & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }

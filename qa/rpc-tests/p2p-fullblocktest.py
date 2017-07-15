@@ -190,14 +190,8 @@ class FullBlockTest(ComparisonTestFramework):
 
         # Now we need that block to mature so we can spend the coinbase.
         test = TestInstance(sync_every_block=False)
-        for ii in range(8):
-            for i in range(400):
-                block(5000 + i+(ii*400))
-                test.blocks_and_transactions.append([self.tip, True])
-                save_spendable_output()
-            yield test
-        for i in range(399):
-            block(8200+i)
+        for i in range(99):
+            block(5000 + i)
             test.blocks_and_transactions.append([self.tip, True])
             save_spendable_output()
         yield test
@@ -555,49 +549,51 @@ class FullBlockTest(ComparisonTestFramework):
         #
         # b41 does the same, less one, so it has the maximum sigops permitted.
         #
-        # Viacoin: not relevant as MAX_BLOCK_SIZE is exceeded faster than MAX_BLOCK_SIGOPS
-        #tip(39)
-        #b40 = block(40, spend=out[12])
-        #sigops = get_legacy_sigopcount_block(b40)
-        #numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
-        #assert_equal(numTxes <= b39_outputs, True)
+        tip(39)
+        b40 = block(40, spend=out[12])
+        sigops = get_legacy_sigopcount_block(b40)
+        numTxes = (MAX_BLOCK_SIGOPS - sigops) // b39_sigops_per_output
+        assert_equal(numTxes <= b39_outputs, True)
 
-        #lastOutpoint = COutPoint(b40.vtx[1].sha256, 0)
-        #new_txs = []
-        #for i in range(1, numTxes+1):
-        #    tx = CTransaction()
-        #    tx.vout.append(CTxOut(1, CScript([OP_TRUE])))
-        #    tx.vin.append(CTxIn(lastOutpoint, b''))
-        #    # second input is corresponding P2SH output from b39
-        #    tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
-        #    # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
-        #    (sighash, err) = SignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
-        #    sig = self.coinbase_key.sign(sighash) + bytes(bytearray([SIGHASH_ALL]))
-        #    scriptSig = CScript([sig, redeem_script])
+        lastOutpoint = COutPoint(b40.vtx[1].sha256, 0)
+        new_txs = []
+        for i in range(1, numTxes+1):
+            tx = CTransaction()
+            tx.vout.append(CTxOut(1, CScript([OP_TRUE])))
+            tx.vin.append(CTxIn(lastOutpoint, b''))
+            # second input is corresponding P2SH output from b39
+            tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
+            # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
+            (sighash, err) = SignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
+            sig = self.coinbase_key.sign(sighash) + bytes(bytearray([SIGHASH_ALL]))
+            scriptSig = CScript([sig, redeem_script])
 
-        #    tx.vin[1].scriptSig = scriptSig
-        #    tx.rehash()
-        #    new_txs.append(tx)
-        #    lastOutpoint = COutPoint(tx.sha256, 0)
+            tx.vin[1].scriptSig = scriptSig
+            tx.rehash()
+            new_txs.append(tx)
+            lastOutpoint = COutPoint(tx.sha256, 0)
 
-        #b40_sigops_to_fill = MAX_BLOCK_SIGOPS - (numTxes * b39_sigops_per_output + sigops) + 1
-        #tx = CTransaction()
-        #tx.vin.append(CTxIn(lastOutpoint, b''))
-        #tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b40_sigops_to_fill)))
-        #tx.rehash()
-        #new_txs.append(tx)
-        #update_block(40, new_txs)
+        b40_sigops_to_fill = MAX_BLOCK_SIGOPS - (numTxes * b39_sigops_per_output + sigops) + 1
+        tx = CTransaction()
+        tx.vin.append(CTxIn(lastOutpoint, b''))
+        tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b40_sigops_to_fill)))
+        tx.rehash()
+        new_txs.append(tx)
+        update_block(40, new_txs)
+        #Viacoin: block size is exceeded faster
         #yield rejected(RejectResult(16, b'bad-blk-sigops'))
+        yield rejected(RejectResult(16, b'bad-blk-length'))
 
         # same as b40, but one less sigop
         tip(39)
         b41 = block(41, spend=None)
         #update_block(41, b40.vtx[1:-1])
-        #b41_sigops_to_fill = b40_sigops_to_fill - 1
-        #tx = CTransaction()
-        #tx.vin.append(CTxIn(lastOutpoint, b''))
-        #tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b41_sigops_to_fill)))
-        #tx.rehash()
+        b41_sigops_to_fill = b40_sigops_to_fill - 1
+        tx = CTransaction()
+        tx.vin.append(CTxIn(lastOutpoint, b''))
+        tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b41_sigops_to_fill)))
+        tx.rehash()
+        #Viacoin: block size is exceeded faster
         #update_block(41, [tx])
         yield accepted()
 
@@ -1269,29 +1265,25 @@ class FullBlockTest(ComparisonTestFramework):
                 test1.blocks_and_transactions.append([self.tip, True])
                 save_spendable_output()
                 spend = get_spendable_output()
-            print("reorg chain 1")
+
             yield test1
             chain1_tip = i
 
             # now create alt chain of same length
-            # !!! often fails to provide headers to core in time
             tip(88)
             test2 = TestInstance(sync_every_block=False)
             for i in range(89, LARGE_REORG_SIZE + 89):
                 block("alt"+str(i))
                 test2.blocks_and_transactions.append([self.tip, False])
-            print("reorg chain 2")
             yield test2
 
             # extend alt chain to trigger re-org
             block("alt" + str(chain1_tip + 1))
-            print("reorg chain 2+")
             yield accepted()
 
             # ... and re-org back to the first chain
             tip(chain1_tip)
             block(chain1_tip + 1)
-            print("reorg back to chain 1")
             yield rejected()
             block(chain1_tip + 2)
             yield accepted()

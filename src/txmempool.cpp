@@ -17,6 +17,7 @@
 #include "utilmoneystr.h"
 #include "utiltime.h"
 #include "version.h"
+#include "chainparams.h"
 
 using namespace std;
 
@@ -539,6 +540,8 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, std::list<CTransact
 
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags)
 {
+    static const int nMaturity = Params().GetConsensus().fPowNoRetargeting ?
+        COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
@@ -557,7 +560,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
                     continue;
                 const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
 		if (nCheckFrequency != 0) assert(coins);
-                if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
+                if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < nMaturity)) {
                     transactionsToRemove.push_back(tx);
                     break;
                 }
