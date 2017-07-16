@@ -128,7 +128,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
-        block.nVersion = 4
+        block.nVersion = 0x80
         if segwit:
             add_witness_commitment(block)
         block.solve()
@@ -140,8 +140,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_on_tip(self.nodes[0])
         self.test_node.send_and_ping(msg_block(block))
         assert(int(self.nodes[0].getbestblockhash(), 16) == block.sha256)
-        for _ in range(36):
-            self.nodes[0].generate(100)
+        self.nodes[0].generate(100)
 
         total_value = block.vtx[0].vout[0].nValue
         out_value = total_value // 10
@@ -281,18 +280,31 @@ class CompactBlocksTest(BitcoinTestFramework):
     # bitcoind's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version, use_witness_address):
         # Generate a bunch of transactions.
-        for _ in range(36):
-            node.generate(100)
-        node.generate(1)
+        if not use_witness_address:
+            node.generate(101)
         num_transactions = 25
         address = node.getnewaddress()
         if use_witness_address:
+            # Viacoin: compact inputs to fit block size
+            unspent = node.listunspent(20)
+            while len(unspent) > 20:
+                a = node.getnewaddress()
+                vouts = unspent[:20]
+                inputs = [{"txid": vout['txid'], "vout": vout['vout']} for vout in vouts]
+                amt = satoshi_round(sum([vout['amount'] for vout in vouts]) - Decimal(0.01))
+                tx = node.createrawtransaction(inputs, {a:amt})
+                stx = node.signrawtransaction(tx)
+                node.sendrawtransaction(stx['hex'])
+                node.generate(1)
+                unspent = node.listunspent(20)
+
             # Want at least one segwit spend, so move all funds to
             # a witness address.
             address = node.addwitnessaddress(address)
             value_to_send = node.getbalance()
             node.sendtoaddress(address, satoshi_round(value_to_send-Decimal(0.1)))
             node.generate(1)
+
 
         segwit_tx_generated = False
         for i in range(num_transactions):

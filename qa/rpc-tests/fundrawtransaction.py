@@ -51,8 +51,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.nodes[2].generate(1)
         self.sync_all()
-        for xx in range(5):
-            self.nodes[0].generate(700)
         self.nodes[0].generate(121)
         self.sync_all()
 

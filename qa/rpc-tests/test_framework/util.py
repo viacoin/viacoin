@@ -35,7 +35,7 @@ PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
 
-BITCOIND_PROC_WAIT_TIMEOUT = 180
+BITCOIND_PROC_WAIT_TIMEOUT = 60
 
 
 class PortSeed:
@@ -52,9 +52,9 @@ MOCKTIME = 0
 def enable_mocktime():
     #For backwared compatibility of the python scripts
     #with previous versions of the cache, set MOCKTIME 
-    #to Jul 12, 2014 15:53:56 + (3701 * 12)
+    #to Jul 12, 2014 15:53:56 + (201 * 12)
     global MOCKTIME
-    MOCKTIME = 1405166036 + (3701 * 12)
+    MOCKTIME = 1405166036 + (201 * 12)
 
 def disable_mocktime():
     global MOCKTIME
@@ -203,9 +203,10 @@ def wait_for_bitcoind_start(process, url, i):
 
 def initialize_chain(test_dir, num_nodes):
     """
-    Create a cache of a 3700-block-long chain (with wallet) for MAX_NODES
+    Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
     """
+
     assert num_nodes <= MAX_NODES
     create_cache = False
     for i in range(MAX_NODES):
@@ -223,7 +224,7 @@ def initialize_chain(test_dir, num_nodes):
         # Create cache directories, run bitcoinds:
         for i in range(MAX_NODES):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("VIACOIND", "viacoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0", "-debug=1" ]
+            args = [ os.getenv("VIACOIND", "viacoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
@@ -247,12 +248,10 @@ def initialize_chain(test_dir, num_nodes):
         # initialize_chain, only 4 nodes will generate coins.
         #
         # blocks are created with timestamps 12 seconds apart
-        # starting from 12*3701 in the past
+        # starting from 201*12 in the past
         enable_mocktime()
-        if os.getenv("PYTHON_DEBUG", ""):
-            print("Mining cache blocks")
-        block_time = get_mocktime() - (3701 * 12)
-        for i in range(37):
+        block_time = get_mocktime() - (201 * 12)
+        for i in range(2):
             for peer in range(4):
                 for j in range(25):
                     set_node_times(rpcs, block_time)
@@ -260,9 +259,6 @@ def initialize_chain(test_dir, num_nodes):
                     block_time += 12
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
-                if os.getenv("PYTHON_DEBUG", ""):
-                    print('.', end = '', flush = True)
-
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
@@ -315,7 +311,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
         binary = os.getenv("VIACOIND", "viacoind")
-    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-mocktime="+str(get_mocktime()) ]
+    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-debug=1", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     if os.getenv("PYTHON_DEBUG", ""):
@@ -577,9 +573,7 @@ def satoshi_round(amount):
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
 def create_confirmed_utxos(fee, node, count):
-    for _ in range(36):
-        node.generate(100)
-    node.generate(int(0.5*count)+1)
+    node.generate(int(0.5*count)+101)
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
@@ -607,16 +601,16 @@ def create_confirmed_utxos(fee, node, count):
 
 # Create large OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions).
-def gen_return_txouts():
+def gen_return_txouts(txouts_cnt = 7):
     # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
     # So we have big transactions (and therefore can't fit very many into each block)
     # create one script_pubkey
     script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
     for i in range (512):
         script_pubkey = script_pubkey + "01"
-    # concatenate 96 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "61"
-    for k in range(96):
+    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
+    txouts = "%02x" % (txouts_cnt + 1)
+    for k in range(txouts_cnt):
         # add txout value
         txouts = txouts + "0000000000000000"
         # add length of script_pubkey

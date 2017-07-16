@@ -49,6 +49,8 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 
 QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionRecord *rec, int unit)
 {
+    static const int nMaturity = Params().GetConsensus().fPowNoRetargeting ?
+        COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
     QString strHTML;
 
     LOCK2(cs_main, wallet->cs_wallet);
@@ -265,7 +267,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
 
     if (wtx.IsCoinBase())
     {
-        quint32 numBlocksToMaturity = COINBASE_MATURITY +  1;
+        quint32 numBlocksToMaturity = nMaturity +  1;
         strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     }
 

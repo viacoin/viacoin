@@ -4,6 +4,7 @@
 
 #include "versionbits.h"
 #include "chain.h"
+#include "util.h"
 
 const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
     {

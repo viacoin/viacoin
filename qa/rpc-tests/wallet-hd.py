@@ -44,9 +44,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Derive some HD addresses and remember the last
         # Also send funds to each add
-        for _ in range(36):
-            self.nodes[0].generate(100)
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(101)
         hd_add = None
         num_hd_adds = 300
         for i in range(num_hd_adds):
