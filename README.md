@@ -1,7 +1,7 @@
 Viacoin Core integration/staging tree
 =====================================
 
-[![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
+[![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=0.13-dev)](https://travis-ci.org/viacoin/viacoin)
 
 https://viacoin.org
 
