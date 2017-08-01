@@ -106,7 +106,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1530230400;   // June 28, 2018
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000024678b06568466a22");
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000318d732407b3fcacb");
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
