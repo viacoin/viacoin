@@ -1778,6 +1778,8 @@ bool IsInitialBlockDownload()
 {
     const CChainParams& chainParams = Params();
 
+    if (chainParams.GetConsensus().fPowNoRetargeting)
+        return false;
     // Once this function has returned false, it must remain false.
     static std::atomic<bool> latchToFalse{false};
     // Optimization: pre-test latch before taking the lock.
