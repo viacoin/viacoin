@@ -60,7 +60,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>ViacoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>&amp;Зурвас хавсаргах...</translation>
@@ -126,8 +126,8 @@
         <translation>Оношилгоо ба засварын консолыг онгойлго</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Биткойн</translation>
+        <source>Viacoin</source>
+        <translation>Viacoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -546,7 +546,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>viacoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Сонголтууд:</translation>

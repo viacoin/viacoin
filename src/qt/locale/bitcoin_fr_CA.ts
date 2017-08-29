@@ -36,7 +36,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>ViacoinGUI</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -154,6 +154,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>viacoin-core</name>
     </context>
 </TS>
