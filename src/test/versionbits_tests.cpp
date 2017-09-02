@@ -12,7 +12,7 @@
 #include <boost/test/unit_test.hpp>
 
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
-int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
+int32_t TestTime(int nHeight) { return 1415926536 + 12 * nHeight; }
 
 static const Consensus::Params paramsDummy = Consensus::Params();
 
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 
     // Check that ComputeBlockVersion will set the bit until nTimeout
     nTime += 12;
-    int blocksToMine = 21600; // test blocks for up to 2 time periods
+    int blocksToMine = 100800; // test blocks for up to 2 time periods
     int nHeight = 151200;
     // These blocks are all before nTimeout is reached.
     while (nTime < nTimeout && blocksToMine > 0) {
