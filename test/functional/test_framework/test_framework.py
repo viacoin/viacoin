@@ -108,11 +108,11 @@ class BitcoinTestFramework(object):
 
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                          help="Leave bitcoinds and test.* datadir on exit or error")
+                          help="Leave viacoinds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                          help="Don't stop bitcoinds after the test execution")
+                          help="Don't stop viacoinds after the test execution")
         parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../../../src"),
-                          help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
+                          help="Source directory containing viacoind/viacoin-cli (default: %default)")
         parser.add_option("--cachedir", dest="cachedir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../../cache"),
                           help="Directory for caching pregenerated datadirs")
         parser.add_option("--tmpdir", dest="tmpdir", help="Root directory for datadirs")
@@ -174,7 +174,7 @@ class BitcoinTestFramework(object):
             if self.nodes:
                 self.stop_nodes()
         else:
-            self.log.info("Note: bitcoinds were not stopped and may still be running")
+            self.log.info("Note: viacoinds were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
             self.log.info("Cleaning up")
@@ -211,16 +211,16 @@ class BitcoinTestFramework(object):
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        """Start a bitcoind and return RPC connection to it"""
+        """Start a viacoind and return RPC connection to it"""
 
         datadir = os.path.join(dirname, "node" + str(i))
         if binary is None:
-            binary = os.getenv("BITCOIND", "bitcoind")
+            binary = os.getenv("VIACOIND", "viacoind")
         args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(self.mocktime), "-uacomment=testnode%d" % i]
         if extra_args is not None:
             args.extend(extra_args)
         self.bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
-        self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
+        self.log.debug("initialize_chain: viacoind started, waiting for RPC to come up")
         self._wait_for_bitcoind_start(self.bitcoind_processes[i], datadir, i, rpchost)
         self.log.debug("initialize_chain: RPC successfully started")
         proxy = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, timeout=timewait)
@@ -278,7 +278,7 @@ class BitcoinTestFramework(object):
                 self.start_node(i, dirname, extra_args, stderr=log_stderr)
                 self.stop_node(i)
             except Exception as e:
-                assert 'bitcoind exited' in str(e)  # node must have shutdown
+                assert 'viacoind exited' in str(e)  # node must have shutdown
                 if expected_msg is not None:
                     log_stderr.seek(0)
                     stderr = log_stderr.read().decode('utf-8')
@@ -286,9 +286,9 @@ class BitcoinTestFramework(object):
                         raise AssertionError("Expected error \"" + expected_msg + "\" not found in:\n" + stderr)
             else:
                 if expected_msg is None:
-                    assert_msg = "bitcoind should have exited with an error"
+                    assert_msg = "viacoind should have exited with an error"
                 else:
-                    assert_msg = "bitcoind should have exited with expected error " + expected_msg
+                    assert_msg = "viacoind should have exited with expected error " + expected_msg
                 raise AssertionError(assert_msg)
 
     def wait_for_node_exit(self, i, timeout):
@@ -386,11 +386,11 @@ class BitcoinTestFramework(object):
             # Create cache directories, run bitcoinds:
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(cachedir, i)
-                args = [os.getenv("BITCOIND", "bitcoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
+                args = [os.getenv("VIACOIND", "viacoind"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 self.bitcoind_processes[i] = subprocess.Popen(args)
-                self.log.debug("initialize_chain: bitcoind started, waiting for RPC to come up")
+                self.log.debug("initialize_chain: viacoind started, waiting for RPC to come up")
                 self._wait_for_bitcoind_start(self.bitcoind_processes[i], datadir, i)
                 self.log.debug("initialize_chain: RPC successfully started")
 
@@ -451,7 +451,7 @@ class BitcoinTestFramework(object):
         Raise an exception if bitcoind exits during initialization."""
         while True:
             if process.poll() is not None:
-                raise Exception('bitcoind exited with status %i during initialization' % process.returncode)
+                raise Exception('viacoind exited with status %i during initialization' % process.returncode)
             try:
                 # Check if .cookie file to be created
                 rpc = get_rpc_proxy(rpc_url(datadir, i, rpchost), i, coveragedir=self.options.coveragedir)
@@ -483,11 +483,11 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to test")
+                          default=os.getenv("VIACOIND", "viacoind"),
+                          help="viacoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to use for reference nodes (if any)")
+                          default=os.getenv("VIACOIND", "viacoind"),
+                          help="viacoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
         extra_args = [['-whitelist=127.0.0.1']]*self.num_nodes
