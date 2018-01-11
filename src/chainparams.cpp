@@ -222,8 +222,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.push_back(CDNSSeedData("bootstrap-testnet.viacoin.net", "testnet.viacoin.net"));
-        vSeeds.push_back(CDNSSeedData("viacoin.net", "seed-testnet.viacoin.net"));
+        vSeeds.push_back(CDNSSeedData("159.203.109.115", "159.203.109.115"));
+        vSeeds.push_back(CDNSSeedData("104.131.34.150", "104.131.34.150"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,127);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
