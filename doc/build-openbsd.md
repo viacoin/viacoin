@@ -1,10 +1,10 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 6.0)
+(updated for OpenBSD 6.2)
 
 This guide describes how to build viacoind and command-line utilities on OpenBSD.
 
-As OpenBSD is most common as a server OS, we will not bother with the GUI.
+OpenBSD is most commonly used as a server OS, so this guide does not contain instructions for building the GUI.
 
 Preparation
 -------------
@@ -12,18 +12,20 @@ Preparation
 Run the following as root to install the base dependencies for building:
 
 ```bash
-pkg_add gmake libtool libevent
+pkg_add git gmake libevent libtool
 pkg_add autoconf # (select highest version, e.g. 2.69)
 pkg_add automake # (select highest version, e.g. 1.15)
-pkg_add python # (select highest version, e.g. 3.5)
+pkg_add python # (select highest version, e.g. 3.6)
+pkg_add boost
+
+git clone https://github.com/bitcoin/bitcoin.git
 ```
 
-The default C++ compiler that comes with OpenBSD 5.9 is g++ 4.2. This version is old (from 2007), and is not able to compile the current version of Viacoin Core, primarily as it has no C++11 support, but even before there were issues. So here we will be installing a newer compiler.
 
 GCC
 -------
 
-You can install a newer version of gcc with:
+The default C++ compiler that comes with OpenBSD 6.2 is g++ 4.2.1. This version is old (from 2007), and is not able to compile the current version of Bitcoin Core because it has no C++11 support. We'll install a newer version of GCC:
 
 ```bash
 pkg_add g++ # (select newest 4.x version, e.g. 4.9.3)
@@ -65,12 +67,17 @@ config_opts="runtime-link=shared threadapi=pthread threading=multi link=static v
 ./b2 -d2 -j2 -d1 ${config_opts} --prefix=${BOOST_PREFIX} stage
 ./b2 -d0 -j4 ${config_opts} --prefix=${BOOST_PREFIX} install
 ```
+=======
+ pkg_add g++
+ ```
+
+ This compiler will not overwrite the system compiler, it will be installed as `egcc` and `eg++` in `/usr/local/bin`.
 
 ### Building BerkeleyDB
 
 BerkeleyDB is only necessary for the wallet functionality. To skip this, pass `--disable-wallet` to `./configure`.
 
-See "Berkeley DB" in [build_unix.md](build_unix.md) for instructions on how to build BerkeleyDB 4.8.
+See "Berkeley DB" in [build-unix.md](build-unix.md#berkeley-db) for instructions on how to build BerkeleyDB 4.8.
 You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility).
 
 ```bash
@@ -98,8 +105,8 @@ The standard ulimit restrictions in OpenBSD are very strict:
 
     data(kbytes)         1572864
 
-This is, unfortunately, no longer enough to compile some `.cpp` files in the project,
-at least with gcc 4.9.3 (see issue https://github.com/bitcoin/bitcoin/issues/6658).
+This, unfortunately, may no longer be enough to compile some `.cpp` files in the project,
+at least with GCC 4.9.4 (see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
 If your user is in the `staff` group the limit can be raised with:
 
     ulimit -d 3000000
@@ -118,59 +125,32 @@ export AUTOCONF_VERSION=2.69 # replace this with the autoconf version that you i
 export AUTOMAKE_VERSION=1.15 # replace this with the automake version that you installed
 ./autogen.sh
 ```
-Make sure `BDB_PREFIX` and `BOOST_PREFIX` are set to the appropriate paths from the above steps.
+Make sure `BDB_PREFIX` is set to the appropriate path from the above steps.
 
 To configure with wallet:
 ```bash
-./configure --with-gui=no --with-boost=$BOOST_PREFIX \
-    CC=egcc CXX=eg++ CPP=ecpp \
+./configure --with-gui=no CC=egcc CXX=eg++ CPP=ecpp \
     BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
 ```
 
 To configure without wallet:
 ```bash
-./configure --disable-wallet --with-gui=no --with-boost=$BOOST_PREFIX \
-    CC=egcc CXX=eg++ CPP=ecpp
+./configure --disable-wallet --with-gui=no CC=egcc CXX=eg++ CPP=ecpp
 ```
 
 Build and run the tests:
 ```bash
-gmake # can use -jX here for parallelism
+gmake # use -jX here for parallelism
 gmake check
 ```
 
-Clang (not currently working)
+Clang
 ------------------------------
 
-WARNING: This is outdated, needs to be updated for OpenBSD 6.0 and re-tried.
-
-Using a newer g++ results in linking the new code to a new libstdc++.
-Libraries built with the old g++, will still import the old library.
-This gives conflicts, necessitating rebuild of all C++ dependencies of the application.
-
-With clang this can - at least theoretically - be avoided because it uses the
-base system's libstdc++.
-
 ```bash
-pkg_add llvm boost
-```
+pkg_add llvm
 
-```bash
 ./configure --disable-wallet --with-gui=no CC=clang CXX=clang++
-gmake
+gmake # use -jX here for parallelism
+gmake check
 ```
-
-However, this does not appear to work. Compilation succeeds, but link fails
-with many 'local symbol discarded' errors:
-
-    local symbol 150: discarded in section `.text._ZN10tinyformat6detail14FormatIterator6finishEv' from libbitcoin_util.a(libbitcoin_util_a-random.o)
-    local symbol 151: discarded in section `.text._ZN10tinyformat6detail14FormatIterator21streamStateFromFormatERSoRjPKcii' from libbitcoin_util.a(libbitcoin_util_a-random.o)
-    local symbol 152: discarded in section `.text._ZN10tinyformat6detail12convertToIntIA13_cLb0EE6invokeERA13_Kc' from libbitcoin_util.a(libbitcoin_util_a-random.o)
-
-According to similar reported errors this is a binutils (ld) issue in 2.15, the
-version installed by OpenBSD 5.7:
-
-- http://openbsd-archive.7691.n7.nabble.com/UPDATE-cppcheck-1-65-td248900.html
-- https://llvm.org/bugs/show_bug.cgi?id=9758
-
-There is no known workaround for this.

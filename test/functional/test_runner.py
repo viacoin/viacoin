@@ -81,6 +81,7 @@ BASE_SCRIPTS= [
     # vv Tests less than 30s vv
     'keypool-topup.py',
     'zmq_test.py',
+    'bitcoin_cli.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
@@ -120,6 +121,8 @@ BASE_SCRIPTS= [
     'bip65-cltv-p2p.py',
     'uptime.py',
     'resendwallettransactions.py',
+    'minchainwork.py',
+    'p2p-acceptblock.py',
 ]
 
 EXTENDED_SCRIPTS = [
@@ -147,7 +150,6 @@ EXTENDED_SCRIPTS = [
     'txn_clone.py --mineblock',
     'forknotify.py',
     'invalidateblock.py',
-    'p2p-acceptblock.py',
     'replace-by-fee.py',
 ]
 
@@ -278,7 +280,8 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
 
     #Set env vars
     if "VIACOIND" not in os.environ:
-        os.environ["VIACOIND"] = build_dir + '/src/bitcoind' + exeext
+        os.environ["VIACOIND"] = build_dir + '/src/viacoind' + exeext
+        os.environ["VIACOINCLI"] = build_dir + '/src/viacoin-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 
