@@ -7,9 +7,8 @@
 
 #include "arith_uint256.h"
 #include "chain.h"
-#include "primitives/block.h"
-#include "uint256.h"
 #include "util.h"
+#include "auxpow/check.h"
 
 unsigned int CalculateNextWorkRequired_V1(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
@@ -194,9 +193,38 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
         return false;
 
     // Check proof of work matches claimed amount
-    if (UintToArith256(hash) > bnTarget)
-        return false;
+    return UintToArith256(hash) <= bnTarget;
 
+}
+
+bool CheckBlockProofOfWork(const CBlockHeader *pblock, const Consensus::Params& params)
+{
+    // LogPrint("txdb", "CheckBlockProofOfWork(): block: %s\n", pblock->ToString());  // LEDTMP
+
+    if (pblock->auxpow && (pblock->auxpow.get() != nullptr))
+    {
+        if (!CheckAuxpow(pblock->auxpow, pblock->GetHash(), pblock->GetChainID(), params))
+            return error("CheckBlockProofOfWork() : AUX POW is not valid");
+        // Check proof of work matches claimed amount
+        if (!CheckProofOfWork(pblock->auxpow->GetParentBlockHash(), pblock->nBits, params))
+            return error("CheckBlockProofOfWork() : AUX proof of work failed");
+    }
+    else
+    {
+        // Check proof of work matches claimed amount
+        if (!CheckProofOfWork(pblock->GetPoWHash(), pblock->nBits, params))
+            return error("CheckBlockProofOfWork() : proof of work failed");
+    }
+    return true;
+}
+
+bool CheckAuxPowValidity(const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    if (!params.fPowAllowMinDifficultyBlocks)
+    {
+        if (pblock->GetChainID() != AuxPow::CHAIN_ID)
+            return error("CheckAuxPowValidity() : block does not have our chain ID");
+    }
     return true;
 }
 

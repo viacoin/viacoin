@@ -1022,7 +1022,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (!CheckBlockProofOfWork(&block, consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
@@ -1040,19 +1040,62 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    // In -regtest mode use Bitcoin schedule
+    if (Params().MineBlocksOnDemand() && consensusParams.fPowAllowMinDifficultyBlocks) {
+        int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings >= 64)
+            return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+        CAmount nSubsidy = 50 * COIN;
+        // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        nSubsidy >>= halvings;
+        return nSubsidy;
+    }
+
+    // Viacoin schedule
+    CAmount nSubsidy = 0;
+
+    // different zero block period for testnet and mainnet
+    // mainnet not fixed until final release
+    int zeroRewardHeight = consensusParams.fPowAllowMinDifficultyBlocks ? 2001 : 10001;
+
+    int rampHeight = 43200 + zeroRewardHeight; // 4 periods of 10800
+
+    if (nHeight == 0) {
+        // no reward for genesis block
+        nSubsidy = 0;
+    } else if (nHeight == 1) {
+        // first distribution
+        nSubsidy = 10000000 * COIN;
+    } else if (nHeight <= zeroRewardHeight) {
+        // no block reward to allow difficulty to scale up and prevent instamining
+        nSubsidy = 0;
+    } else if (nHeight <= (zeroRewardHeight + 10800)) {
+        // first 10800 block after zero reward period is 10 coins per block
+        nSubsidy = 10 * COIN;
+    } else if (nHeight <= rampHeight) {
+        // every 10800 blocks reduce nSubsidy from 8 to 6
+        nSubsidy = (8 - int((nHeight-zeroRewardHeight-1) / 10800)) * COIN;
+    } else if (nHeight <= 1971000) {
+        nSubsidy = 5 * COIN;
+    } else { // (nHeight > 1971000)
+        int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings <= 64) {
+            nSubsidy = 20 * COIN;
+            nSubsidy >>= halvings;
+        }
+    }
+
     return nSubsidy;
 }
 
 bool IsInitialBlockDownload()
 {
+    if (Params().GetConsensus().fPowNoRetargeting)
+        return false;
+
     // Once this function has returned false, it must remain false.
     static std::atomic<bool> latchToFalse{false};
     // Optimization: pre-test latch before taking the lock.
@@ -1621,7 +1664,8 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (pindex->nHeight >= consensusparams.nWitnessStartHeight ||
+        VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
@@ -1739,14 +1783,14 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
     }
 
-    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
-    int nLockTimeFlags = 0;
-    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
-        nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
-    }
 
     // Get the script flags for this block
     unsigned int flags = GetBlockScriptFlags(pindex, chainparams.GetConsensus());
+    // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY) using versionbits logic.
+    int nLockTimeFlags = 0;
+    if (flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY) {
+        nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
+    }
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
@@ -1954,8 +1998,11 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
                     vBlocks.push_back(*it);
                     setDirtyBlockIndex.erase(it++);
                 }
-                if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks)) {
+                if (!pblocktree->WriteBatchSync(vFiles, nLastBlockFile, vBlocks, mapDirtyAuxPow)) {
                     return AbortNode(state, "Failed to write to block index database");
+                }
+                for (std::vector<const CBlockIndex*>::const_iterator it = vBlocks.begin(); it != vBlocks.end(); it++) {
+                    mapDirtyAuxPow.erase((*it)->GetBlockHash());
                 }
             }
             // Finally remove any pruned files
@@ -2042,7 +2089,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
         for (int i = 0; i < 100 && pindex != nullptr; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
-            if (pindex->nVersion > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & ~nExpectedVersion) != 0)
+            if ((pindex->nVersion & 0xff) > VERSIONBITS_LAST_OLD_BLOCK_VERSION && (pindex->nVersion & 0xff & ~nExpectedVersion) != 0)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
@@ -2658,6 +2705,7 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
 
+    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
     setDirtyBlockIndex.insert(pindexNew);
 
     return pindexNew;
@@ -2677,6 +2725,7 @@ static bool ReceivedBlockTransactions(const CBlock &block, CValidationState& sta
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
+    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
 
     if (pindexNew->pprev == nullptr || pindexNew->pprev->nChainTx) {
         // If pindexNew is the genesis block or all parents are BLOCK_VALID_TRANSACTIONS.
@@ -2803,7 +2852,7 @@ static bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, 
 static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckBlockProofOfWork(&block, consensusParams))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     return true;
@@ -2875,7 +2924,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     LOCK(cs_main);
-    return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return (nHeight >= params.nWitnessStartHeight ||
+            VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_SEGWIT, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
 // Compute at which vout of the block's coinbase transaction the witness
@@ -2942,8 +2993,20 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     assert(pindexPrev != nullptr);
     const int nHeight = pindexPrev->nHeight + 1;
 
-    // Check proof of work
     const Consensus::Params& consensusParams = params.GetConsensus();
+
+    // Check and validate auxpow
+    if (block.auxpow && block.auxpow.get() != nullptr)
+    {
+        if (nHeight < consensusParams.nAuxPowStartHeight)
+            return state.DoS(100, error("%s : premature auxpow block", __func__),
+                             REJECT_INVALID, "time-too-new");
+        if (!CheckAuxPowValidity(&block, params.GetConsensus()))
+            return state.DoS(100, error("%s : invalid auxpow block", __func__),
+                             REJECT_INVALID, "bad-auxpow");
+    }
+
+    // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
 
@@ -2966,10 +3029,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    // check for version 2, 3 and 4 upgrades
-    if((block.nVersion < 2 && nHeight >= consensusParams.BIP34Height) ||
-       (block.nVersion < 3 && nHeight >= consensusParams.BIP66Height) ||
-       (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
+    // check for version 3, 4 and 5 upgrades
+    if(((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS && (block.nVersion & 0xFF) < 3 && nHeight >= consensusParams.BIP65Height) ||
+       ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS && (block.nVersion & 0xFF) < 4 && nHeight >= consensusParams.BIP66Height) ||
+       ((block.nVersion & 0xFF) < VERSIONBITS_TOP_BITS && (block.nVersion & 0xFF) < 5 && nHeight >= consensusParams.BlockVer5Height))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
@@ -2982,7 +3045,8 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
+    if (nHeight >= consensusParams.nWitnessStartHeight ||
+        VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == THRESHOLD_ACTIVE) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
@@ -2998,7 +3062,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    if (block.nVersion >= 2 && nHeight >= consensusParams.BIP34Height)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||

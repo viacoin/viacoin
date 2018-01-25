@@ -17,6 +17,7 @@
 #include "txmempool.h"
 #include "utilstrencodings.h"
 #include "version.h"
+#include "auxpow/serialize.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -159,7 +160,7 @@ static bool rest_headers(HTTPRequest* req,
 
     CDataStream ssHeader(SER_NETWORK, PROTOCOL_VERSION);
     for (const CBlockIndex *pindex : headers) {
-        ssHeader << pindex->GetBlockHeader();
+        ssHeader << pindex->GetBlockHeader(mapDirtyAuxPow);
     }
 
     switch (rf) {

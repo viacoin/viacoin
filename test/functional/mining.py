@@ -41,7 +41,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['currentblocktx'], 0)
         assert_equal(mining_info['currentblockweight'], 0)
         assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
-        assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
+        assert_equal(mining_info['networkhashps'], Decimal('0.08333333333333333'))
         assert_equal(mining_info['pooledtx'], 0)
 
         # Mine a block to leave initial block download
@@ -51,7 +51,7 @@ class MiningTest(BitcoinTestFramework):
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
 
-        coinbase_tx = create_coinbase(height=int(tmpl["height"]) + 1)
+        coinbase_tx = create_coinbase(height=int(tmpl["height"])) # + 1)
         # sequence numbers must not be max for nLockTime to have effect
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
         coinbase_tx.rehash()

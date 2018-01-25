@@ -508,7 +508,7 @@ def create_confirmed_utxos(fee, node, count):
 
 # Create large OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions).
-def gen_return_txouts():
+def gen_return_txouts(txouts_cnt = 7):
     # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
     # So we have big transactions (and therefore can't fit very many into each block)
     # create one script_pubkey
@@ -516,8 +516,8 @@ def gen_return_txouts():
     for i in range(512):
         script_pubkey = script_pubkey + "01"
     # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-    txouts = "81"
-    for k in range(128):
+    txouts = "%02x" % (txouts_cnt + 1)
+    for k in range(txouts_cnt):
         # add txout value
         txouts = txouts + "0000000000000000"
         # add length of script_pubkey
