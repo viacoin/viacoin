@@ -2705,8 +2705,8 @@ static CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
 
-    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
     setDirtyBlockIndex.insert(pindexNew);
+    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
 
     return pindexNew;
 }
@@ -3988,6 +3988,7 @@ void UnloadBlockIndex()
     nLastBlockFile = 0;
     nBlockSequenceId = 1;
     setDirtyBlockIndex.clear();
+    mapDirtyAuxPow.clear();
     g_failed_blocks.clear();
     setDirtyFileInfo.clear();
     versionbitscache.Clear();

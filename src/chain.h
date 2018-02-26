@@ -418,6 +418,9 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        // auxpow is not part of the block hash
+        if ((!(s.GetType() & SER_GETHASH)) && this->IsAuxPow())
+            READWRITE(auxpow);
     }
 
     uint256 GetBlockHash() const
@@ -430,6 +433,11 @@ public:
         block.nBits           = nBits;
         block.nNonce          = nNonce;
         return block.GetHash();
+    }
+
+    inline bool IsAuxPow() const
+    {
+        return nVersion & AuxPow::BLOCK_VERSION_AUXPOW;
     }
 
 
