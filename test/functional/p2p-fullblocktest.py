@@ -175,7 +175,7 @@ class FullBlockTest(ComparisonTestFramework):
         create_and_sign_tx = self.create_and_sign_transaction
 
         # these must be updated if consensus changes
-        MAX_BLOCK_SIGOPS = 20000
+        MAX_BLOCK_SIGOPS = 2000
 
 
         # Create a new block
@@ -358,7 +358,7 @@ class FullBlockTest(ComparisonTestFramework):
         tip(15)
         b23 = block(23, spend=out[6])
         tx = CTransaction()
-        script_length = MAX_BLOCK_BASE_SIZE - len(b23.serialize()) - 69
+        script_length = MAX_BLOCK_BASE_SIZE - len(b23.serialize()) - 65
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
@@ -371,7 +371,7 @@ class FullBlockTest(ComparisonTestFramework):
         # Make the next block one byte bigger and check that it fails
         tip(15)
         b24 = block(24, spend=out[6])
-        script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 69
+        script_length = MAX_BLOCK_BASE_SIZE - len(b24.serialize()) - 65
         script_output = CScript([b'\x00' * (script_length+1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = update_block(24, [tx])
@@ -576,20 +576,22 @@ class FullBlockTest(ComparisonTestFramework):
         tx.rehash()
         new_txs.append(tx)
         update_block(40, new_txs)
-        yield rejected(RejectResult(16, b'bad-blk-sigops'))
+        # yield rejected(RejectResult(16, b'bad-blk-sigops'))
+        # Viacoin: this won't fit in a block
+        yield rejected(RejectResult(16, b'bad-blk-length'))
 
         # same as b40, but one less sigop
         tip(39)
         b41 = block(41, spend=None)
-        update_block(41, b40.vtx[1:-1])
+        # update_block(41, b40.vtx[1:-1])
         b41_sigops_to_fill = b40_sigops_to_fill - 1
         tx = CTransaction()
         tx.vin.append(CTxIn(lastOutpoint, b''))
         tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b41_sigops_to_fill)))
         tx.rehash()
-        update_block(41, [tx])
+        # Viacoin: this won't fit in a block
+        # update_block(41, [tx])
         yield accepted()
-
         # Fork off of b39 to create a constant base again
         #
         # b23 (6) -> b30 (7) -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13)
@@ -900,7 +902,7 @@ class FullBlockTest(ComparisonTestFramework):
         tx = CTransaction()
 
         # use canonical serialization to calculate size
-        script_length = MAX_BLOCK_BASE_SIZE - len(b64a.normal_serialize()) - 69
+        script_length = MAX_BLOCK_BASE_SIZE - len(b64a.normal_serialize()) - 65
         script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
@@ -1243,13 +1245,13 @@ class FullBlockTest(ComparisonTestFramework):
         #
         if self.options.runbarelyexpensive:
             tip(88)
-            LARGE_REORG_SIZE = 1088
+            LARGE_REORG_SIZE = 288
             test1 = TestInstance(sync_every_block=False)
             spend=out[32]
             for i in range(89, LARGE_REORG_SIZE + 89):
                 b = block(i, spend)
                 tx = CTransaction()
-                script_length = MAX_BLOCK_BASE_SIZE - len(b.serialize()) - 69
+                script_length = MAX_BLOCK_BASE_SIZE - len(b.serialize()) - 65
                 script_output = CScript([b'\x00' * script_length])
                 tx.vout.append(CTxOut(0, script_output))
                 tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))

@@ -20,7 +20,7 @@ VB_PERIOD = 144
 VB_ACTIVATION_THRESHOLD = 108
 VB_TOP_BITS = 0x20000000
 
-MAX_SIGOP_COST = 80000
+MAX_SIGOP_COST = 8000
 
 
 # Calculate the virtual size of a witness block:
@@ -186,7 +186,7 @@ class SegWitTest(BitcoinTestFramework):
 
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
-        tx.vout.append(CTxOut(self.utxo[0].nValue-1000, CScript([OP_TRUE])))
+        tx.vout.append(CTxOut(self.utxo[0].nValue-1000000, CScript([OP_TRUE])))
         tx.wit.vtxinwit.append(CTxInWitness())
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)])]
 
@@ -448,7 +448,7 @@ class SegWitTest(BitcoinTestFramework):
         # The witness program will be a bunch of OP_2DROP's, followed by OP_TRUE.
         # This should give us plenty of room to tweak the spending tx's
         # virtual size.
-        NUM_DROPS = 200 # 201 max ops per script!
+        NUM_DROPS = 10 # 201 max ops per script!
         NUM_OUTPUTS = 50
 
         witness_program = CScript([OP_2DROP]*NUM_DROPS + [OP_TRUE])
@@ -494,7 +494,8 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(vsize, MAX_BLOCK_BASE_SIZE + 1)
         # Make sure that our test case would exceed the old max-network-message
         # limit
-        assert(len(block.serialize(True)) > 2*1024*1024)
+        # Viacoin: scale to blocksize proportion
+        assert(len(block.serialize(True)) > 2*1024*1024 // 16.66)
 
         self.test_node.test_witness_block(block, accepted=False)
 
@@ -1289,7 +1290,7 @@ class SegWitTest(BitcoinTestFramework):
         # output to a random number of outputs.  Repeat NUM_TESTS times.
         # Ensure that we've tested a situation where we use SIGHASH_SINGLE with
         # an input index > number of outputs.
-        NUM_TESTS = 500
+        NUM_TESTS = 300
         temp_utxos = []
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(prev_utxo.sha256, prev_utxo.n), b""))
@@ -1340,13 +1341,13 @@ class SegWitTest(BitcoinTestFramework):
                 temp_utxos.append(UTXO(tx.sha256, i, split_value))
             temp_utxos = temp_utxos[num_inputs:]
 
-            block.vtx.append(tx)
-
             # Test the block periodically, if we're close to maxblocksize
-            if (get_virtual_size(block) > MAX_BLOCK_BASE_SIZE - 1000):
+            if (get_virtual_size(block) >= MAX_BLOCK_BASE_SIZE - len(tx.serialize_with_witness())):
                 self.update_witness_block_with_transactions(block, [])
                 self.test_node.test_witness_block(block, accepted=True)
                 block = self.build_next_block()
+
+            block.vtx.append(tx)
 
         if (not used_sighash_single_out_of_bounds):
             self.log.info("WARNING: this test run didn't attempt SIGHASH_SINGLE with out-of-bounds index value")
@@ -1404,6 +1405,7 @@ class SegWitTest(BitcoinTestFramework):
             index += 1
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
+        assert_greater_than_or_equal(MAX_BLOCK_BASE_SIZE, get_virtual_size(block))
         self.test_node.test_witness_block(block, accepted=True)
 
         for i in range(len(tx.vout)):
@@ -1865,12 +1867,6 @@ class SegWitTest(BitcoinTestFramework):
 
         self.utxo.pop(0)
 
-    def test_reject_blocks(self):
-        print ("\tTesting rejection of block.nVersion < BIP9_TOP_BITS blocks")
-        block = self.build_next_block(nVersion=4)
-        block.solve()
-        resp = self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
-        assert_equal(resp, 'bad-version(0x00000004)')
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
@@ -1930,7 +1926,6 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Test P2SH witness handling again
-        self.test_reject_blocks()
         self.test_p2sh_witness(segwit_activated=True)
         self.test_witness_commitments()
         self.test_block_malleability()

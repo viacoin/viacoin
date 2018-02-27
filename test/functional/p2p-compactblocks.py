@@ -252,10 +252,24 @@ class CompactBlocksTest(BitcoinTestFramework):
     # bitcoind's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version, use_witness_address):
         # Generate a bunch of transactions.
-        node.generate(101)
+        if not use_witness_address:
+            node.generate(101)
         num_transactions = 25
         address = node.getnewaddress()
         if use_witness_address:
+            # Viacoin: compact inputs to fit block size
+            unspent = node.listunspent(20)
+            while len(unspent) > 20:
+                a = node.getnewaddress()
+                vouts = unspent[:20]
+                inputs = [{"txid": vout['txid'], "vout": vout['vout']} for vout in vouts]
+                amt = satoshi_round(sum([vout['amount'] for vout in vouts]) - Decimal(0.01))
+                tx = node.createrawtransaction(inputs, {a:amt})
+                stx = node.signrawtransaction(tx)
+                node.sendrawtransaction(stx['hex'])
+                node.generate(1)
+                unspent = node.listunspent(20)
+
             # Want at least one segwit spend, so move all funds to
             # a witness address.
             address = node.addwitnessaddress(address)

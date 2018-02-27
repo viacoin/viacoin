@@ -44,7 +44,7 @@ MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_INV_SZ = 50000
-MAX_BLOCK_BASE_SIZE = 1000000
+MAX_BLOCK_BASE_SIZE = 60000
 
 COIN = 100000000 # 1 btc in satoshis
 
@@ -600,7 +600,7 @@ class CBlockHeader(object):
                time.ctime(self.nTime), self.nBits, self.nNonce)
 
 
-cAlass CBlock(CBlockHeader):
+class CBlock(CBlockHeader):
     def __init__(self, header=None):
         super(CBlock, self).__init__(header)
         self.vtx = []
@@ -647,7 +647,7 @@ cAlass CBlock(CBlockHeader):
 
         return self.get_merkle_root(hashes)
 
-  A  def is_valid(self):
+    def is_valid(self):
         self.calc_sha256()
         target = uint256_from_compact(self.nBits)
         if self.scrypt256 > target:

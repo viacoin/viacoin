@@ -15,13 +15,12 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
 from io import BytesIO
 
-CLTV_HEIGHT = 1351
+CLTV_HEIGHT = 1251
 
 # Reject codes that we might receive in this test
 REJECT_INVALID = 16
 REJECT_OBSOLETE = 17
 REJECT_NONSTANDARD = 64
-VB_TOP_BITS = 0x80
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
@@ -91,7 +90,7 @@ class BIP65Test(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
         block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        block.nVersion = VB_TOP_BITS
+        block.nVersion = 1
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
@@ -99,11 +98,11 @@ class BIP65Test(BitcoinTestFramework):
         node0.send_and_ping(msg_block(block))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
-        self.log.info("Test that blocks must now be at least version VB_TOP_BITS")
+        self.log.info("Test that blocks must now be at least version 3")
         tip = block.sha256
         block_time += 1
         block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        block.nVersion = 3
+        block.nVersion = 2
         block.solve()
         node0.send_and_ping(msg_block(block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
@@ -111,12 +110,12 @@ class BIP65Test(BitcoinTestFramework):
         wait_until(lambda: "reject" in node0.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
             assert_equal(node0.last_message["reject"].code, REJECT_OBSOLETE)
-            assert_equal(node0.last_message["reject"].reason, b'bad-version(0x00000003)')
+            assert_equal(node0.last_message["reject"].reason, b'bad-version(0x00000002)')
             assert_equal(node0.last_message["reject"].data, block.sha256)
             del node0.last_message["reject"]
 
         self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
-        block.nVersion = VB_TOP_BITS
+        block.nVersion = 3
 
         spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
                 self.nodeaddress, 1.0)
@@ -147,7 +146,7 @@ class BIP65Test(BitcoinTestFramework):
             else:
                 assert b'Negative locktime' in node0.last_message["reject"].reason
 
-        self.log.info("Test that a version VB_TOP_BITS block with a valid-according-to-CLTV transaction is accepted")
+        self.log.info("Test that a version 3 block with a valid-according-to-CLTV transaction is accepted")
         spendtx = cltv_validate(self.nodes[0], spendtx, CLTV_HEIGHT - 1)
         spendtx.rehash()
 

@@ -331,9 +331,9 @@ class BitcoinTestFramework(object):
         mocktime then the mempools will not sync due to IBD.
 
         For backwared compatibility of the python scripts with previous
-        versions of the cache, this helper function sets mocktime to Jan 1,
-        2014 + (201 * 10 * 60)"""
-        self.mocktime = 1388534400 + (201 * 10 * 60)
+        versions of the cache, this helper function sets mocktime to
+        Jul 12, 2014 15:53:56 + (201 * 24) second"""
+        self.mocktime = 1405166036 + (201 * 24)
 
     def disable_mocktime(self):
         self.mocktime = 0
@@ -408,16 +408,16 @@ class BitcoinTestFramework(object):
             # Note: To preserve compatibility with older versions of
             # initialize_chain, only 4 nodes will generate coins.
             #
-            # blocks are created with timestamps 10 minutes apart
-            # starting from 2010 minutes in the past
+            # blocks are created with timestamps 24 seconds apart
+            # starting from 201*24 in the past
             self.enable_mocktime()
-            block_time = self.mocktime - (201 * 10 * 60)
+            block_time = self.mocktime - (201 * 24)
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
                         self.nodes[peer].generate(1)
-                        block_time += 10 * 60
+                        block_time += 24
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
 
