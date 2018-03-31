@@ -5,7 +5,6 @@ Viacoin Core integration/staging tree
 
 https://viacoin.org
 
-Note: Development is ongoing on our own personal accounts! Core 0.15 will be released soon.
 ----------------
 
 What is Viacoin?
