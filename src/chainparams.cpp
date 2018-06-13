@@ -111,11 +111,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd9;
-        nDefaultPort = 8333;
+        pchMessageStart[0] = 0x0f;
+        pchMessageStart[1] = 0x68;
+        pchMessageStart[2] = 0xc6;
+        pchMessageStart[3] = 0xcb;
+        nDefaultPort = 5223;
         nPruneAfterHeight = 100000;
 
         genesis = CreateGenesisBlock(1405164774, 4016033, 0x1e01ffff, 1, 0 * COIN);
