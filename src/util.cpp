@@ -949,6 +949,8 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
+        std::string strYear = strPrefix;
+        strYear.replace(strYear.find("2014"), sizeof("2014")-1, "2009");
         strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;
