@@ -1,13 +1,13 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/viacoin
+src/viacoind
+src/viacoin-cli
+src/viacoin-tx
+src/test/test_viacoin
+src/test/test_viacoin_fuzzy
+src/qt/test/test_viacoin-qt
 
 # autoreconf
 Makefile.in
@@ -80,17 +80,16 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+viacoin-qt
+Viacoin-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+viacoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
-
 # Mac specific
 .DS_Store
 build
@@ -99,7 +98,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_viacoin.coverage/
 total.coverage/
 coverage_percent.txt
 
