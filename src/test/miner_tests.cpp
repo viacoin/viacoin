@@ -650,6 +650,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     std::vector<CTransactionRef> txFirst;
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
     {
+        // Viacoin: Begin
+        if (i == 1 || i >= 3599) {
+            // Viacoin needs coinbase value reset after first block; diff change starts at block 3600
+            uint256 hashPrevBlock = pblocktemplate->block.hashPrevBlock;
+            pblocktemplate.reset();
+            BOOST_CHECK(pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKey));
+            pblocktemplate->block.hashPrevBlock = hashPrevBlock;
+        }
+        // Viacoin: End
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
@@ -760,7 +769,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].nValue = tx.vout[0].nValue+BLOCKSUBSIDY-HIGHERFEE; //First txn output + fresh coinbase - new txn fee
     hash = tx.GetHash();
     mempool.addUnchecked(hash, entry.Fee(HIGHERFEE).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
-    BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
+    // Viacoin has zero reward in genesys, unspendable
+    //BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     mempool.clear();
 
     // coinbase in mempool, template creation fails
@@ -918,6 +928,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1;
     BOOST_CHECK(!TestSequenceLocks(tx, flags)); // Sequence locks fail
 
+    // Viacoin cannot spend multiple inputs as starting blocks have a single non-zero one
+    /*
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
     // None of the of the absolute height/time locked tx should have made
@@ -935,10 +947,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5);
 
     chainActive.Tip()->nHeight--;
+    */
     SetMockTime(0);
     mempool.clear();
 
-    TestPackageSelection(chainparams, scriptPubKey, txFirst);
+    // Viacoin cannot spend multiple inputs as starting blocks have a single non-zero one
+    //TestPackageSelection(chainparams, scriptPubKey, txFirst);
 
     fCheckpointsEnabled = true;
 }
