@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
 
     // Mine 2011 more blocks at the old time, and check that CBV isn't setting the bit yet.
     for (int i=1; i<50396; i++) {
-        lastBlock = firstChain.Mine(50396+i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+        lastBlock = firstChain.Mine(50400+i, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
         // This works because VERSIONBITS_LAST_OLD_BLOCK_VERSION happens
         // to be 4, and the bit we're testing happens to be bit 28.
         BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, mainnetParams) & (1<<bit), 0);
