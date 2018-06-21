@@ -25,7 +25,7 @@ python27
 
 Download the source code:
 ```
-git clone https://github.com/viacoin-project/viacoin
+git clone https://github.com/viacoin/viacoin
 ```
 
 See [dependencies.md](dependencies.md) for a complete overview.

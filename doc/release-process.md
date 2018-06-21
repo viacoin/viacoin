@@ -5,7 +5,7 @@ Before every release candidate:
 
 * Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
 
-* Update manpages, see [gen-manpages.sh](https://github.com/viacoin-project/viacoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update manpages, see [gen-manpages.sh](https://github.com/viacoin/viacoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 
 Before every minor and major release:
 
@@ -33,10 +33,10 @@ If you're using the automated script (found in [contrib/gitian-build.sh](/contri
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/viacoin-project/gitian.sigs.ltc.git
-    git clone https://github.com/viacoin-project/viacoin-detached-sigs.git
+    git clone https://github.com/viacoin/gitian.sigs.via.git
+    git clone https://github.com/viacoin/viacoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/viacoin-project/viacoin.git
+    git clone https://github.com/viacoin/viacoin.git
 
 ### Viacoin maintainers/release engineers, suggestion for writing release notes
 
@@ -68,9 +68,9 @@ Setup Gitian descriptors:
     git checkout v${VERSION}
     popd
 
-Ensure your gitian.sigs.ltc are up-to-date if you wish to gverify your builds against other Gitian signatures.
+Ensure your gitian.sigs.via are up-to-date if you wish to gverify your builds against other Gitian signatures.
 
-    pushd ./gitian.sigs.ltc
+    pushd ./gitian.sigs.via
     git pull
     popd
 
@@ -112,16 +112,16 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
     pushd ./gitian-builder
     ./bin/gbuild --num-make 2 --memory 3000 --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs.ltc/ ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs.via/ ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
     mv build/out/viacoin-*.tar.gz build/out/src/viacoin-*.tar.gz ../
 
     ./bin/gbuild --num-make 2 --memory 3000 --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs.ltc/ ../viacoin/contrib/gitian-descriptors/gitian-win.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs.via/ ../viacoin/contrib/gitian-descriptors/gitian-win.yml
     mv build/out/viacoin-*-win-unsigned.tar.gz inputs/viacoin-win-unsigned.tar.gz
     mv build/out/viacoin-*.zip build/out/viacoin-*.exe ../
 
     ./bin/gbuild --num-make 2 --memory 3000 --commit viacoin=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs.ltc/ ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs.via/ ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
     mv build/out/viacoin-*-osx-unsigned.tar.gz inputs/viacoin-osx-unsigned.tar.gz
     mv build/out/viacoin-*.tar.gz build/out/viacoin-*.dmg ../
     popd
@@ -132,7 +132,7 @@ Build output expected:
   2. linux 32-bit and 64-bit dist tarballs (`viacoin-${VERSION}-linux[32|64].tar.gz`)
   3. windows 32-bit and 64-bit unsigned installers and dist zips (`viacoin-${VERSION}-win[32|64]-setup-unsigned.exe`, `viacoin-${VERSION}-win[32|64].zip`)
   4. OS X unsigned installer and dist tarball (`viacoin-${VERSION}-osx-unsigned.dmg`, `viacoin-${VERSION}-osx64.tar.gz`)
-  5. Gitian signatures (in `gitian.sigs.ltc/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/`)
+  5. Gitian signatures (in `gitian.sigs.via/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/`)
 
 ### Verify other gitian builders signatures to your own. (Optional)
 
@@ -144,21 +144,21 @@ Add other gitian builders keys to your gpg keyring, and/or refresh keys.
 Verify the signatures
 
     pushd ./gitian-builder
-    ./bin/gverify -v -d ../gitian.sigs.ltc/ -r ${VERSION}-linux ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
-    ./bin/gverify -v -d ../gitian.sigs.ltc/ -r ${VERSION}-win-unsigned ../viacoin/contrib/gitian-descriptors/gitian-win.yml
-    ./bin/gverify -v -d ../gitian.sigs.ltc/ -r ${VERSION}-osx-unsigned ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
+    ./bin/gverify -v -d ../gitian.sigs.via/ -r ${VERSION}-linux ../viacoin/contrib/gitian-descriptors/gitian-linux.yml
+    ./bin/gverify -v -d ../gitian.sigs.via/ -r ${VERSION}-win-unsigned ../viacoin/contrib/gitian-descriptors/gitian-win.yml
+    ./bin/gverify -v -d ../gitian.sigs.via/ -r ${VERSION}-osx-unsigned ../viacoin/contrib/gitian-descriptors/gitian-osx.yml
     popd
 
 ### Next steps:
 
-Commit your signature to gitian.sigs.ltc:
+Commit your signature to gitian.sigs.via:
 
-    pushd gitian.sigs.ltc
+    pushd gitian.sigs.via
     git add ${VERSION}-linux/${SIGNER}
     git add ${VERSION}-win-unsigned/${SIGNER}
     git add ${VERSION}-osx-unsigned/${SIGNER}
     git commit -a
-    git push  # Assuming you can push to the gitian.sigs.ltc tree
+    git push  # Assuming you can push to the gitian.sigs.via tree
     popd
 
 Codesigner only: Create Windows/OS X detached signatures:
@@ -195,14 +195,14 @@ Codesigner only: Commit the detached codesign payloads:
 Non-codesigners: wait for Windows/OS X detached signatures:
 
 - Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
-- Detached signatures will then be committed to the [viacoin-detached-sigs](https://github.com/viacoin-project/viacoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+- Detached signatures will then be committed to the [viacoin-detached-sigs](https://github.com/viacoin/viacoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
 Create (and optionally verify) the signed OS X binary:
 
     pushd ./gitian-builder
     ./bin/gbuild -i --commit signature=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs.ltc/ ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-    ./bin/gverify -v -d ../gitian.sigs.ltc/ -r ${VERSION}-osx-signed ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs.via/ ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+    ./bin/gverify -v -d ../gitian.sigs.via/ -r ${VERSION}-osx-signed ../viacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
     mv build/out/viacoin-osx-signed.dmg ../viacoin-${VERSION}-osx.dmg
     popd
 
@@ -210,19 +210,19 @@ Create (and optionally verify) the signed Windows binaries:
 
     pushd ./gitian-builder
     ./bin/gbuild -i --commit signature=v${VERSION} ../viacoin/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs.ltc/ ../viacoin/contrib/gitian-descriptors/gitian-win-signer.yml
-    ./bin/gverify -v -d ../gitian.sigs.ltc/ -r ${VERSION}-win-signed ../viacoin/contrib/gitian-descriptors/gitian-win-signer.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs.via/ ../viacoin/contrib/gitian-descriptors/gitian-win-signer.yml
+    ./bin/gverify -v -d ../gitian.sigs.via/ -r ${VERSION}-win-signed ../viacoin/contrib/gitian-descriptors/gitian-win-signer.yml
     mv build/out/viacoin-*win64-setup.exe ../viacoin-${VERSION}-win64-setup.exe
     mv build/out/viacoin-*win32-setup.exe ../viacoin-${VERSION}-win32-setup.exe
     popd
 
 Commit your signature for the signed OS X/Windows binaries:
 
-    pushd gitian.sigs.ltc
+    pushd gitian.sigs.via
     git add ${VERSION}-osx-signed/${SIGNER}
     git add ${VERSION}-win-signed/${SIGNER}
     git commit -a
-    git push  # Assuming you can push to the gitian.sigs.ltc tree
+    git push  # Assuming you can push to the gitian.sigs.via tree
     popd
 
 ### After 3 or more people have gitian-built and their results match:
@@ -279,6 +279,6 @@ Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spur
 
   - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
-  - Create a [new GitHub release](https://github.com/viacoin-project/viacoin/releases/new) with a link to the archived release notes.
+  - Create a [new GitHub release](https://github.com/viacoin/viacoin/releases/new) with a link to the archived release notes.
 
   - Celebrate

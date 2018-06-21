@@ -49,7 +49,7 @@ Build Viacoin Core
 
 1. Clone the viacoin source code and cd into `viacoin`
 
-        git clone https://github.com/viacoin-project/viacoin
+        git clone https://github.com/viacoin/viacoin
         cd viacoin
 
 2.  Build viacoin-core:
