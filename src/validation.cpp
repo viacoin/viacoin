@@ -2878,8 +2878,8 @@ CBlockIndex* CChainState::AddToBlockIndex(const CBlockHeader& block)
     if (pindexBestHeader == nullptr || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
 
-    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
     setDirtyBlockIndex.insert(pindexNew);
+    mapDirtyAuxPow.insert(std::make_pair(block.GetHash(), block.auxpow));
 
     return pindexNew;
 }
@@ -4218,6 +4218,7 @@ void UnloadBlockIndex()
     vinfoBlockFile.clear();
     nLastBlockFile = 0;
     setDirtyBlockIndex.clear();
+    mapDirtyAuxPow.clear();
     setDirtyFileInfo.clear();
     versionbitscache.Clear();
     for (int b = 0; b < VERSIONBITS_NUM_BITS; b++) {

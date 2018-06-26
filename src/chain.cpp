@@ -35,7 +35,7 @@ CBlockHeader CBlockIndex::GetBlockHeader(const std::map<uint256, std::shared_ptr
             // auxpow is not in memory, load CDiskBlockHeader
             // from database to get it
 
-            pblocktree->ReadDiskBlockIndex(*phashBlock, diskblockindex);
+            assert(pblocktree->ReadDiskBlockIndex(*phashBlock, diskblockindex));
             block.auxpow = diskblockindex.auxpow;
         }
     }
