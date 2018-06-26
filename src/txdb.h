@@ -114,7 +114,8 @@ public:
     CBlockTreeDB(const CBlockTreeDB&) = delete;
     CBlockTreeDB& operator=(const CBlockTreeDB&) = delete;
 
-    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo, const std::map<uint256, std::shared_ptr<CAuxPow> >& auxpows);
+    bool ReadDiskBlockIndex(const uint256 &blkid, CDiskBlockIndex& diskblockindex);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
     bool ReadLastBlockFile(int &nFile);
     bool WriteReindexing(bool fReindexing);

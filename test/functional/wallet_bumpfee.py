@@ -254,7 +254,7 @@ def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
 
 
 def test_bumpfee_metadata(rbf_node, dest_address):
-    rbfid = rbf_node.sendtoaddress(dest_address, Decimal("0.100000"), "comment value", "to value")
+    rbfid = rbf_node.sendtoaddress(dest_address, Decimal("0.10000000"), "comment value", "to value")
     bumped_tx = rbf_node.bumpfee(rbfid)
     bumped_wtx = rbf_node.gettransaction(bumped_tx["txid"])
     assert_equal(bumped_wtx["comment"], "comment value")
@@ -270,10 +270,10 @@ def test_locked_wallet_fails(rbf_node, dest_address):
 
 def spend_one_input(node, dest_address):
     tx_input = dict(
-        sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.100000")))
+        sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.10000000")))
     rawtx = node.createrawtransaction(
-        [tx_input], {dest_address: Decimal("0.050000"),
-                     node.getrawchangeaddress(): Decimal("0.049000")})
+        [tx_input], {dest_address: Decimal("0.05000000"),
+                     node.getrawchangeaddress(): Decimal("0.04900000")})
     signedtx = node.signrawtransaction(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid

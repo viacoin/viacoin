@@ -130,6 +130,42 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("versionHex", strprintf("%08x", block.nVersion)));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+
+    if (block.IsAuxPow()) {
+        // this block includes auxpow
+        UniValue auxpow(UniValue::VOBJ);
+        auxpow.push_back(Pair("size", (int)::GetSerializeSize(*block.auxpow, SER_NETWORK, PROTOCOL_VERSION)));
+
+        UniValue coinbasetx(UniValue::VOBJ);
+        TxToJSON(*block.auxpow, uint256(), coinbasetx);
+        auxpow.push_back(Pair("coinbasetx", coinbasetx));
+
+        UniValue coinbaseMerkle(UniValue::VARR);
+        for (const auto& hash : block.auxpow->vMerkleBranch) {
+            coinbaseMerkle.push_back(hash.GetHex());
+        }
+        auxpow.push_back(Pair("coinbaseMerkleBranch", coinbaseMerkle));
+        auxpow.push_back(Pair("coinbaseIndex", block.auxpow->nIndex));
+
+        UniValue chainMerkle(UniValue::VARR);
+        for (const auto& hash : block.auxpow->vChainMerkleBranch) {
+            chainMerkle.push_back(hash.GetHex());
+        }
+        auxpow.push_back(Pair("chainMerkleBranch", chainMerkle));
+        auxpow.push_back(Pair("chainIndex", (boost::uint64_t)block.auxpow->nChainIndex));
+
+        UniValue parent_block(UniValue::VOBJ);
+        parent_block.push_back(Pair("hash", block.auxpow->parentBlockHeader.GetHash().GetHex()));
+        parent_block.push_back(Pair("version", (boost::uint64_t)block.auxpow->parentBlockHeader.nVersion));
+        parent_block.push_back(Pair("previousblockhash", block.auxpow->parentBlockHeader.hashPrevBlock.GetHex()));
+        parent_block.push_back(Pair("merkleroot", block.auxpow->parentBlockHeader.hashMerkleRoot.GetHex()));
+        parent_block.push_back(Pair("time", (boost::int64_t)block.auxpow->parentBlockHeader.nTime));
+        parent_block.push_back(Pair("bits", strprintf("%08x", block.auxpow->parentBlockHeader.nBits)));
+        parent_block.push_back(Pair("nonce", (boost::uint64_t)block.auxpow->parentBlockHeader.nNonce));
+        auxpow.push_back(Pair("parent_block", parent_block));
+        result.push_back(Pair("auxpow", auxpow));
+    }
+
     UniValue txs(UniValue::VARR);
     for(const auto& tx : block.vtx)
     {
@@ -705,7 +741,7 @@ UniValue getblockheader(const JSONRPCRequest& request)
     if (!fVerbose)
     {
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
-        ssBlock << pblockindex->GetBlockHeader();
+        ssBlock << pblockindex->GetBlockHeader(mapDirtyAuxPow);
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
         return strHex;
     }
@@ -1085,10 +1121,13 @@ static UniValue SoftForkMajorityDesc(int version, CBlockIndex* pindex, const Con
             activated = pindex->nHeight >= consensusParams.BIP34Height;
             break;
         case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            activated = pindex->nHeight >= consensusParams.BIP65Height;
             break;
         case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            break;
+        case 5:
+            activated = pindex->nHeight >= consensusParams.BlockVer5Height;
             break;
     }
     rv.push_back(Pair("status", activated));
@@ -1147,7 +1186,7 @@ void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::Params&
 
 UniValue getblockchaininfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
+    if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
             "getblockchaininfo\n"
             "Returns an object containing various state info regarding blockchain processing.\n"
@@ -1231,12 +1270,24 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    CBlockIndex* tip = chainActive.Tip();
+    CBlockIndex* tip;
+    if (request.params.size() > 0) {
+        std::string strHash = request.params[0].get_str();
+        uint256 hash(uint256S(strHash));
+
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+        tip  = mapBlockIndex[hash];
+    } else {
+        tip = chainActive.Tip();
+    }
     UniValue softforks(UniValue::VARR);
     UniValue bip9_softforks(UniValue::VOBJ);
     softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
+    softforks.push_back(SoftForkDesc("bip65", 3, tip, consensusParams));
+    softforks.push_back(SoftForkDesc("bip66", 4, tip, consensusParams));
+    softforks.push_back(SoftForkDesc("ver5", 5, tip, consensusParams));
     for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
         BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     }
