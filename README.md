@@ -4,6 +4,7 @@ Viacoin Core integration/staging tree
 [![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
 
 https://viacoin.org
+
 To speed up sync process: https://bootstrap.viacoin.org/
 
 What is Viacoin?
