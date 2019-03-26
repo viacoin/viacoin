@@ -773,13 +773,13 @@ UniValue submitblock(const JSONRPCRequest& request)
 CKeyID GetAuxpowMiningKey()
 {
     CKeyID result;
-    CBitcoinAddress auxminingaddr(gArgs.GetArg("-auxminingaddr", ""));
-    if (!auxminingaddr.GetKeyID(result)) {
-        CReserveKey reservekey(vpwallets[0]);
-        CPubKey pubkey;
-        reservekey.GetReservedKey(pubkey);
-        result = pubkey.GetID();
-    }
+    // CBitcoinSecret auxminingaddr(gArgs.GetArg("-auxminingaddr", ""));
+    // if (!auxminingaddr.GetKeyID(result)) {
+    //     CReserveKey reservekey(vpwallets[0]);
+    //     CPubKey pubkey;
+    //     reservekey.GetReservedKey(pubkey);
+    //     result = pubkey.GetID();
+    // }
     return result;
 }
 

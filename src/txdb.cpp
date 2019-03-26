@@ -281,10 +281,15 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
         boost::this_thread::interruption_point();
         std::pair<std::pair<char, uint256>, char> key;
         if (pcursor->GetKey(key) && key.first.first == DB_BLOCK_INDEX) {
+
+            assert(key.second == DB_BLOCK_INDEX_AUXPOW);
+
             CDiskBlockIndex diskindex;
             if (pcursor->GetValue(diskindex)) {
                 // Construct block index object
-                CBlockIndex* pindexNew = insertBlockIndex(key.first.second);
+                uint256 hash = key.first.second;
+                CBlockIndex* pindexNew = insertBlockIndex(hash);
+
                 pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;

@@ -137,7 +137,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         auxpow.push_back(Pair("size", (int)::GetSerializeSize(*block.auxpow, SER_NETWORK, PROTOCOL_VERSION)));
 
         UniValue coinbasetx(UniValue::VOBJ);
-        TxToJSON(*block.auxpow, uint256(), coinbasetx);
+        TxToJSON(*block.auxpow->tx, uint256(), coinbasetx);
         auxpow.push_back(Pair("coinbasetx", coinbasetx));
 
         UniValue coinbaseMerkle(UniValue::VARR);
