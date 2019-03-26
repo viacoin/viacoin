@@ -1,17 +1,7 @@
-Bitcoin Core version 0.16.x is now available from:
+Viacoin Core version 0.16.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.16.x/>
-
-This is a new major version release, including new features, various bugfixes
-and performance improvements, as well as updated translations.
-
-Please report bugs using the issue tracker at GitHub:
-
-  <https://github.com/bitcoin/bitcoin/issues>
-
-To receive security and update notifications, please subscribe to:
-
-  <https://bitcoincore.org/en/list/announcements/join/>
+This is a new minor version release, with various bugfixes
+as well as updated translations.
 
 How to Upgrade
 ==============
@@ -19,7 +9,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+or `viacoind`/`viacoin-qt` (on Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
@@ -40,22 +30,21 @@ wallets that were created with older versions are not affected by this.
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Viacoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Viacoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
 ===============
 
-Miner block size removed
-------------------------
+(to be filled in)
 
-The `-blockmaxsize` option for miners to limit their blocks' sizes was
-deprecated in V0.15.1, and has now been removed. Miners should use the
-`-blockmaxweight` option if they want to limit the weight of their blocks'
-weights.
+0.16.x change log
+------------------
+
+(to be filled in)
 
 0.16.x change log
 ------------------
@@ -122,24 +111,10 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
-- 251
-- Ben Woosley
-- Chun Kuan Lee
-- David A. Harding
-- e0
-- fanquake
-- Henrik Jonsson
-- JeremyRand
-- Jesse Cohen
-- John Newbery
-- Johnson Lau
-- Karl-Johan Alm
-- Luke Dashjr
-- MarcoFalke
-- Matt Corallo
-- Pieter Wuille
-- Suhas Daftuar
-- Tamas Blummer
-- Wladimir J. van der Laan
+(to be filled in)
+
+And to those that reported security issues:
+
+(to be filled in)
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).

@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <auxpow/consensus.h>
+#include <memory>
 
 #include <chainparamsseeds.h>
 
