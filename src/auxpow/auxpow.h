@@ -5,11 +5,11 @@
 #ifndef BITCOIN_AUXPOW_AUXPOW_H
 #define BITCOIN_AUXPOW_AUXPOW_H
 
-#include "versionbits.h"
-#include "consensus/params.h"
-#include "wallet/wallet.h"
-#include "primitives/blockheader.h"
-#include "auxpow/consensus.h"
+#include <versionbits.h>
+#include <consensus/params.h>
+#include <utilstrencodings.h>
+#include <primitives/blockheader.h>
+#include <auxpow/consensus.h>
 
 
 class CAuxPow : public CMerkleTx

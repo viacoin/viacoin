@@ -587,8 +587,8 @@ class FullBlockTest(ComparisonTestFramework):
         # same as b40, but one less sigop
         tip(39)
         block(41, spend=None)
-        update_block(41, b40.vtx[1:-1])
-        #b41_sigops_to_fill = b40_sigops_to_fill - 1
+        #update_block(41, b40.vtx[1:-1])
+        b41_sigops_to_fill = b40_sigops_to_fill - 1
         tx = CTransaction()
         tx.vin.append(CTxIn(lastOutpoint, b''))
         tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b41_sigops_to_fill)))

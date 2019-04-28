@@ -173,7 +173,7 @@ def test_small_output_fails(rbf_node, dest_address):
     rbf_node.bumpfee(rbfid, {"totalFee": 5000000})
 
     rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_jsonrpc(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 5000001})
+    assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 5000001})
 
 
 def test_dust_to_fee(rbf_node, dest_address):
@@ -205,7 +205,7 @@ def test_rebumping(rbf_node, dest_address):
     # check that re-bumping the original tx fails, but bumping the bumper succeeds
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 200000})
-    assert_raises_jsonrpc(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 300000})
+    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 300000})
     rbf_node.bumpfee(bumped["txid"], {"totalFee": 300000})
 
 
@@ -213,7 +213,7 @@ def test_rebumping_not_replaceable(rbf_node, dest_address):
     # check that re-bumping a non-replaceable bump tx fails
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, {"totalFee": 1000000, "replaceable": False})
-    assert_raises_jsonrpc(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
+    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
                           {"totalFee": 2000000})
 
 

@@ -65,7 +65,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         txABC2 = self.nodes[0].sendrawtransaction(signed2["hex"])
 
         # Create a child tx spending ABC2
-        signed3_change = Decimal("24.999")
+        signed3_change = Decimal("24.9")
         inputs = [ {"txid":txABC2, "vout":0} ]
         outputs = { self.nodes[0].getnewaddress(): signed3_change }
         signed3 = self.nodes[0].signrawtransaction(self.nodes[0].createrawtransaction(inputs, outputs))

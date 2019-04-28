@@ -1,8 +1,9 @@
 #ifndef VIACOIN_BLOCKHEADER_H
 #define VIACOIN_BLOCKHEADER_H
 
-#include "auxpow/consensus.h"
-#include "auxpow/serialize.h"
+#include <primitives/transaction.h>
+#include <auxpow/consensus.h>
+#include <auxpow/serialize.h>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
