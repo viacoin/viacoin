@@ -9,6 +9,14 @@ src/bitcoin-wallet
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
+src/viacoin
+src/viacoind
+src/viacoin-cli
+src/viacoin-tx
+src/viacoin-wallet
+src/test/test_viacoin
+src/test/test_viacoin_fuzzy
+src/qt/test/test_viacoin-qt
 
 # autoreconf
 Makefile.in
@@ -83,12 +91,15 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 bitcoin-qt
+viacoin-qt
 Bitcoin-Qt.app
+Viacoin-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
+viacoin_qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -102,6 +113,7 @@ build
 *.gcda
 /*.info
 test_bitcoin.coverage/
+test_viacoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -124,3 +136,10 @@ db4/
 
 # clang-check
 *.plist
+
+# ide
+.idea/
+.vscode/
+CMakeLists.txt
+cmake-build-debug/
+.project
