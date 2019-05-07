@@ -279,13 +279,13 @@ static UniValue setlabel(const JSONRPCRequest& request)
             RPCHelpMan{"setlabel",
                 "\nSets the label associated with the given address.\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to be associated with a label."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The viacoin address to be associated with a label."},
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label to assign to the address."},
                 },
                 RPCResults{},
                 RPCExamples{
-                    HelpExampleCli("setlabel", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\" \"tabby\"")
-            + HelpExampleRpc("setlabel", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\", \"tabby\"")
+                    HelpExampleCli("setlabel", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\" \"tabby\"")
+            + HelpExampleRpc("setlabel", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\", \"tabby\"")
                 },
             }.ToString());
 
@@ -383,10 +383,10 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "\"txid\"                  (string) The transaction id.\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("sendtoaddress", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\" 0.1")
-            + HelpExampleCli("sendtoaddress", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendtoaddress", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendtoaddress", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\", 0.1, \"donation\", \"seans outpost\"")
+                    HelpExampleCli("sendtoaddress", "\"Vv6rMNz4Pp5btJ9SiwQfdYA29EM2mdREu6\" 0.1")
+            + HelpExampleCli("sendtoaddress", "\"Vv6rMNz4Pp5btJ9SiwQfdYA29EM2mdREu6\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleCli("sendtoaddress", "\"Vv6rMNz4Pp5btJ9SiwQfdYA29EM2mdREu6\" 0.1 \"\" \"\" true")
+            + HelpExampleRpc("sendtoaddress", "\"Vv6rMNz4Pp5btJ9SiwQfdYA29EM2mdREu6\", 0.1, \"donation\", \"seans outpost\"")
                 },
             }.ToString());
 
@@ -529,11 +529,11 @@ static UniValue signmessage(const JSONRPCRequest& request)
             "\nUnlock the wallet for 30 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
             "\nCreate the signature\n"
-            + HelpExampleCli("signmessage", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\" \"my message\"") +
+            + HelpExampleCli("signmessage", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\" \"my message\"") +
             "\nVerify the signature\n"
-            + HelpExampleCli("verifymessage", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\" \"signature\" \"my message\"") +
+            + HelpExampleCli("verifymessage", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\" \"signature\" \"my message\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("signmessage", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\", \"my message\"")
+            + HelpExampleRpc("signmessage", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\", \"my message\"")
                 },
             }.ToString());
 
@@ -593,13 +593,13 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
                 },
                 RPCExamples{
             "\nThe amount from transactions with at least 1 confirmation\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\"") +
+            + HelpExampleCli("getreceivedbyaddress", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\"") +
             "\nThe amount including unconfirmed transactions, zero confirmations\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\" 0") +
+            + HelpExampleCli("getreceivedbyaddress", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\" 0") +
             "\nThe amount with at least 6 confirmations\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\" 6") +
+            + HelpExampleCli("getreceivedbyaddress", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\" 6") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("getreceivedbyaddress", "\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\", 6")
+            + HelpExampleRpc("getreceivedbyaddress", "\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\", 6")
                 },
             }.ToString());
 
@@ -844,13 +844,13 @@ static UniValue sendmany(const JSONRPCRequest& request)
                  },
                 RPCExamples{
             "\nSend two amounts to two different addresses:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\\\":0.01,\\\"LbhhnrHHVFP1eUjP1tdNIYeEVsNHfN9FCw\\\":0.02}\"") +
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\\\":0.01,\\\"Vc4soaPaxAMN81odrRL6xB4DwUSJHS2P3h\\\":0.02}\"") +
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\\\":0.01,\\\"LbhhnrHHVFP1eUjP1tdNIYeEVsNHfN9FCw\\\":0.02}\" 6 \"testing\"") +
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\\\":0.01,\\\"Vc4soaPaxAMN81odrRL6xB4DwUSJHS2P3h\\\":0.02}\" 6 \"testing\"") +
             "\nSend two amounts to two different addresses, subtract fee from amount:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\\\":0.01,\\\"LbhhnrHHVFP1eUjP1tdNIYeEVsNHfN9FCw\\\":0.02}\" 1 \"\" \"[\\\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\\\",\\\"LbhhnrHHVFP1eUjP1tdNIYeEVsNHfN9FCw\\\"]\"") +
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\\\":0.01,\\\"Vc4soaPaxAMN81odrRL6xB4DwUSJHS2P3h\\\":0.02}\" 1 \"\" \"[\\\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\\\",\\\"Vc4soaPaxAMN81odrRL6xB4DwUSJHS2P3h\\\"]\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("sendmany", "\"\", {\"LEr4hNAefWYhBMgxCFP2Po1NPrUeiK8kM2\":0.01,\"LbhhnrHHVFP1eUjP1tdNIYeEVsNHfN9FCw\":0.02}, 6, \"testing\"")
+            + HelpExampleRpc("sendmany", "\"\", {\"VfsGVcc7Vd9EYXP6f6vTVk4E7oUY1LytuH\":0.01,\"Vn1PmGY6T7P1BLsm42C2qcj2CSSwV7xk2Y\":0.02}, 6, \"testing\"")
                 },
             }.ToString());
 
@@ -992,9 +992,9 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
                 },
                 RPCExamples{
             "\nAdd a multisig address from 2 addresses\n"
-            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"LEr4hnAefwYhBmGxcFP2Po1NPrUEIk8KM2\\\",\\\"LYKr1oaPSqShthukmLDhdZsqUJgzVnQiAQ\\\"]\"") +
+            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"VfsGVcc7Vd9EYXP6f6vTVk4E7oUY1LytuH\\\",\\\"Vg1hbSwWxhJ75tUnV6vV48Gr7HFkuYSRMR\\\"]\"") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"LEr4hnAefwYhBmGxcFP2Po1NPrUEIk8KM2\\\",\\\"LYKr1oaPSqShthukmLDhdZsqUJgzVnQiAQ\\\"]\"")
+            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"VfsGVcc7Vd9EYXP6f6vTVk4E7oUY1LytuH\\\",\\\"Vg1hbSwWxhJ75tUnV6vV48Gr7HFkuYSRMR\\\"]\"")
                 },
             }.ToString();
         throw std::runtime_error(msg);
@@ -1234,7 +1234,7 @@ static UniValue listreceivedbyaddress(const JSONRPCRequest& request)
                     HelpExampleCli("listreceivedbyaddress", "")
             + HelpExampleCli("listreceivedbyaddress", "6 true")
             + HelpExampleRpc("listreceivedbyaddress", "6, true, true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\"")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true, true, \"VfsGVcc7Vd9EYXP6f6vTVk4E7oUY1LytuH\"")
                 },
             }.ToString());
 
@@ -1582,8 +1582,8 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("listsinceblock", "")
-            + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
-            + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
+            + HelpExampleCli("listsinceblock", "\"c75ffdd6a3dc3543b6aeb0fc2be563b6e10474ee8f9894e4ffa6c9e3d9da7635\" 6")
+            + HelpExampleRpc("listsinceblock", "\"c75ffdd6a3dc3543b6aeb0fc2be563b6e10474ee8f9894e4ffa6c9e3d9da7635\", 6")
                 },
             }.ToString());
 
@@ -1721,9 +1721,9 @@ static UniValue gettransaction(const JSONRPCRequest& request)
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-            + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true")
-            + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                    HelpExampleCli("gettransaction", "\"8b8b0b357f3fe2d0804402d45429f2754ce21dee8b68612bad02f48fa29cc192\"")
+            + HelpExampleCli("gettransaction", "\"8b8b0b357f3fe2d0804402d45429f2754ce21dee8b68612bad02f48fa29cc192\" true")
+            + HelpExampleRpc("gettransaction", "\"8b8b0b357f3fe2d0804402d45429f2754ce21dee8b68612bad02f48fa29cc192\"")
                 },
             }.ToString());
 
@@ -2068,7 +2068,7 @@ static UniValue walletlock(const JSONRPCRequest& request)
             "\nSet the passphrase for 2 minutes to perform a transaction\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
             "\nPerform a send (requires passphrase set)\n"
-            + HelpExampleCli("sendtoaddress", "\"LEr4HnaefWYHbMGXcFp2Po1NPRUeIk8km2\" 1.0") +
+            + HelpExampleCli("sendtoaddress", "\"Vv6rMNz4Pp5btJ9SiwQfdYA29EM2mdREu6\" 1.0") +
             "\nClear the passphrase since we are done before 2 minutes is up\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
@@ -2772,8 +2772,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 },
                 RPCExamples{
                     HelpExampleCli("listunspent", "")
-            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
-            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"VxG5jxA8BDWu5TDMneDhAuTF4YLrxE5CAc\\\",\\\"VutkjujdE3XgL2ey48zgnnDbJPd35cYFxv\\\"]\"")
+            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"VxG5jxA8BDWu5TDMneDhAuTF4YLrxE5CAc\\\",\\\"VutkjujdE3XgL2ey48zgnnDbJPd35cYFxv\\\"]\"")
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
             + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
                 },
