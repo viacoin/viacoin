@@ -17,6 +17,8 @@ from test_framework.script import CScript, OP_TRUE, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, get_bip9_status, satoshi_round, sync_blocks, wait_until
 
+VB_TOP_BITS = 0x80
+
 # TestP2PConn: A peer we use to send messages to bitcoind, and store responses.
 class TestP2PConn(P2PInterface):
     def __init__(self):
@@ -109,7 +111,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
         block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
-        block.nVersion = 4
+        block.nVersion = VB_TOP_BITS
         if segwit:
             add_witness_commitment(block)
         block.solve()
@@ -258,10 +260,25 @@ class CompactBlocksTest(BitcoinTestFramework):
     # bitcoind's choice of nonce.
     def test_compactblock_construction(self, node, test_node, version, use_witness_address):
         # Generate a bunch of transactions.
+        if not use_witness_address:
+            node.generate(101)
         node.generate(101)
         num_transactions = 25
         address = node.getnewaddress()
         if use_witness_address:
+            # Viacoin: compact inputs to to fit block size
+            unspent = node.listunspent(20)
+            while len(unspent) > 20:
+                a = node.getnewaddress()
+                vouts = unspent[:20]
+                inputs = [{"txid": vout['txid'], "vout": vout['vout']} for vout in vouts]
+                amt = satoshi_round(sum([vout['amount'] for vout in vouts]) - Decimal(0.01))
+                tx = node.createrawtransaction(inputs, {a:amt})
+                stx = node.signrawtransaction(tx)
+                node.sendrawtransaction(stx['hex'])
+                node.generate(1)
+                unspent = node.listunspent(20)
+
             # Want at least one segwit spend, so move all funds to
             # a witness address.
             address = node.getnewaddress(address_type='bech32')
@@ -428,7 +445,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         for i in range(num_transactions):
             tx = CTransaction()
             tx.vin.append(CTxIn(COutPoint(utxo[0], utxo[1]), b''))
-            tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
+            tx.vout.append(CTxOut(utxo[2] - 100000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
             tx.rehash()
             utxo = [tx.sha256, 0, tx.vout[0].nValue]
             block.vtx.append(tx)
