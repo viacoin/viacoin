@@ -110,9 +110,11 @@ def create_coinbase(height, pubkey=None):
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
     otherwise an anyone-can-spend output."""
+    def ser_cb_height(height):
+        return bytes([0x50 + height] * 2) if (1 <= height <= 16) else ser_string(serialize_script_num(height))
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff),
-                        ser_string(serialize_script_num(height)), 0xffffffff))
+                        ser_cb_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = 50 * COIN
     halvings = int(height / 150)  # regtest
