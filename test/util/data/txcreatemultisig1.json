@@ -4,7 +4,6 @@
     "version": 1,
     "size": 124,
     "vsize": 124,
-    "weight": 496,
     "locktime": 0,
     "vin": [
     ],
@@ -18,9 +17,9 @@
                 "reqSigs": 2,
                 "type": "multisig",
                 "addresses": [
-                    "1FoG2386FG2tAJS9acMuiDsKy67aGg9MKz",
-                    "1FXtz9KU8JNmQDyHdiEm5HDiALuP3zdHvV",
-                    "14LuavcBbXZYJ6Tsz3cAUQj9SuQoL2xCQX"
+                    "Vpo5vkHYf4w6E5LJKQ1Y98CBeuQYm6Cjo9",
+                    "VpXitrUvY7GyTzsSNVtPWBYZrACMWgXW58",
+                    "VdLjVdme1LTkMsN2iqFnuK418ihmqRdjST"
                 ]
             }
         }

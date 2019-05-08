@@ -1,10 +1,10 @@
+
 {
     "txid": "8df6ed527472542dd5e137c242a7c5a9f337ac34f7b257ae4af886aeaebb51b0",
     "hash": "8df6ed527472542dd5e137c242a7c5a9f337ac34f7b257ae4af886aeaebb51b0",
     "version": 2,
     "size": 85,
     "vsize": 85,
-    "weight": 340,
     "locktime": 0,
     "vin": [
         {
@@ -27,7 +27,7 @@
                 "reqSigs": 1,
                 "type": "pubkeyhash",
                 "addresses": [
-                    "13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"
+                    "VctjD1NsSEaNvYapesx53LxiLPzyAji1JY"
                 ]
             }
         }

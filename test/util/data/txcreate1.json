@@ -4,7 +4,6 @@
     "version": 2,
     "size": 201,
     "vsize": 201,
-    "weight": 804,
     "locktime": 0,
     "vin": [
         {
@@ -45,7 +44,7 @@
                 "reqSigs": 1,
                 "type": "pubkeyhash",
                 "addresses": [
-                    "13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"
+                    "VctjD1NsSEaNvYapesx53LxiLPzyAji1JY"
                 ]
             }
         },
@@ -58,7 +57,7 @@
                 "reqSigs": 1,
                 "type": "pubkeyhash",
                 "addresses": [
-                    "1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46"
+                    "Vx8oRdixYYPvm9ukj5JU68PSVLfVfwKhZ2"
                 ]
             }
         }
