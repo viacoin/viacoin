@@ -494,7 +494,7 @@ class SendHeadersTest(BitcoinTestFramework):
         blocks = []
 
         # Create extra blocks for later
-        for b in range(20):
+        for b in range(16*32+4):
             blocks.append(create_block(tip, create_coinbase(height), block_time))
             blocks[-1].solve()
             tip = blocks[-1].sha256
@@ -517,13 +517,13 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # Announcing 16 more headers should trigger direct fetch for 14 more
         # blocks
-        test_node.send_header_for_blocks(blocks[2:18])
+        test_node.send_header_for_blocks(blocks[2:-2])
         test_node.sync_with_ping()
-        test_node.wait_for_getdata([x.sha256 for x in blocks[2:16]], timeout=DIRECT_FETCH_RESPONSE_TIME)
+        test_node.wait_for_getdata([x.sha256 for x in blocks[2:-4]], timeout=DIRECT_FETCH_RESPONSE_TIME)
 
         # Announcing 1 more header should not trigger any response
         test_node.last_message.pop("getdata", None)
-        test_node.send_header_for_blocks(blocks[18:19])
+        test_node.send_header_for_blocks(blocks[-2:])
         test_node.sync_with_ping()
         with mininode_lock:
             assert "getdata" not in test_node.last_message
