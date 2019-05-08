@@ -77,6 +77,9 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 8100; // 75% of nMinerConfirmationWindow
         consensus.nMinerConfirmationWindow = 10800; // nPowTargetTimespan / nPowTargetSpacing => 3 days
+
+        consensus.nWitnessStartHeight = 4040000;
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1232032894; // December 31, 2008
@@ -182,6 +185,9 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 2700; // 75% for testchains
         consensus.nMinerConfirmationWindow = 3600; // nPowTargetTimespan / nPowTargetSpacing
+
+        consensus.nWitnessStartHeight = 4040000;
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1232032894; // start + (1year/25)
@@ -276,6 +282,9 @@ public:
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
+
+        consensus.nWitnessStartHeight = 20000;
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
