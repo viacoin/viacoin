@@ -69,7 +69,8 @@ public:
         consensus.BIP34Hash = uint256S("0x4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1");
         consensus.BIP65Height = 598725; // e5c7b7ae69ed868e90a69217e14c4be51a7ed59276cda2f1ebbc611145c56933
         consensus.BIP66Height = 1421641; // e7259cd451a2df946829c9ac8bb57143ca3e1a13aec9690e15d5dc9b06899ee8
-        consensus.powLimit = uint256S("000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.BlockVer5Height = 1976295;
+        consensus.powLimit = uint256S("000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint25(0) >> 23
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 24;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -173,6 +174,7 @@ public:
         consensus.BIP34Hash = uint256S("0x0");
         consensus.BIP65Height = 800000;
         consensus.BIP66Height = 502664;
+        consensus.BlockVer5Height = 1800000;
         consensus.powLimit = uint256S("00001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 3.5 * 24 * 60 * 60; // 3.5 days
         consensus.nPowTargetSpacing = 1 * 24;
@@ -266,6 +268,7 @@ public:
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1251; // BIP65 activated on regtest (Used in functional tests)
         consensus.BIP66Height = 1351; // BIP66 activated on regtest (Used in functional tests)
+        consensus.BlockVer5Height = 1697078;
         consensus.powLimit = uint256S("efffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 1 * 24;
