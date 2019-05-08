@@ -16,8 +16,8 @@ static bool DoubleEquals(double a, double b, double epsilon)
 static CBlockIndex* CreateBlockIndexWithNbits(uint32_t nbits)
 {
     CBlockIndex* block_index = new CBlockIndex();
-    block_index->nHeight = 46367;
-    block_index->nTime = 1269211443;
+    block_index->nHeight = 1001951;
+    block_index->nTime = 1464900315;  // Block #1001951
     block_index->nBits = nbits;
     return block_index;
 }
