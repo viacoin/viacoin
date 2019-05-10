@@ -5,6 +5,7 @@
 #ifndef BITCOIN_VERSIONBITS_H
 #define BITCOIN_VERSIONBITS_H
 
+#include <consensus/params.h>
 #include <chain.h>
 #include <map>
 
@@ -24,6 +25,8 @@ enum class ThresholdState {
     ACTIVE,
     FAILED,
 };
+
+class CBlockIndex;
 
 // A map that gives the state for blocks whose height is a multiple of Period().
 // The map is indexed by the block's parent, however, so all keys in the map

@@ -13,6 +13,7 @@
 #include <versionbitsinfo.h>
 
 #include <assert.h>
+#include <auxpow/consensus.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -78,6 +79,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 8100; // 75% of nMinerConfirmationWindow
         consensus.nMinerConfirmationWindow = 10800; // nPowTargetTimespan / nPowTargetSpacing => 3 days
 
+        consensus.nAuxPowStartHeight = AuxPow::START_MAINNET;
         consensus.nWitnessStartHeight = 4040000;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
@@ -186,6 +188,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 2700; // 75% for testchains
         consensus.nMinerConfirmationWindow = 3600; // nPowTargetTimespan / nPowTargetSpacing
 
+        consensus.nAuxPowStartHeight = AuxPow::START_TESTNET;
         consensus.nWitnessStartHeight = 4040000;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;
@@ -283,6 +286,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
 
+        consensus.nAuxPowStartHeight = AuxPow::START_REGTEST;
         consensus.nWitnessStartHeight = 20000;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 6;

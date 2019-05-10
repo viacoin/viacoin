@@ -62,6 +62,8 @@ struct Params {
     /** Viacoin enforcing block version 5 */
     int BlockVer5Height;
 
+    /** AuxPow starting height for Viacoin */
+    int nAuxPowStartHeight;
     int nWitnessStartHeight;
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
