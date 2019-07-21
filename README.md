@@ -15,7 +15,7 @@ out collectively by the network. Viacoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Viacoin Core software, see https://viacoin.org/en/download
+the Viacoin Core software, see https://viacoin.org
 
 License
 -------
