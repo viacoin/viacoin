@@ -63,7 +63,7 @@ public:
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 657000;
         consensus.script_flag_exceptions.emplace( // BIP16 exception
             uint256S("0x00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"), SCRIPT_VERIFY_NONE);
         consensus.script_flag_exceptions.emplace( // Taproot exception
