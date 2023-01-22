@@ -2,8 +2,9 @@ Viacoin Core integration/staging tree [![Build Status](https://travis-ci.org/via
 =====================================
 
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
 
-https://viacoin.org
+
 
 What is Viacoin? 
 ----------------
@@ -25,6 +26,8 @@ Furthermore, the inflation rate of Viacoin is low, given its low block reward, w
 
 Additionally, its mining difficulty is adjusted with a Kimotos Gravity Well algorithm, and its mining reward halving occurs every 6 months. There is a total supply of 23,176,392.41459 coins, and F2Pool, one of the largest mining pools, is currently mining Viacoin at a high hash rate. The Lightning Network will also be supported. Versionbits to allow up to 29 simultaneous Soft Fork changes to be implemented.
 
+https://viacoin.org
+
 https://coinmarketcap.com/currencies/viacoin/
 
 ***
@@ -40,8 +43,12 @@ https://github.com/viacoin/viacoin/wiki
 For more information, as well as an immediately useable, binary version of
 the Viacoin Core software, see https://viacoin.org
 
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)
 
-![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+
+
 
 ***
 
