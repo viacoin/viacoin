@@ -5,7 +5,7 @@ Viacoin Core integration/staging tree
 
 https://viacoin.org
 
-What is Viacoin?
+What is Viacoin? 
 ----------------
 
 Viacoin is an experimental digital currency that enables instant payments to
@@ -14,8 +14,32 @@ with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Viacoin Core is the name of open source
 software which enables the use of this currency.
 
+Viacoin is an open-source experimental cryptocurrency that enables instant payments to
+anyone, anywhere in the world. Viacoin uses peer-to-peer technology to operate
+with no central authority: managing transactions and issuing money are carried
+out collectively by the network
+
+Viacoin supports embedded consensus with an extended OP_RETURN of 120 bytes and provides 25x faster transactions than Bitcoin. 
+
+Furthermore, the inflation rate of Viacoin is low, given its low block reward, which is offset by miners’ incentives to mine Viacoin through Merged mining (AuxPoW). Notably, F2Pool, one of the largest mining pools, is currently mining Viacoin at a high hash rate and the mining reward halving occurs every 6 months with a total supply of 23,176,392.41459 coins.
+
+Additionally, its mining difficulty is adjusted with a Kimotos Gravity Well algorithm, and its mining reward halving occurs every 6 months. There is a total supply of 23,176,392.41459 coins, and F2Pool, one of the largest mining pools, is currently mining Viacoin at a high hash rate. The Lightning Network will also be supported. Versionbits to allow up to 29 simultaneous Soft Fork changes to be implemented.
+
+***
+
+### Technical documentation
+
+The wiki is created due to the widespread lack of technical knowledge among investors and programmers prompted the building of this wiki. This wiki's purpose is to demonstrate its genuine craftsmanship and serve as our own documentation.
+
+https://github.com/viacoin/viacoin/wiki
+
+***
+
 For more information, as well as an immediately useable, binary version of
 the Viacoin Core software, see https://viacoin.org
+
+
+![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 
 License
 -------
