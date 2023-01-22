@@ -1,7 +1,7 @@
-Viacoin Core integration/staging tree
+Viacoin Core integration/staging tree [![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
 =====================================
 
-[![Build Status](https://travis-ci.org/viacoin/viacoin.svg?branch=master)](https://travis-ci.org/viacoin/viacoin)
+![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 
 https://viacoin.org
 
@@ -25,6 +25,8 @@ Furthermore, the inflation rate of Viacoin is low, given its low block reward, w
 
 Additionally, its mining difficulty is adjusted with a Kimotos Gravity Well algorithm, and its mining reward halving occurs every 6 months. There is a total supply of 23,176,392.41459 coins, and F2Pool, one of the largest mining pools, is currently mining Viacoin at a high hash rate. The Lightning Network will also be supported. Versionbits to allow up to 29 simultaneous Soft Fork changes to be implemented.
 
+https://coinmarketcap.com/currencies/viacoin/
+
 ***
 
 ### Technical documentation
@@ -40,6 +42,8 @@ the Viacoin Core software, see https://viacoin.org
 
 
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+
+***
 
 License
 -------
