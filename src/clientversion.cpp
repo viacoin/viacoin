@@ -84,6 +84,8 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
     // Make sure Bitcoin Core copyright is not removed by accident
     if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
+        std::string strYear = strPrefix;
+        strYear.replace(strYear.find("2014"), sizeof("2011")-1, "2009");
         strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;
@@ -91,7 +93,7 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/viacoin/viacoin>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i").translated, 2014, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
