@@ -276,6 +276,11 @@ public:
      */
     bool HaveTxsDownloaded() const { return nChainTx != 0; }
 
+    uint256 GetBlockPoWHash() const
+    {
+      return GetBlockHeader().GetPoWHash();
+    }
+
     NodeSeconds Time() const
     {
         return NodeSeconds{std::chrono::seconds{nTime}};
