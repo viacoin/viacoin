@@ -1927,7 +1927,7 @@ AM_CONDITIONAL([ENABLE_QT], [test "$bitcoin_enable_qt" = "yes"])
 AM_CONDITIONAL([ENABLE_QT_TESTS], [test "$BUILD_TEST_QT" = "yes"])
 AM_CONDITIONAL([ENABLE_BENCH], [test "$use_bench" = "yes"])
 AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
-AM_CONDITIONAL([USE_SSE2], [test x$use_sse2 = xyes])
+AM_CONDITIONAL([USE_SSE2], [test "x$use_sse2 = xyes"])
 AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
@@ -2086,8 +2086,8 @@ echo "  with gui / qt   = $bitcoin_enable_qt"
 if test $bitcoin_enable_qt != "no"; then
     echo "    with qr       = $use_qr"
 fi
-echo "  pkg openssl   = $pkg_openssl"
 echo "  with zmq        = $use_zmq"
+echo "  pkg openssl     = $pkg_openssl"
 if test $enable_fuzz = "no"; then
     echo "  with test       = $use_tests"
 else
