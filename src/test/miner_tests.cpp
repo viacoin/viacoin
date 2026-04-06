@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         {
             // A block template does not have proof-of-work, but it might pass
             // verification by coincidence. Grind the nonce if needed:
-            while (CheckProofOfWork(block.GetHash(), block.nBits, Assert(m_node.chainman)->GetParams().GetConsensus())) {
+            while (CheckProofOfWork(block.GetPoWHash(), block.nBits, Assert(m_node.chainman)->GetParams().GetConsensus())) {
                 block.nNonce++;
             }
 

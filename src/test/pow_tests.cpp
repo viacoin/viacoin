@@ -5,9 +5,11 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -132,6 +134,43 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
     nBits = hash_arith.GetCompact();
     hash = ArithToUint256(hash_arith);
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(HasValidProofOfWork_uses_powhash_not_header_hash)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
+    const auto& consensus = chainParams->GetConsensus();
+
+    CBlockHeader header;
+    header.nVersion = chainParams->GenesisBlock().nVersion;
+    header.hashPrevBlock = chainParams->GenesisBlock().GetHash();
+    header.hashMerkleRoot = uint256{1};
+    header.nTime = chainParams->GenesisBlock().nTime + 1;
+    header.nNonce = 0;
+
+    bool found_pow_only_header{false};
+    for (int divisor : {2, 4, 8, 16, 32, 64, 128, 256, 512}) {
+        arith_uint256 candidate_target = UintToArith256(consensus.powLimit);
+        candidate_target /= divisor;
+        header.nBits = candidate_target.GetCompact();
+        header.nNonce = 0;
+
+        for (uint32_t tries = 0; tries < 200000; ++tries) {
+            if (CheckProofOfWork(header.GetPoWHash(), header.nBits, consensus) &&
+                !CheckProofOfWork(header.GetHash(), header.nBits, consensus)) {
+                found_pow_only_header = true;
+                break;
+            }
+            ++header.nNonce;
+            BOOST_REQUIRE(header.nNonce != 0);
+        }
+        if (found_pow_only_header) break;
+    }
+    BOOST_REQUIRE(found_pow_only_header);
+
+    BOOST_REQUIRE(CheckProofOfWork(header.GetPoWHash(), header.nBits, consensus));
+    BOOST_REQUIRE(!CheckProofOfWork(header.GetHash(), header.nBits, consensus));
+    BOOST_REQUIRE(HasValidProofOfWork({header}, consensus));
 }
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
