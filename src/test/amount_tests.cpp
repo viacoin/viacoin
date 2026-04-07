@@ -20,6 +20,11 @@ BOOST_AUTO_TEST_CASE(MoneyRangeTest)
     BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY + CAmount(1)), false);
 }
 
+BOOST_AUTO_TEST_CASE(ViacoinMaxMoneyRed)
+{
+    BOOST_CHECK_EQUAL(MAX_MONEY, 23000000 * COIN);
+}
+
 BOOST_AUTO_TEST_CASE(GetFeeTest)
 {
     CFeeRate feeRate, altFeeRate;

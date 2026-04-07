@@ -4,6 +4,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <consensus/consensus.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <test/util/random.h>
@@ -438,6 +439,14 @@ BOOST_AUTO_TEST_CASE(viacoin_regtest_chainparams_identity_red)
     BOOST_CHECK_EQUAL(chainParams->GenesisBlock().GetHash().ToString(), "f0dae070f24fbc35311533a22aa85c0a616c84a1f22881612304d802acda286f");
     BOOST_REQUIRE_EQUAL(chainParams->GenesisBlock().vtx.size(), 1U);
     BOOST_CHECK_EQUAL(chainParams->GenesisBlock().vtx[0]->vout[0].nValue, 0 * COIN);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_consensus_constants_red)
+{
+    BOOST_CHECK_EQUAL(MAX_BLOCK_SERIALIZED_SIZE, 240000U);
+    BOOST_CHECK_EQUAL(MAX_BLOCK_WEIGHT, 240000U);
+    BOOST_CHECK_EQUAL(MAX_BLOCK_SIGOPS_COST, 8000);
+    BOOST_CHECK_EQUAL(COINBASE_MATURITY, 3600);
 }
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
