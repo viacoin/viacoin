@@ -4226,10 +4226,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     }
 
-    // Reject blocks with outdated version
-    if ((block.nVersion < 2 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB)) ||
-        (block.nVersion < 3 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_DERSIG)) ||
-        (block.nVersion < 4 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CLTV))) {
+    const int32_t block_version = block.nVersion & 0xFF;
+    if (((block_version < VERSIONBITS_TOP_BITS) && block_version < 3 && nHeight >= consensusParams.BIP65Height) ||
+        ((block_version < VERSIONBITS_TOP_BITS) && block_version < 4 && nHeight >= consensusParams.BIP66Height) ||
+        ((block_version < VERSIONBITS_TOP_BITS) && block_version < 5 && nHeight >= consensusParams.BlockVer5Height)) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
     }

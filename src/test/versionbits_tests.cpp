@@ -205,6 +205,39 @@ BOOST_AUTO_TEST_CASE(viacoin_mainnet_versionbits_params_red)
     BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold, 8100U);
 }
 
+BOOST_AUTO_TEST_CASE(viacoin_activation_params_red)
+{
+    {
+        const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+        const auto& consensus = chainParams->GetConsensus();
+        BOOST_CHECK_EQUAL(consensus.BIP34Height, 0);
+        BOOST_CHECK_EQUAL(consensus.BIP34Hash.ToString(), "4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1");
+        BOOST_CHECK_EQUAL(consensus.BIP65Height, 598725);
+        BOOST_CHECK_EQUAL(consensus.BIP66Height, 1421641);
+        BOOST_CHECK_EQUAL(consensus.BlockVer5Height, 1976295);
+        BOOST_CHECK_EQUAL(consensus.nWitnessStartHeight, 4040000);
+    }
+    {
+        const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET);
+        const auto& consensus = chainParams->GetConsensus();
+        BOOST_CHECK_EQUAL(consensus.BIP34Height, -1);
+        BOOST_CHECK_EQUAL(consensus.BIP34Hash.ToString(), "0000000000000000000000000000000000000000000000000000000000000000");
+        BOOST_CHECK_EQUAL(consensus.BIP65Height, 800000);
+        BOOST_CHECK_EQUAL(consensus.BIP66Height, 502664);
+        BOOST_CHECK_EQUAL(consensus.BlockVer5Height, 1800000);
+        BOOST_CHECK_EQUAL(consensus.nWitnessStartHeight, 4040000);
+    }
+    {
+        const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
+        const auto& consensus = chainParams->GetConsensus();
+        BOOST_CHECK_EQUAL(consensus.BIP34Height, 100000000);
+        BOOST_CHECK_EQUAL(consensus.BIP65Height, 1251);
+        BOOST_CHECK_EQUAL(consensus.BIP66Height, 1351);
+        BOOST_CHECK_EQUAL(consensus.BlockVer5Height, 1697078);
+        BOOST_CHECK_EQUAL(consensus.nWitnessStartHeight, 20000);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(versionbits_test)
 {
     for (int i = 0; i < 64; i++) {

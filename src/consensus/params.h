@@ -98,6 +98,10 @@ struct Params {
     int BIP65Height;
     /** Block height at which BIP66 becomes active */
     int BIP66Height;
+    /** Block height at which blocks with version < 5 become invalid */
+    int BlockVer5Height;
+    /** Height after which witness-era rules are enforced regardless of versionbits state */
+    int nWitnessStartHeight;
     /** Block height at which CSV (BIP68, BIP112 and BIP113) becomes active */
     int CSVHeight;
     /** Block height at which Segwit (BIP141, BIP143 and BIP147) becomes active.
