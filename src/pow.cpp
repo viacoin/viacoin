@@ -11,77 +11,167 @@
 #include <uint256.h>
 #include <util/check.h>
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+static unsigned int CalculateNextWorkRequired_V1(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+{
+    if (params.fPowNoRetargeting) {
+        return pindexLast->nBits;
+    }
+
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
+    if (nActualTimespan < params.nPowTargetTimespan / 4) {
+        nActualTimespan = params.nPowTargetTimespan / 4;
+    }
+    if (nActualTimespan > params.nPowTargetTimespan * 4) {
+        nActualTimespan = params.nPowTargetTimespan * 4;
+    }
+
+    arith_uint256 bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    const bool fShift = bnNew.bits() > bnPowLimit.bits() - 1;
+    if (fShift) {
+        bnNew >>= 1;
+    }
+    bnNew *= nActualTimespan;
+    bnNew /= params.nPowTargetTimespan;
+    if (fShift) {
+        bnNew <<= 1;
+    }
+
+    if (bnNew > bnPowLimit) {
+        bnNew = bnPowLimit;
+    }
+
+    return bnNew.GetCompact();
+}
+
+static unsigned int GetNextWorkRequired_V1(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+    const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
-    // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
-    {
-        if (params.fPowAllowMinDifficultyBlocks)
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then it MUST be a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+    if ((pindexLast->nHeight + 1) % params.DifficultyAdjustmentInterval() != 0) {
+        if (params.fPowAllowMinDifficultyBlocks) {
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 2) {
                 return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
             }
+            const CBlockIndex* pindex = pindexLast;
+            while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit) {
+                pindex = pindex->pprev;
+            }
+            return pindex->nBits;
         }
         return pindexLast->nBits;
     }
 
-    // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-    assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
-    assert(pindexFirst);
+    int blockstogoback = params.DifficultyAdjustmentInterval() - 1;
+    if ((pindexLast->nHeight + 1) != params.DifficultyAdjustmentInterval()) {
+        blockstogoback = params.DifficultyAdjustmentInterval();
+    }
 
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+    const CBlockIndex* pindexFirst = pindexLast;
+    for (int i = 0; pindexFirst && i < blockstogoback; ++i) {
+        pindexFirst = pindexFirst->pprev;
+    }
+    assert(pindexFirst != nullptr);
+
+    return CalculateNextWorkRequired_V1(pindexLast, pindexFirst->GetBlockTime(), params);
+}
+
+static unsigned int AntiGravityWave(int64_t version, const CBlockIndex* pindexLast, const CBlockHeader*, const Consensus::Params& params)
+{
+    const CBlockIndex* blockLastSolved = pindexLast;
+    const CBlockIndex* blockReading = pindexLast;
+    int64_t nActualTimespan = 0;
+    int64_t lastBlockTime = 0;
+    int64_t pastBlocksMin = 24;
+    int64_t pastBlocksMax = 24;
+    const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+
+    if (version == 2) {
+        pastBlocksMin = 72;
+        pastBlocksMax = 72;
+    }
+
+    int64_t countBlocks = 0;
+    arith_uint256 pastDifficultyAverage;
+    arith_uint256 pastDifficultyAveragePrev;
+
+    if (blockLastSolved == nullptr || blockLastSolved->nHeight == 0 || blockLastSolved->nHeight < pastBlocksMin) {
+        return nProofOfWorkLimit;
+    }
+
+    for (unsigned int i = 1; blockReading && blockReading->nHeight > 0; ++i) {
+        if (pastBlocksMax > 0 && i > pastBlocksMax) {
+            break;
+        }
+        countBlocks++;
+
+        if (countBlocks <= pastBlocksMin) {
+            if (countBlocks == 1) {
+                pastDifficultyAverage.SetCompact(blockReading->nBits);
+            } else {
+                pastDifficultyAverage = ((pastDifficultyAveragePrev * countBlocks) + arith_uint256{}.SetCompact(blockReading->nBits)) / (countBlocks + 1);
+            }
+            pastDifficultyAveragePrev = pastDifficultyAverage;
+        }
+
+        if (lastBlockTime > 0) {
+            nActualTimespan += (lastBlockTime - blockReading->GetBlockTime());
+        }
+        lastBlockTime = blockReading->GetBlockTime();
+
+        if (blockReading->pprev == nullptr) {
+            break;
+        }
+        blockReading = blockReading->pprev;
+    }
+
+    arith_uint256 bnNew{pastDifficultyAverage};
+    if (version == 2) {
+        --countBlocks;
+    }
+
+    int64_t nTargetTimespan = countBlocks * params.nPowTargetSpacing;
+    int64_t div = version == 2 ? 2 : 3;
+
+    if (nActualTimespan < nTargetTimespan / div) {
+        nActualTimespan = nTargetTimespan / div;
+    }
+    if (nActualTimespan > nTargetTimespan * div) {
+        nActualTimespan = nTargetTimespan * div;
+    }
+
+    bnNew *= nActualTimespan;
+    bnNew /= nTargetTimespan;
+
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    if (bnNew > bnPowLimit) {
+        bnNew = bnPowLimit;
+    }
+
+    return bnNew.GetCompact();
+}
+
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    assert(pindexLast != nullptr);
+    if (params.fPowNoRetargeting) {
+        return pindexLast->nBits;
+    }
+
+    if (pindexLast->nHeight + 1 >= 451000 || (params.fPowAllowMinDifficultyBlocks && pindexLast->nHeight + 1 >= 300000)) {
+        return AntiGravityWave(2, pindexLast, pblock, params);
+    }
+    if (pindexLast->nHeight + 1 >= 3600) {
+        return AntiGravityWave(1, pindexLast, pblock, params);
+    }
+    return GetNextWorkRequired_V1(pindexLast, pblock, params);
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
-    if (params.fPowNoRetargeting)
-        return pindexLast->nBits;
-
-    // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
-    if (nActualTimespan < params.nPowTargetTimespan/4)
-        nActualTimespan = params.nPowTargetTimespan/4;
-    if (nActualTimespan > params.nPowTargetTimespan*4)
-        nActualTimespan = params.nPowTargetTimespan*4;
-
-    // Retarget
-    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
-    arith_uint256 bnNew;
-
-    // Special difficulty rule for Testnet4
-    if (params.enforce_BIP94) {
-        // Here we use the first block of the difficulty period. This way
-        // the real difficulty is always preserved in the first block as
-        // it is not allowed to use the min-difficulty exception.
-        int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-        const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
-        bnNew.SetCompact(pindexFirst->nBits);
-    } else {
-        bnNew.SetCompact(pindexLast->nBits);
-    }
-
-    bnNew *= nActualTimespan;
-    bnNew /= params.nPowTargetTimespan;
-
-    if (bnNew > bnPowLimit)
-        bnNew = bnPowLimit;
-
-    return bnNew.GetCompact();
+    return CalculateNextWorkRequired_V1(pindexLast, nFirstBlockTime, params);
 }
 
 // Check that on difficulty adjustments, the new difficulty does not increase

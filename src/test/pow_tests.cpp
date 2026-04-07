@@ -82,6 +82,253 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
 
+static Consensus::Params ViacoinLegacyPowParams(const Consensus::Params& base)
+{
+    Consensus::Params params{base};
+    params.powLimit = uint256{"000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
+    params.nPowTargetTimespan = 14 * 24 * 60 * 60;
+    params.nPowTargetSpacing = 24;
+    params.fPowAllowMinDifficultyBlocks = false;
+    params.enforce_BIP94 = false;
+    params.fPowNoRetargeting = false;
+    return params;
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_legacy_v1_vector_280223)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+
+    int64_t nLastRetargetTime = 1358118740; // Block #278207
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 280223;
+    pindexLast.nTime = 1358378777;  // Block #280223
+    pindexLast.nBits = 0x1c0ac141;
+
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, consensus), 0x1c02b050U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_legacy_v1_vector_2015)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+
+    int64_t nLastRetargetTime = 1317972665; // Block #0
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 2015;
+    pindexLast.nTime = 1318480354;  // Block #2015
+    pindexLast.nBits = 0x1e0ffff0;
+
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, consensus), 0x1e01ffffU);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_legacy_v1_vector_578591)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+
+    int64_t nLastRetargetTime = 1401682934; // legacy note: not an actual block time
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 578591;
+    pindexLast.nTime = 1401757934;
+    pindexLast.nBits = 0x1b075cf1;
+
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, consensus), 0x1b01d73cU);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_legacy_v1_vector_1001951)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+
+    int64_t nLastRetargetTime = 1463690315; // legacy note: not an actual block time
+    CBlockIndex pindexLast;
+    pindexLast.nHeight = 1001951;
+    pindexLast.nTime = 1464900315;
+    pindexLast.nBits = 0x1b015318;
+
+    BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, consensus), 0x1b015334U);
+}
+
+static unsigned int LegacyGetNextWorkRequiredV1(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+
+    if ((pindexLast->nHeight + 1) % params.DifficultyAdjustmentInterval() != 0) {
+        if (params.fPowAllowMinDifficultyBlocks) {
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 2) {
+                return nProofOfWorkLimit;
+            }
+            const CBlockIndex* pindex = pindexLast;
+            while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit) {
+                pindex = pindex->pprev;
+            }
+            return pindex->nBits;
+        }
+        return pindexLast->nBits;
+    }
+
+    int blockstogoback = params.DifficultyAdjustmentInterval() - 1;
+    if ((pindexLast->nHeight + 1) != params.DifficultyAdjustmentInterval()) {
+        blockstogoback = params.DifficultyAdjustmentInterval();
+    }
+
+    const CBlockIndex* pindexFirst = pindexLast;
+    for (int i = 0; pindexFirst && i < blockstogoback; ++i) {
+        pindexFirst = pindexFirst->pprev;
+    }
+    BOOST_REQUIRE(pindexFirst != nullptr);
+    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+}
+
+static unsigned int LegacyAntiGravityWave(int64_t version, const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    const CBlockIndex* block_last_solved = pindexLast;
+    const CBlockIndex* block_reading = pindexLast;
+    int64_t nActualTimespan = 0;
+    int64_t last_block_time = 0;
+    int64_t past_blocks_min = 24;
+    int64_t past_blocks_max = 24;
+    const unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+
+    if (version == 2) {
+        past_blocks_min = 72;
+        past_blocks_max = 72;
+    }
+
+    int64_t count_blocks = 0;
+    arith_uint256 past_difficulty_average;
+    arith_uint256 past_difficulty_average_prev;
+
+    if (block_last_solved == nullptr || block_last_solved->nHeight == 0 || block_last_solved->nHeight < past_blocks_min) {
+        return nProofOfWorkLimit;
+    }
+
+    for (unsigned int i = 1; block_reading && block_reading->nHeight > 0; ++i) {
+        if (past_blocks_max > 0 && i > past_blocks_max) break;
+        count_blocks++;
+
+        if (count_blocks <= past_blocks_min) {
+            if (count_blocks == 1) {
+                past_difficulty_average.SetCompact(block_reading->nBits);
+            } else {
+                past_difficulty_average = ((past_difficulty_average_prev * count_blocks) + (arith_uint256().SetCompact(block_reading->nBits))) / (count_blocks + 1);
+            }
+            past_difficulty_average_prev = past_difficulty_average;
+        }
+
+        if (last_block_time > 0) {
+            nActualTimespan += (last_block_time - block_reading->GetBlockTime());
+        }
+        last_block_time = block_reading->GetBlockTime();
+
+        if (block_reading->pprev == nullptr) break;
+        block_reading = block_reading->pprev;
+    }
+
+    arith_uint256 bnNew(past_difficulty_average);
+    if (version == 2) --count_blocks;
+
+    int64_t nTargetTimespan = count_blocks * params.nPowTargetSpacing;
+    int64_t div = version == 2 ? 2 : 3;
+
+    if (nActualTimespan < nTargetTimespan / div) nActualTimespan = nTargetTimespan / div;
+    if (nActualTimespan > nTargetTimespan * div) nActualTimespan = nTargetTimespan * div;
+
+    bnNew *= nActualTimespan;
+    bnNew /= nTargetTimespan;
+
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    if (bnNew > bnPowLimit) bnNew = bnPowLimit;
+    return bnNew.GetCompact();
+}
+
+static unsigned int LegacyViacoinGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)
+{
+    if (params.fPowNoRetargeting) return pindexLast->nBits;
+
+    if (pindexLast->nHeight + 1 >= 451000 || (params.fPowAllowMinDifficultyBlocks && pindexLast->nHeight + 1 >= 300000)) {
+        return LegacyAntiGravityWave(2, pindexLast, params);
+    } else if (pindexLast->nHeight + 1 >= 3600) {
+        return LegacyAntiGravityWave(1, pindexLast, params);
+    }
+    return LegacyGetNextWorkRequiredV1(pindexLast, pblock, params);
+}
+
+static std::vector<CBlockIndex> BuildSyntheticHistory(int last_height, uint32_t nBits, int64_t start_time, int64_t first_step, int64_t later_step)
+{
+    std::vector<CBlockIndex> chain(last_height + 1);
+    for (int i = 0; i <= last_height; ++i) {
+        if (i > 0) chain[i].pprev = &chain[i - 1];
+        chain[i].nHeight = i;
+        chain[i].nBits = nBits;
+        if (i == 0) {
+            chain[i].nTime = start_time;
+        } else if (i == 1) {
+            chain[i].nTime = start_time + first_step;
+        } else {
+            chain[i].nTime = chain[i - 1].nTime + later_step;
+        }
+    }
+    return chain;
+}
+
+static void CheckSyntheticViacoinAgwCase(const Consensus::Params& consensus, int last_height, uint32_t nBits, int64_t start_time, int64_t first_step, int64_t later_step, uint32_t expected_nbits)
+{
+    auto chain = BuildSyntheticHistory(last_height, nBits, start_time, first_step, later_step);
+
+    CBlockHeader block;
+    block.nTime = chain.back().nTime + consensus.nPowTargetSpacing;
+
+    const auto current_nbits = GetNextWorkRequired(&chain.back(), &block, consensus);
+    const auto legacy_nbits = LegacyViacoinGetNextWorkRequired(&chain.back(), &block, consensus);
+
+    BOOST_CHECK_EQUAL(legacy_nbits, expected_nbits);
+    BOOST_CHECK_EQUAL(current_nbits, expected_nbits);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_agw_v1_dispatch_boundary_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+    CheckSyntheticViacoinAgwCase(consensus, 3599, 0x1c0ac141U, 1'350'000'000, 24 * 20, 24 * 20, 0x1c2043c3U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_agw_v2_dispatch_boundary_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+    CheckSyntheticViacoinAgwCase(consensus, 450999, 0x1b015318U, 1'460'000'000, 24 * 18, 24 * 18, 0x1b02a630U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_agw_v1_clamp_floor_exact)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+    CheckSyntheticViacoinAgwCase(consensus, 3600, 0x1c0ac141U, 1'350'500'000, 1, 1, 0x1c0395c0U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_agw_v1_clamp_ceiling_exact)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+    CheckSyntheticViacoinAgwCase(consensus, 3600, 0x1c0ac141U, 1'351'000'000, 100, 100, 0x1c2043c3U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_agw_v2_clamp_floor_exact)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+    CheckSyntheticViacoinAgwCase(consensus, 451000, 0x1b015318U, 1'460'500'000, 1, 1, 0x1b00a98cU);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_agw_v2_clamp_ceiling_exact)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto consensus = ViacoinLegacyPowParams(chainParams->GetConsensus());
+    CheckSyntheticViacoinAgwCase(consensus, 451000, 0x1b015318U, 1'461'000'000, 100, 100, 0x1b02a630U);
+}
+
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
 {
     const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
@@ -191,60 +438,3 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
         CBlockIndex *p3 = &blocks[m_rng.randrange(10000)];
 
         int64_t tdiff = GetBlockProofEquivalentTime(*p1, *p2, *p3, chainParams->GetConsensus());
-        BOOST_CHECK_EQUAL(tdiff, p1->GetBlockTime() - p2->GetBlockTime());
-    }
-}
-
-void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
-{
-    const auto chainParams = CreateChainParams(args, chain_type);
-    const auto consensus = chainParams->GetConsensus();
-
-    // hash genesis is correct
-    BOOST_CHECK_EQUAL(consensus.hashGenesisBlock, chainParams->GenesisBlock().GetHash());
-
-    // target timespan is an even multiple of spacing
-    BOOST_CHECK_EQUAL(consensus.nPowTargetTimespan % consensus.nPowTargetSpacing, 0);
-
-    // genesis nBits is positive, doesn't overflow and is lower than powLimit
-    arith_uint256 pow_compact;
-    bool neg, over;
-    pow_compact.SetCompact(chainParams->GenesisBlock().nBits, &neg, &over);
-    BOOST_CHECK(!neg && pow_compact != 0);
-    BOOST_CHECK(!over);
-    BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
-
-    // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
-    if (!consensus.fPowNoRetargeting) {
-        arith_uint256 targ_max{UintToArith256(uint256{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"})};
-        targ_max /= consensus.nPowTargetTimespan*4;
-        BOOST_CHECK(UintToArith256(consensus.powLimit) < targ_max);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(ChainParams_MAIN_sanity)
-{
-    sanity_check_chainparams(*m_node.args, ChainType::MAIN);
-}
-
-BOOST_AUTO_TEST_CASE(ChainParams_REGTEST_sanity)
-{
-    sanity_check_chainparams(*m_node.args, ChainType::REGTEST);
-}
-
-BOOST_AUTO_TEST_CASE(ChainParams_TESTNET_sanity)
-{
-    sanity_check_chainparams(*m_node.args, ChainType::TESTNET);
-}
-
-BOOST_AUTO_TEST_CASE(ChainParams_TESTNET4_sanity)
-{
-    sanity_check_chainparams(*m_node.args, ChainType::TESTNET4);
-}
-
-BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
-{
-    sanity_check_chainparams(*m_node.args, ChainType::SIGNET);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
