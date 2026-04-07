@@ -184,6 +184,27 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(versionbits_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(viacoin_versionbits_layout_red)
+{
+    BOOST_CHECK_EQUAL(VERSIONBITS_LAST_OLD_BLOCK_VERSION, 5);
+    BOOST_CHECK_EQUAL(VERSIONBITS_TOP_BITS, 0x00000080UL);
+    BOOST_CHECK_EQUAL(VERSIONBITS_TOP_MASK, 0x00000080UL);
+    BOOST_CHECK_EQUAL(VERSIONBITS_NUM_BITS, 7);
+    BOOST_CHECK_EQUAL(Consensus::MAX_VERSION_BITS_DEPLOYMENTS, 3);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_mainnet_versionbits_params_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit, 6);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime, 1199145601);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout, 1230767999);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period, 10800U);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold, 8100U);
+}
+
 BOOST_AUTO_TEST_CASE(versionbits_test)
 {
     for (int i = 0; i < 64; i++) {
