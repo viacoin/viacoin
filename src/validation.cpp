@@ -2347,17 +2347,33 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
-static bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params, const ChainstateManager* chainman = nullptr)
+static constexpr unsigned int LOCKTIME_MEDIAN_TIME_PAST = (1U << 1);
+
+static bool IsCSVEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache = nullptr)
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
     return nHeight >= params.nWitnessStartHeight ||
-           (chainman != nullptr && DeploymentActiveAfter(pindexPrev, *chainman, Consensus::DEPLOYMENT_SEGWIT));
+           (versionbitscache != nullptr && DeploymentActiveAfter(pindexPrev, params, Consensus::DEPLOYMENT_VIACOIN_CSV, *versionbitscache));
 }
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
+static bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache = nullptr)
 {
-    const Consensus::Params& consensusparams = chainman.GetConsensus();
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           (versionbitscache != nullptr && DeploymentActiveAfter(pindexPrev, params, Consensus::DEPLOYMENT_VIACOIN_SEGWIT, *versionbitscache));
+}
 
+static unsigned int GetLockTimeFlags(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache = nullptr)
+{
+    unsigned int flags{0};
+    if (IsCSVEnabled(pindexPrev, params, versionbitscache)) {
+        flags |= LOCKTIME_MEDIAN_TIME_PAST;
+    }
+    return flags;
+}
+
+static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Consensus::Params& consensusparams, VersionBitsCache* versionbitscache)
+{
     uint32_t flags{SCRIPT_VERIFY_NONE};
 
     if (block_index.nHeight >= consensusparams.BIP16Height) {
@@ -2372,16 +2388,21 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    if (block_index.nHeight >= consensusparams.nWitnessStartHeight || DeploymentActiveAfter(block_index.pprev, chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (IsCSVEnabled(block_index.pprev, consensusparams, versionbitscache)) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
-    if (IsWitnessEnabled(block_index.pprev, consensusparams, &chainman)) {
+    if (IsWitnessEnabled(block_index.pprev, consensusparams, versionbitscache)) {
         flags |= SCRIPT_VERIFY_WITNESS;
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
     return flags;
+}
+
+static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
+{
+    return GetBlockScriptFlags(block_index, chainman.GetConsensus(), &chainman.m_versionbitscache);
 }
 
 static bool ContextualCheckAuxPowHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height)
@@ -2404,9 +2425,24 @@ unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const Ch
     return GetBlockScriptFlags(block_index, chainman);
 }
 
+unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const Consensus::Params& params, VersionBitsCache& versionbitscache)
+{
+    return GetBlockScriptFlags(block_index, params, &versionbitscache);
+}
+
 bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     return IsWitnessEnabled(pindexPrev, params);
+}
+
+bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache)
+{
+    return IsWitnessEnabled(pindexPrev, params, versionbitscache);
+}
+
+unsigned int GetLockTimeFlagsForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache)
+{
+    return GetLockTimeFlags(pindexPrev, params, versionbitscache);
 }
 
 bool ContextualCheckAuxPowHeaderForTest(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height)
@@ -2595,7 +2631,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // Enforce BIP68 (sequence locks)
     int nLockTimeFlags = 0;
-    if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (IsCSVEnabled(pindex->pprev, m_chainman.GetConsensus(), &m_chainman.m_versionbitscache)) {
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
@@ -3922,7 +3958,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
-    if (DeploymentActiveAt(*pindexNew, *this, Consensus::DEPLOYMENT_SEGWIT)) {
+    if (ViacoinSegwitActiveAt(*pindexNew, *this)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
@@ -4126,7 +4162,7 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
 {
     int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce(32, 0x00);
-    if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
+    if (commitpos != NO_WITNESS_COMMITMENT && ViacoinSegwitActiveAfter(pindexPrev, *this) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
         tx.vin[0].scriptWitness.stack[0] = nonce;
@@ -4279,7 +4315,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 
     // Enforce BIP113 (Median Time Past).
     bool enforce_locktime_median_time_past{false};
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (GetLockTimeFlags(pindexPrev, chainman.GetConsensus(), &chainman.m_versionbitscache) != 0) {
         assert(pindexPrev != nullptr);
         enforce_locktime_median_time_past = true;
     }
@@ -4313,7 +4349,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
-    if (!CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT), state)) {
+    if (!CheckWitnessMalleation(block, ViacoinSegwitActiveAfter(pindexPrev, chainman), state)) {
         return false;
     }
 
@@ -4982,7 +5018,7 @@ bool Chainstate::NeedsRedownload() const
     // At and above m_params.SegwitHeight, segwit consensus rules must be validated
     CBlockIndex* block{m_chain.Tip()};
 
-    while (block != nullptr && DeploymentActiveAt(*block, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
+    while (block != nullptr && ViacoinSegwitActiveAt(*block, m_chainman)) {
         if (!(block->nStatus & BLOCK_OPT_WITNESS)) {
             // block is insufficiently validated for a segwit client
             return true;
@@ -6077,7 +6113,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
         // Fake BLOCK_OPT_WITNESS so that Chainstate::NeedsRedownload()
         // won't ask for -reindex on startup.
-        if (DeploymentActiveAt(*index, *this, Consensus::DEPLOYMENT_SEGWIT)) {
+        if (ViacoinSegwitActiveAt(*index, *this)) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
 

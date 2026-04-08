@@ -1359,6 +1359,32 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
     return DeploymentEnabled(chainman.GetConsensus(), dep);
 }
 
+inline bool ViacoinCSVActiveAfter(const CBlockIndex* pindexPrev, const ChainstateManager& chainman)
+{
+    const auto& params = chainman.GetConsensus();
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_VIACOIN_CSV);
+}
+
+inline bool ViacoinCSVActiveAt(const CBlockIndex& index, const ChainstateManager& chainman)
+{
+    return ViacoinCSVActiveAfter(index.pprev, chainman);
+}
+
+inline bool ViacoinSegwitActiveAfter(const CBlockIndex* pindexPrev, const ChainstateManager& chainman)
+{
+    const auto& params = chainman.GetConsensus();
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_VIACOIN_SEGWIT);
+}
+
+inline bool ViacoinSegwitActiveAt(const CBlockIndex& index, const ChainstateManager& chainman)
+{
+    return ViacoinSegwitActiveAfter(index.pprev, chainman);
+}
+
 /** Identifies blocks that overwrote an existing coinbase output in the UTXO set (see BIP30) */
 bool IsBIP30Repeat(const CBlockIndex& block_index);
 

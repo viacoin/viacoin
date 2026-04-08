@@ -242,22 +242,22 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1232032894;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 2700;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 3600;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].nStartTime = 1494547200;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].nTimeout = 1526083200;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].min_activation_height = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].threshold = 1512;
-        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].period = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].threshold = 2700;
+        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].period = 3600;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].nStartTime = 1494547200;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].nTimeout = 1526083200;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].min_activation_height = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].threshold = 1512;
-        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].period = 2016;
+        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].threshold = 2700;
+        consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].period = 3600;
 
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000016dd270dd94fac1d7632"};
         consensus.defaultAssumeValid = uint256{"0000000000000065c6c38258e201971a3fdfcc2ceee0dd6e85a6c022d45dee34"}; // 4550000

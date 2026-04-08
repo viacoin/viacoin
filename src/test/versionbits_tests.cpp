@@ -4,7 +4,9 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <consensus/consensus.h>
 #include <consensus/params.h>
+#include <script/interpreter.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
@@ -15,6 +17,12 @@
 
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
 static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
+
+namespace validation_tests {
+unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const Consensus::Params& params, VersionBitsCache& versionbitscache);
+bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache);
+unsigned int GetLockTimeFlagsForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache);
+}
 
 class TestConditionChecker final : public VersionBitsConditionChecker
 {
@@ -236,6 +244,84 @@ BOOST_AUTO_TEST_CASE(viacoin_activation_params_red)
         BOOST_CHECK_EQUAL(consensus.BlockVer5Height, 1697078);
         BOOST_CHECK_EQUAL(consensus.nWitnessStartHeight, 20000);
     }
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_activation_paths_ignore_buried_heights_red)
+{
+    auto consensus = CreateChainParams(*m_node.args, ChainType::REGTEST)->GetConsensus();
+    consensus.nWitnessStartHeight = 500000;
+    consensus.CSVHeight = 900000;
+    consensus.SegwitHeight = 900000;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
+    VersionBitsCache versionbitscache;
+    CBlockIndex prev;
+    prev.nHeight = 0;
+    prev.nTime = TestTime(0);
+    prev.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    prev.BuildSkip();
+
+    CBlockIndex next;
+    next.nHeight = 1;
+    next.pprev = &prev;
+    next.nTime = TestTime(1);
+    next.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    next.BuildSkip();
+
+    BOOST_CHECK(validation_tests::IsWitnessEnabledForTest(&prev, consensus, &versionbitscache));
+
+    const unsigned int flags = validation_tests::GetBlockScriptFlagsForTest(next, consensus, versionbitscache);
+    BOOST_CHECK(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY);
+    BOOST_CHECK(flags & SCRIPT_VERIFY_WITNESS);
+    BOOST_CHECK(flags & SCRIPT_VERIFY_NULLDUMMY);
+    BOOST_CHECK_NE(validation_tests::GetLockTimeFlagsForTest(&prev, consensus, &versionbitscache), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_activation_paths_ignore_buried_false_positives_red)
+{
+    auto consensus = CreateChainParams(*m_node.args, ChainType::REGTEST)->GetConsensus();
+    consensus.nWitnessStartHeight = 500000;
+    consensus.CSVHeight = 0;
+    consensus.SegwitHeight = 0;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+    consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
+    VersionBitsCache versionbitscache;
+    CBlockIndex prev;
+    prev.nHeight = 0;
+    prev.nTime = TestTime(0);
+    prev.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    prev.BuildSkip();
+
+    CBlockIndex next;
+    next.nHeight = 1;
+    next.pprev = &prev;
+    next.nTime = TestTime(1);
+    next.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    next.BuildSkip();
+
+    BOOST_CHECK(!validation_tests::IsWitnessEnabledForTest(&prev, consensus, &versionbitscache));
+
+    const unsigned int flags = validation_tests::GetBlockScriptFlagsForTest(next, consensus, versionbitscache);
+    BOOST_CHECK_EQUAL(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY, 0U);
+    BOOST_CHECK_EQUAL(flags & SCRIPT_VERIFY_WITNESS, 0U);
+    BOOST_CHECK_EQUAL(flags & SCRIPT_VERIFY_NULLDUMMY, 0U);
+    BOOST_CHECK_EQUAL(validation_tests::GetLockTimeFlagsForTest(&prev, consensus, &versionbitscache), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_testnet_deployment_window_red)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::TESTNET)->GetConsensus();
+
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].period, 3600U);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_CSV].threshold, 2700U);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].period, 3600U);
+    BOOST_CHECK_EQUAL(consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].threshold, 2700U);
 }
 
 BOOST_AUTO_TEST_CASE(versionbits_test)
