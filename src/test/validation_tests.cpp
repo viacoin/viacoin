@@ -8,6 +8,7 @@
 #include <core_io.h>
 #include <hash.h>
 #include <net.h>
+#include <script/interpreter.h>
 #include <signet.h>
 #include <uint256.h>
 #include <util/chaintype.h>
@@ -20,6 +21,19 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
+
+unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const ChainstateManager& chainman);
+bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+
+static void FillSyntheticIndex(CBlockIndex& index, int height, const CBlockIndex* prev = nullptr)
+{
+    index.nHeight = height;
+    index.pprev = const_cast<CBlockIndex*>(prev);
+    index.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    index.nTime = 1'500'000'000 + height;
+    static uint256 synthetic_hash{};
+    index.phashBlock = &synthetic_hash;
+}
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
@@ -63,6 +77,35 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     }
     BOOST_CHECK_EQUAL(max_subsidy, 10 * COIN);
     BOOST_CHECK_EQUAL(nSum, CAmount{988300000000000ULL});
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_script_flag_activation_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    CBlockIndex before_bip16;
+    FillSyntheticIndex(before_bip16, std::max(0, consensus.BIP34Height));
+    const unsigned int before_flags = GetBlockScriptFlagsForTest(before_bip16, *m_node.chainman);
+    BOOST_CHECK_EQUAL(before_flags & SCRIPT_VERIFY_P2SH, SCRIPT_VERIFY_P2SH);
+    BOOST_CHECK_EQUAL(before_flags & SCRIPT_VERIFY_WITNESS, 0U);
+    BOOST_CHECK_EQUAL(before_flags & SCRIPT_VERIFY_TAPROOT, 0U);
+
+    CBlockIndex before_witness_prev;
+    FillSyntheticIndex(before_witness_prev, consensus.nWitnessStartHeight - 2);
+    BOOST_CHECK(!IsWitnessEnabledForTest(&before_witness_prev, consensus));
+
+    CBlockIndex witness_prev;
+    FillSyntheticIndex(witness_prev, consensus.nWitnessStartHeight - 1);
+    BOOST_CHECK(IsWitnessEnabledForTest(&witness_prev, consensus));
+
+    CBlockIndex after_witness;
+    FillSyntheticIndex(after_witness, consensus.nWitnessStartHeight, &witness_prev);
+    const unsigned int after_flags = GetBlockScriptFlagsForTest(after_witness, *m_node.chainman);
+    BOOST_CHECK(after_flags & SCRIPT_VERIFY_P2SH);
+    BOOST_CHECK(after_flags & SCRIPT_VERIFY_WITNESS);
+    BOOST_CHECK(after_flags & SCRIPT_VERIFY_NULLDUMMY);
+    BOOST_CHECK_EQUAL(after_flags & SCRIPT_VERIFY_TAPROOT, 0U);
 }
 
 BOOST_AUTO_TEST_CASE(signet_parse_tests)
