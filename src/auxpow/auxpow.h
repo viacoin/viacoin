@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
-#ifndef VIACOIN_AUXPOW_AUXPOW_H
-#define VIACOIN_AUXPOW_AUXPOW_H
+#ifndef BITCOIN_AUXPOW_AUXPOW_H
+#define BITCOIN_AUXPOW_AUXPOW_H
 
 #include <hash.h>
 #include <primitives/blockheader.h>
@@ -66,4 +66,4 @@ inline void CBlockHeader::SetAuxPow(CAuxPow* pow)
     auxpow.reset(pow);
 }
 
-#endif // VIACOIN_AUXPOW_AUXPOW_H
+#endif // BITCOIN_AUXPOW_AUXPOW_H

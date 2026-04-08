@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
-#ifndef VIACOIN_AUXPOW_CONSENSUS_H
-#define VIACOIN_AUXPOW_CONSENSUS_H
+#ifndef BITCOIN_AUXPOW_CONSENSUS_H
+#define BITCOIN_AUXPOW_CONSENSUS_H
 
 namespace AuxPow {
 
@@ -23,4 +23,4 @@ enum
 
 } // namespace AuxPow
 
-#endif // VIACOIN_AUXPOW_CONSENSUS_H
+#endif // BITCOIN_AUXPOW_CONSENSUS_H

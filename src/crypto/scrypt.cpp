@@ -12,15 +12,6 @@
 #include <cstring>
 
 namespace {
-static inline uint32_t be32dec(const void* pp)
-{
-    const auto* p = static_cast<const uint8_t*>(pp);
-    return (uint32_t{p[3]}) |
-           (uint32_t{p[2]} << 8) |
-           (uint32_t{p[1]} << 16) |
-           (uint32_t{p[0]} << 24);
-}
-
 static inline void be32enc(void* pp, uint32_t x)
 {
     auto* p = static_cast<uint8_t*>(pp);

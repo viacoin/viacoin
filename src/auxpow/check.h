@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
-#ifndef VIACOIN_AUXPOW_CHECK_H
-#define VIACOIN_AUXPOW_CHECK_H
+#ifndef BITCOIN_AUXPOW_CHECK_H
+#define BITCOIN_AUXPOW_CHECK_H
 
 #include <auxpow/auxpow.h>
 #include <consensus/params.h>
@@ -72,4 +72,4 @@ inline bool CheckAuxpow(const std::shared_ptr<const CAuxPow>& auxpow, const uint
     return auxpow->nChainIndex == (slot % tree_size);
 }
 
-#endif // VIACOIN_AUXPOW_CHECK_H
+#endif // BITCOIN_AUXPOW_CHECK_H
