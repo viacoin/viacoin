@@ -2,12 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <auxpow/auxpow.h>
+#include <auxpow/consensus.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <hash.h>
 #include <net.h>
+#include <pow.h>
 #include <script/interpreter.h>
 #include <signet.h>
 #include <uint256.h>
@@ -24,6 +27,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 
 unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const ChainstateManager& chainman);
 bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+bool ContextualCheckAuxPowHeaderForTest(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height);
 
 static void FillSyntheticIndex(CBlockIndex& index, int height, const CBlockIndex* prev = nullptr)
 {
@@ -33,6 +37,21 @@ static void FillSyntheticIndex(CBlockIndex& index, int height, const CBlockIndex
     index.nTime = 1'500'000'000 + height;
     static uint256 synthetic_hash{};
     index.phashBlock = &synthetic_hash;
+}
+
+static CBlockHeader MakeAuxPowHeaderForContextTest(int chain_id = AuxPow::CHAIN_ID)
+{
+    CBlockHeader header;
+    header.nVersion = AuxPow::BLOCK_VERSION_DEFAULT |
+        AuxPow::BLOCK_VERSION_AUXPOW |
+        (chain_id * AuxPow::BLOCK_VERSION_CHAIN_START);
+    header.hashPrevBlock = uint256{1};
+    header.hashMerkleRoot = uint256{2};
+    header.nTime = 1'600'000'000;
+    header.nBits = 0x1e0fffff;
+    header.nNonce = 3;
+    header.SetAuxPow(new CAuxPow());
+    return header;
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
@@ -77,6 +96,44 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     }
     BOOST_CHECK_EQUAL(max_subsidy, 10 * COIN);
     BOOST_CHECK_EQUAL(nSum, CAmount{988300000000000ULL});
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_auxpow_activation_params_red)
+{
+    const auto main_params = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto test_params = CreateChainParams(*m_node.args, ChainType::TESTNET);
+    const auto regtest_params = CreateChainParams(*m_node.args, ChainType::REGTEST);
+
+    BOOST_CHECK_EQUAL(main_params->GetConsensus().nAuxPowStartHeight, AuxPow::START_MAINNET);
+    BOOST_CHECK_EQUAL(test_params->GetConsensus().nAuxPowStartHeight, AuxPow::START_TESTNET);
+    BOOST_CHECK_EQUAL(regtest_params->GetConsensus().nAuxPowStartHeight, AuxPow::START_REGTEST);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_auxpow_contextual_activation_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    {
+        BlockValidationState state;
+        const CBlockHeader premature = MakeAuxPowHeaderForContextTest();
+        BOOST_CHECK(!ContextualCheckAuxPowHeaderForTest(premature, state, consensus, consensus.nAuxPowStartHeight - 1));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "time-too-new");
+    }
+
+    {
+        BlockValidationState state;
+        const CBlockHeader wrong_chain = MakeAuxPowHeaderForContextTest(AuxPow::CHAIN_ID + 1);
+        BOOST_CHECK(!ContextualCheckAuxPowHeaderForTest(wrong_chain, state, consensus, consensus.nAuxPowStartHeight));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-auxpow");
+    }
+
+    {
+        BlockValidationState state;
+        const CBlockHeader valid = MakeAuxPowHeaderForContextTest();
+        BOOST_CHECK(ContextualCheckAuxPowHeaderForTest(valid, state, consensus, consensus.nAuxPowStartHeight));
+        BOOST_CHECK(state.IsValid());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(viacoin_script_flag_activation_red)

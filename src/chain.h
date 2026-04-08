@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -189,6 +190,7 @@ public:
     uint32_t nTime{0};
     uint32_t nBits{0};
     uint32_t nNonce{0};
+    std::shared_ptr<const CAuxPow> auxpow;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
@@ -201,7 +203,8 @@ public:
           hashMerkleRoot{block.hashMerkleRoot},
           nTime{block.nTime},
           nBits{block.nBits},
-          nNonce{block.nNonce}
+          nNonce{block.nNonce},
+          auxpow{block.auxpow}
     {
     }
 
@@ -237,7 +240,13 @@ public:
         block.nTime = nTime;
         block.nBits = nBits;
         block.nNonce = nNonce;
+        block.auxpow = auxpow;
         return block;
+    }
+
+    bool IsAuxPow() const
+    {
+        return static_cast<bool>(nVersion & AuxPow::BLOCK_VERSION_AUXPOW);
     }
 
     uint256 GetBlockHash() const
@@ -394,6 +403,9 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+        if (obj.IsAuxPow()) {
+            READWRITE(obj.auxpow);
+        }
     }
 
     uint256 ConstructBlockHash() const

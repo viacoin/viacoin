@@ -2384,6 +2384,20 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     return flags;
 }
 
+static bool ContextualCheckAuxPowHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height)
+{
+    if (!block.auxpow) {
+        return true;
+    }
+    if (height < consensus_params.nAuxPowStartHeight) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-new", "premature auxpow block");
+    }
+    if (!CheckAuxPowValidity(block, consensus_params)) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-auxpow", "invalid auxpow block");
+    }
+    return true;
+}
+
 namespace validation_tests {
 unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const ChainstateManager& chainman)
 {
@@ -2393,6 +2407,11 @@ unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const Ch
 bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     return IsWitnessEnabled(pindexPrev, params);
+}
+
+bool ContextualCheckAuxPowHeaderForTest(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height)
+{
+    return ContextualCheckAuxPowHeader(block, state, consensus_params, height);
 }
 }
 
@@ -3949,7 +3968,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckBlockProofOfWork(block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
     return true;
@@ -4145,7 +4164,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
 bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
 {
     return std::all_of(headers.cbegin(), headers.cend(),
-            [&](const auto& header) { return CheckProofOfWork(header.GetPoWHash(), header.nBits, consensusParams);});
+            [&](const auto& header) { return CheckBlockProofOfWork(header, consensusParams); });
 }
 
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
@@ -4210,6 +4229,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     // Check proof of work
     const Consensus::Params& consensusParams = chainman.GetConsensus();
+    if (!ContextualCheckAuxPowHeader(block, state, consensusParams, nHeight)) {
+        return false;
+    }
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 

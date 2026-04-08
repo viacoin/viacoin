@@ -11,7 +11,9 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return (HashWriter{} << *this).GetHash();
+    HashWriter hasher{};
+    hasher << nVersion << hashPrevBlock << hashMerkleRoot << nTime << nBits << nNonce;
+    return hasher.GetHash();
 }
 
 uint256 CBlockHeader::GetPoWHash() const

@@ -103,6 +103,7 @@ public:
         consensus.BIP65Height = 598725;
         consensus.BIP66Height = 1421641;
         consensus.BlockVer5Height = 1976295;
+        consensus.nAuxPowStartHeight = AuxPow::START_MAINNET;
         consensus.nWitnessStartHeight = 4040000;
         consensus.CSVHeight = 419328; // script-flag tranche will align witness-era activation path separately
         consensus.SegwitHeight = 481824; // script-flag tranche will align witness-era activation path separately
@@ -226,6 +227,7 @@ public:
         consensus.BIP65Height = 800000;
         consensus.BIP66Height = 502664;
         consensus.BlockVer5Height = 1800000;
+        consensus.nAuxPowStartHeight = AuxPow::START_TESTNET;
         consensus.nWitnessStartHeight = 4040000;
         consensus.CSVHeight = 770112; // script-flag tranche will align witness-era activation path separately
         consensus.SegwitHeight = 834624; // script-flag tranche will align witness-era activation path separately
@@ -556,6 +558,7 @@ public:
         consensus.BIP65Height = 1251;
         consensus.BIP66Height = 1351;
         consensus.BlockVer5Height = 1697078;
+        consensus.nAuxPowStartHeight = AuxPow::START_REGTEST;
         consensus.nWitnessStartHeight = 20000;
         consensus.CSVHeight = 1;    // script-flag tranche will align witness-era activation path separately
         consensus.SegwitHeight = 0; // script-flag tranche will align witness-era activation path separately

@@ -4,6 +4,7 @@
 
 #include <core_io.h>
 #include <interfaces/chain.h>
+#include <interfaces/mining.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/client.h>
@@ -131,6 +132,18 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
     // Make sure options object specified through args array conflicts.
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, 2, {"opt1": 10}], "opt2": 20})"), arg_names), UniValue,
                           HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
+}
+
+BOOST_AUTO_TEST_CASE(getauxblock_rpc_registration_red)
+{
+    if (!m_node.mining) {
+        m_node.mining = interfaces::MakeMining(m_node);
+    }
+
+    BOOST_CHECK_EXCEPTION(CallRPC("getauxblock"), std::runtime_error,
+                          [](const std::runtime_error& e) {
+                              return std::string{e.what()}.find("is not connected!") != std::string::npos;
+                          });
 }
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)

@@ -2,12 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <auxpow/auxpow.h>
+#include <auxpow/check.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <crypto/common.h>
 #include <node/blockstorage.h>
 #include <pow.h>
 #include <primitives/block.h>
+#include <script/script.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
@@ -504,6 +508,13 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
+static std::vector<unsigned char> SerializeUint32(uint32_t value)
+{
+    std::array<unsigned char, 4> bytes;
+    WriteLE32(bytes.data(), value);
+    return {bytes.begin(), bytes.end()};
+}
+
 static CBlockHeader MinePowOnlyHeader(const CChainParams& chain_params)
 {
     const auto& consensus = chain_params.GetConsensus();
@@ -532,6 +543,63 @@ static CBlockHeader MinePowOnlyHeader(const CChainParams& chain_params)
     }
 
     BOOST_FAIL("failed to mine pow-only header");
+}
+
+static CBlockHeader MakeAuxpowHeaderTemplate(const CChainParams& chain_params)
+{
+    CBlockHeader header;
+    header.nVersion = chain_params.GenesisBlock().nVersion | AuxPow::BLOCK_VERSION_AUXPOW |
+        (AuxPow::CHAIN_ID * AuxPow::BLOCK_VERSION_CHAIN_START);
+    header.hashPrevBlock = chain_params.GenesisBlock().GetHash();
+    header.hashMerkleRoot = uint256{9};
+    header.nTime = chain_params.GenesisBlock().nTime + 2;
+    header.nNonce = 1;
+    header.nBits = UintToArith256(chain_params.GetConsensus().powLimit).GetCompact();
+    return header;
+}
+
+static CBlockHeader MakeValidAuxpowHeader(const CChainParams& chain_params)
+{
+    const auto& consensus = chain_params.GetConsensus();
+    CBlockHeader header = MakeAuxpowHeaderTemplate(chain_params);
+
+    auto auxpow = std::make_shared<CAuxPow>();
+    auxpow->nIndex = 0;
+    auxpow->vMerkleBranch.clear();
+    auxpow->vChainMerkleBranch.clear();
+    auxpow->nChainIndex = 0;
+    auxpow->parentBlockHeader.nVersion = 1;
+    auxpow->parentBlockHeader.hashPrevBlock = uint256{21};
+    auxpow->parentBlockHeader.hashMerkleRoot.SetNull();
+    auxpow->parentBlockHeader.nTime = header.nTime + 1;
+    auxpow->parentBlockHeader.nBits = header.nBits;
+    auxpow->parentBlockHeader.nNonce = 0;
+
+    const uint256 aux_block_hash = header.GetHash();
+    std::vector<unsigned char> root_bytes(aux_block_hash.begin(), aux_block_hash.end());
+    std::reverse(root_bytes.begin(), root_bytes.end());
+    std::vector<unsigned char> payload{0xfa, 0xbe, 'm', 'm'};
+    payload.insert(payload.end(), root_bytes.begin(), root_bytes.end());
+    const auto tree_size = SerializeUint32(1);
+    payload.insert(payload.end(), tree_size.begin(), tree_size.end());
+    const auto nonce_bytes = SerializeUint32(0);
+    payload.insert(payload.end(), nonce_bytes.begin(), nonce_bytes.end());
+
+    CMutableTransaction tx;
+    tx.version = 2;
+    tx.vin.resize(1);
+    tx.vout.resize(1);
+    tx.vin[0].scriptSig = CScript() << payload;
+    auxpow->tx = MakeTransactionRef(tx);
+    auxpow->parentBlockHeader.hashMerkleRoot = auxpow->tx->GetHash().ToUint256();
+
+    while (!CheckProofOfWork(auxpow->parentBlockHeader.GetPoWHash(), auxpow->parentBlockHeader.nBits, consensus)) {
+        ++auxpow->parentBlockHeader.nNonce;
+        BOOST_REQUIRE(auxpow->parentBlockHeader.nNonce != 0);
+    }
+
+    header.SetAuxPow(new CAuxPow(*auxpow));
+    return header;
 }
 
 BOOST_AUTO_TEST_CASE(HasValidProofOfWork_uses_powhash_not_header_hash)
@@ -592,6 +660,34 @@ BOOST_AUTO_TEST_CASE(LoadBlockIndexGuts_uses_powhash_not_header_hash)
     BOOST_REQUIRE(loaded_it != loaded_indexes.end());
     BOOST_CHECK_EQUAL(loaded_it->second.nBits, header.nBits);
     BOOST_CHECK_EQUAL(loaded_it->second.nNonce, header.nNonce);
+}
+
+BOOST_AUTO_TEST_CASE(CheckBlockProofOfWork_accepts_valid_auxpow_parent_pow)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
+    const auto& consensus = chainParams->GetConsensus();
+    const CBlockHeader header = MakeValidAuxpowHeader(*chainParams);
+
+    BOOST_REQUIRE(header.IsAuxPow());
+    BOOST_REQUIRE(header.auxpow);
+    BOOST_REQUIRE(CheckProofOfWork(header.auxpow->GetParentBlockHash(), header.nBits, consensus));
+    BOOST_REQUIRE(CheckAuxpow(header.auxpow, header.GetHash(), header.GetChainID(), consensus));
+    BOOST_CHECK(CheckBlockProofOfWork(header, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(CheckBlockProofOfWork_rejects_invalid_auxpow_payload_even_with_valid_parent_pow)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
+    const auto& consensus = chainParams->GetConsensus();
+    CBlockHeader header = MakeValidAuxpowHeader(*chainParams);
+
+    BOOST_REQUIRE(header.auxpow);
+    BOOST_REQUIRE(CheckProofOfWork(header.auxpow->GetParentBlockHash(), header.nBits, consensus));
+    CAuxPow invalid_auxpow{*header.auxpow};
+    invalid_auxpow.nIndex = 1;
+    header.SetAuxPow(new CAuxPow(invalid_auxpow));
+
+    BOOST_CHECK(!CheckBlockProofOfWork(header, consensus));
 }
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)

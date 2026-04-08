@@ -5,6 +5,7 @@
 
 #include <pow.h>
 
+#include <auxpow/check.h>
 #include <arith_uint256.h>
 #include <chain.h>
 #include <primitives/block.h>
@@ -257,5 +258,25 @@ bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Par
     if (UintToArith256(hash) > bnTarget)
         return false;
 
+    return true;
+}
+
+bool CheckBlockProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
+{
+    if (block.auxpow) {
+        if (!CheckAuxpow(block.auxpow, block.GetHash(), block.GetChainID(), params)) {
+            return false;
+        }
+        return CheckProofOfWork(block.auxpow->GetParentBlockHash(), block.nBits, params);
+    }
+
+    return CheckProofOfWork(block.GetPoWHash(), block.nBits, params);
+}
+
+bool CheckAuxPowValidity(const CBlockHeader& block, const Consensus::Params& params)
+{
+    if (!params.fPowAllowMinDifficultyBlocks && block.GetChainID() != AuxPow::CHAIN_ID) {
+        return false;
+    }
     return true;
 }

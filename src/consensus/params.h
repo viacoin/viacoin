@@ -102,6 +102,8 @@ struct Params {
     int BIP66Height;
     /** Block height at which blocks with version < 5 become invalid */
     int BlockVer5Height;
+    /** AuxPow starting height for Viacoin */
+    int nAuxPowStartHeight;
     /** Height after which witness-era rules are enforced regardless of versionbits state */
     int nWitnessStartHeight;
     /** Block height at which CSV (BIP68, BIP112 and BIP113) becomes active */
