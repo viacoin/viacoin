@@ -543,6 +543,7 @@ static CBlockHeader MinePowOnlyHeader(const CChainParams& chain_params)
     }
 
     BOOST_FAIL("failed to mine pow-only header");
+    return header;
 }
 
 static CBlockHeader MakeAuxpowHeaderTemplate(const CChainParams& chain_params)
@@ -637,7 +638,7 @@ BOOST_AUTO_TEST_CASE(LoadBlockIndexGuts_uses_powhash_not_header_hash)
     source_index.nTime = header.nTime;
     source_index.nBits = header.nBits;
     source_index.nNonce = header.nNonce;
-    source_index.nStatus = BLOCK_VALID_TREE;
+    WITH_LOCK(::cs_main, source_index.nStatus = BLOCK_VALID_TREE);
     source_index.nTx = 1;
 
     const CDiskBlockIndex disk_index{&source_index};

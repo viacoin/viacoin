@@ -176,7 +176,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
-        const int coinbase_maturity = ::Params().GetConsensus().fPowNoRetargeting ? COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
+        const int coinbase_maturity = coin.out.nValue == 50 * COIN ? COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < coinbase_maturity) {
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));

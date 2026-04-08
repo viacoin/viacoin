@@ -1922,7 +1922,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    if (Params().MineBlocksOnDemand() && consensusParams.fPowAllowMinDifficultyBlocks) {
+    if (consensusParams.fPowNoRetargeting && consensusParams.fPowAllowMinDifficultyBlocks) {
         int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
         if (halvings >= 64) return 0;
 
