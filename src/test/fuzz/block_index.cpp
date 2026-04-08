@@ -34,6 +34,9 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider)
 {
     CBlockHeader header;
     header.nVersion = provider.ConsumeIntegral<decltype(header.nVersion)>();
+    if (header.IsAuxPow()) {
+        header.nVersion &= ~AuxPow::BLOCK_VERSION_AUXPOW;
+    }
     header.hashPrevBlock = g_block_hash;
     header.hashMerkleRoot = g_block_hash;
     header.nTime = provider.ConsumeIntegral<decltype(header.nTime)>();
