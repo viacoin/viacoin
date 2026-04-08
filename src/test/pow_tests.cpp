@@ -5,6 +5,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <node/blockstorage.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <test/util/random.h>
@@ -503,19 +504,17 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
-BOOST_AUTO_TEST_CASE(HasValidProofOfWork_uses_powhash_not_header_hash)
+static CBlockHeader MinePowOnlyHeader(const CChainParams& chain_params)
 {
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
-    const auto& consensus = chainParams->GetConsensus();
+    const auto& consensus = chain_params.GetConsensus();
 
     CBlockHeader header;
-    header.nVersion = chainParams->GenesisBlock().nVersion;
-    header.hashPrevBlock = chainParams->GenesisBlock().GetHash();
+    header.nVersion = chain_params.GenesisBlock().nVersion;
+    header.hashPrevBlock = chain_params.GenesisBlock().GetHash();
     header.hashMerkleRoot = uint256{1};
-    header.nTime = chainParams->GenesisBlock().nTime + 1;
+    header.nTime = chain_params.GenesisBlock().nTime + 1;
     header.nNonce = 0;
 
-    bool found_pow_only_header{false};
     for (int divisor : {2, 4, 8, 16, 32, 64, 128, 256, 512}) {
         arith_uint256 candidate_target = UintToArith256(consensus.powLimit);
         candidate_target /= divisor;
@@ -525,19 +524,74 @@ BOOST_AUTO_TEST_CASE(HasValidProofOfWork_uses_powhash_not_header_hash)
         for (uint32_t tries = 0; tries < 200000; ++tries) {
             if (CheckProofOfWork(header.GetPoWHash(), header.nBits, consensus) &&
                 !CheckProofOfWork(header.GetHash(), header.nBits, consensus)) {
-                found_pow_only_header = true;
-                break;
+                return header;
             }
             ++header.nNonce;
             BOOST_REQUIRE(header.nNonce != 0);
         }
-        if (found_pow_only_header) break;
     }
-    BOOST_REQUIRE(found_pow_only_header);
+
+    BOOST_FAIL("failed to mine pow-only header");
+}
+
+BOOST_AUTO_TEST_CASE(HasValidProofOfWork_uses_powhash_not_header_hash)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
+    const auto& consensus = chainParams->GetConsensus();
+    const CBlockHeader header = MinePowOnlyHeader(*chainParams);
 
     BOOST_REQUIRE(CheckProofOfWork(header.GetPoWHash(), header.nBits, consensus));
     BOOST_REQUIRE(!CheckProofOfWork(header.GetHash(), header.nBits, consensus));
     BOOST_REQUIRE(HasValidProofOfWork({header}, consensus));
+}
+
+BOOST_AUTO_TEST_CASE(LoadBlockIndexGuts_uses_powhash_not_header_hash)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
+    const auto& consensus = chainParams->GetConsensus();
+    const CBlockHeader header = MinePowOnlyHeader(*chainParams);
+
+    kernel::BlockTreeDB block_index_db(DBParams{
+        .path = "",
+        .cache_bytes = 1 << 20,
+        .memory_only = true,
+    });
+
+    CBlockIndex prev_index{chainParams->GenesisBlock()};
+    const uint256 genesis_hash = chainParams->GenesisBlock().GetHash();
+    prev_index.phashBlock = &genesis_hash;
+
+    CBlockIndex source_index;
+    source_index.pprev = &prev_index;
+    source_index.nHeight = 1;
+    source_index.nVersion = header.nVersion;
+    source_index.hashMerkleRoot = header.hashMerkleRoot;
+    source_index.nTime = header.nTime;
+    source_index.nBits = header.nBits;
+    source_index.nNonce = header.nNonce;
+    source_index.nStatus = BLOCK_VALID_TREE;
+    source_index.nTx = 1;
+
+    const CDiskBlockIndex disk_index{&source_index};
+    BOOST_REQUIRE(CheckProofOfWork(header.GetPoWHash(), header.nBits, consensus));
+    BOOST_REQUIRE(!CheckProofOfWork(disk_index.ConstructBlockHash(), header.nBits, consensus));
+    BOOST_REQUIRE(block_index_db.Write(std::make_pair(uint8_t{'b'}, disk_index.ConstructBlockHash()), disk_index));
+
+    node::BlockMap loaded_indexes;
+    const auto inserter = [&](const uint256& hash) {
+        const auto [it, inserted] = loaded_indexes.try_emplace(hash);
+        CBlockIndex* index = &it->second;
+        if (inserted) {
+            index->phashBlock = &it->first;
+        }
+        return index;
+    };
+
+    WITH_LOCK(::cs_main, BOOST_CHECK(block_index_db.LoadBlockIndexGuts(consensus, inserter, m_interrupt)));
+    const auto loaded_it = loaded_indexes.find(disk_index.ConstructBlockHash());
+    BOOST_REQUIRE(loaded_it != loaded_indexes.end());
+    BOOST_CHECK_EQUAL(loaded_it->second.nBits, header.nBits);
+    BOOST_CHECK_EQUAL(loaded_it->second.nNonce, header.nNonce);
 }
 
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
