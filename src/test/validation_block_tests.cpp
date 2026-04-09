@@ -238,6 +238,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
     auto last_mined = GoodBlock(Params().GenesisBlock().GetHash());
     BOOST_REQUIRE(ProcessBlock(last_mined));
 
+    const int coinbase_maturity = Params().GetConsensus().fPowNoRetargeting ? COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
+
     // Run the test multiple times
     for (int test_runs = 3; test_runs > 0; --test_runs) {
         BOOST_CHECK_EQUAL(last_mined->GetHash(), WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Tip()->GetBlockHash()));
@@ -261,7 +263,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         }
 
         // Mature the inputs of the txs
-        for (int j = COINBASE_MATURITY; j > 0; --j) {
+        for (int j = coinbase_maturity; j > 0; --j) {
             last_mined = GoodBlock(last_mined->GetHash());
             BOOST_REQUIRE(ProcessBlock(last_mined));
         }
@@ -272,7 +274,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         std::vector<std::shared_ptr<const CBlock>> reorg;
         last_mined = GoodBlock(split_hash);
         reorg.push_back(last_mined);
-        for (size_t j = COINBASE_MATURITY + txs.size() + 1; j > 0; --j) {
+        for (size_t j = coinbase_maturity + txs.size() + 1; j > 0; --j) {
             last_mined = GoodBlock(last_mined->GetHash());
             reorg.push_back(last_mined);
         }
@@ -282,7 +284,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
             LOCK(cs_main);
             for (const auto& tx : txs) {
                 const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(tx);
-                BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
+                BOOST_REQUIRE_MESSAGE(result.m_result_type == MempoolAcceptResult::ResultType::VALID, result.m_state.ToString());
             }
         }
 

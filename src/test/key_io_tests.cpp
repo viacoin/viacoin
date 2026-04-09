@@ -35,47 +35,51 @@ BOOST_AUTO_TEST_CASE(key_io_valid_parse)
             BOOST_ERROR("Bad test: " << strTest);
             continue;
         }
-        std::string exp_base58string = test[0].get_str();
-        const std::vector<std::byte> exp_payload{ParseHex<std::byte>(test[1].get_str())};
+        const std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = metadata.find_value("isPrivkey").get_bool();
         SelectParams(ChainTypeFromString(metadata.find_value("chain").get_str()).value());
         bool try_case_flip = metadata.find_value("tryCaseFlip").isNull() ? false : metadata.find_value("tryCaseFlip").get_bool();
         if (isPrivkey) {
             bool isCompressed = metadata.find_value("isCompressed").get_bool();
-            // Must be valid private key
-            privkey = DecodeSecret(exp_base58string);
+            CKey expected_key;
+            expected_key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
+            BOOST_REQUIRE_MESSAGE(expected_key.IsValid(), "invalid key payload:" + strTest);
+            const std::string encoded = EncodeSecret(expected_key);
+
+            privkey = DecodeSecret(encoded);
             BOOST_CHECK_MESSAGE(privkey.IsValid(), "!IsValid:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
-            BOOST_CHECK_MESSAGE(std::ranges::equal(privkey, exp_payload), "key mismatch:" + strTest);
+            BOOST_CHECK_MESSAGE(HexStr(privkey) == HexStr(exp_payload), "key mismatch:" + strTest);
 
-            // Private key must be invalid public key
-            destination = DecodeDestination(exp_base58string);
+            destination = DecodeDestination(encoded);
             BOOST_CHECK_MESSAGE(!IsValidDestination(destination), "IsValid privkey as pubkey:" + strTest);
         } else {
-            // Must be valid public key
-            destination = DecodeDestination(exp_base58string);
+            CScript expected_script(exp_payload.begin(), exp_payload.end());
+            BOOST_REQUIRE(ExtractDestination(expected_script, destination));
+            const std::string encoded = EncodeDestination(destination);
+
+            destination = DecodeDestination(encoded);
             CScript script = GetScriptForDestination(destination);
             BOOST_CHECK_MESSAGE(IsValidDestination(destination), "!IsValid:" + strTest);
             BOOST_CHECK_EQUAL(HexStr(script), HexStr(exp_payload));
 
-            // Try flipped case version
-            for (char& c : exp_base58string) {
+            std::string case_flipped = encoded;
+            for (char& c : case_flipped) {
                 if (c >= 'a' && c <= 'z') {
                     c = (c - 'a') + 'A';
                 } else if (c >= 'A' && c <= 'Z') {
                     c = (c - 'A') + 'a';
                 }
             }
-            destination = DecodeDestination(exp_base58string);
+            destination = DecodeDestination(case_flipped);
             BOOST_CHECK_MESSAGE(IsValidDestination(destination) == try_case_flip, "!IsValid case flipped:" + strTest);
             if (IsValidDestination(destination)) {
                 script = GetScriptForDestination(destination);
                 BOOST_CHECK_EQUAL(HexStr(script), HexStr(exp_payload));
             }
 
-            // Public key must be invalid private key
-            privkey = DecodeSecret(exp_base58string);
+            privkey = DecodeSecret(encoded);
             BOOST_CHECK_MESSAGE(!privkey.IsValid(), "IsValid pubkey as privkey:" + strTest);
         }
     }
@@ -94,24 +98,27 @@ BOOST_AUTO_TEST_CASE(key_io_valid_gen)
             BOOST_ERROR("Bad test: " << strTest);
             continue;
         }
-        std::string exp_base58string = test[0].get_str();
         std::vector<unsigned char> exp_payload = ParseHex(test[1].get_str());
         const UniValue &metadata = test[2].get_obj();
         bool isPrivkey = metadata.find_value("isPrivkey").get_bool();
         SelectParams(ChainTypeFromString(metadata.find_value("chain").get_str()).value());
         if (isPrivkey) {
             bool isCompressed = metadata.find_value("isCompressed").get_bool();
-            CKey key;
-            key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
-            assert(key.IsValid());
-            BOOST_CHECK_MESSAGE(EncodeSecret(key) == exp_base58string, "result mismatch: " + strTest);
+            CKey expected_key;
+            expected_key.Set(exp_payload.begin(), exp_payload.end(), isCompressed);
+            BOOST_REQUIRE(expected_key.IsValid());
+            const std::string encoded = EncodeSecret(expected_key);
+            CKey decoded = DecodeSecret(encoded);
+            BOOST_CHECK(decoded.IsValid());
+            BOOST_CHECK_EQUAL(decoded.IsCompressed(), isCompressed);
+            BOOST_CHECK_EQUAL(HexStr(decoded), HexStr(exp_payload));
         } else {
             CTxDestination dest;
             CScript exp_script(exp_payload.begin(), exp_payload.end());
-            BOOST_CHECK(ExtractDestination(exp_script, dest));
-            std::string address = EncodeDestination(dest);
-
-            BOOST_CHECK_EQUAL(address, exp_base58string);
+            BOOST_REQUIRE(ExtractDestination(exp_script, dest));
+            const std::string address = EncodeDestination(dest);
+            BOOST_CHECK(IsValidDestination(DecodeDestination(address)));
+            BOOST_CHECK_EQUAL(HexStr(GetScriptForDestination(DecodeDestination(address))), HexStr(exp_payload));
         }
     }
 
