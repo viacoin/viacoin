@@ -1251,6 +1251,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
 
     CTxMemPool::Options mempool_opts{
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        .consensus = &chainparams.GetConsensus(),
         .signals = node.validation_signals.get(),
     };
     Assert(ApplyArgsManOptions(args, chainparams, mempool_opts)); // no error can happen, already checked in AppInitParameterInteraction
