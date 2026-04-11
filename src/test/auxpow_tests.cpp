@@ -69,9 +69,9 @@ std::shared_ptr<CAuxPow> MakeValidAuxpow(const uint256& aux_block_hash, unsigned
     auxpow->vChainMerkleBranch.clear();
 
     uint32_t slot = nonce;
-    slot = slot * 1103515245 + 12345;
-    slot += chain_id;
-    slot = slot * 1103515245 + 12345;
+    slot = static_cast<uint32_t>(static_cast<uint64_t>(slot) * 1103515245ULL + 12345ULL);
+    slot = static_cast<uint32_t>(static_cast<uint64_t>(slot) + chain_id);
+    slot = static_cast<uint32_t>(static_cast<uint64_t>(slot) * 1103515245ULL + 12345ULL);
     auxpow->nChainIndex = slot % 1;
     auxpow->parentBlockHeader.nVersion = 1;
     auxpow->parentBlockHeader.hashPrevBlock = uint256{21};

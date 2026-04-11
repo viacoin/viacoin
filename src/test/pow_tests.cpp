@@ -12,9 +12,11 @@
 #include <pow.h>
 #include <primitives/block.h>
 #include <script/script.h>
+#include <streams.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/chaintype.h>
+#include <util/strencodings.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -452,6 +454,137 @@ BOOST_AUTO_TEST_CASE(viacoin_consensus_constants_red)
     BOOST_CHECK_EQUAL(MAX_BLOCK_WEIGHT, 240000U);
     BOOST_CHECK_EQUAL(MAX_BLOCK_SIGOPS_COST, 8000);
     BOOST_CHECK_EQUAL(COINBASE_MATURITY, 3600);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_historical_boundary_reference_samples)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    struct BoundarySample {
+        int height;
+        unsigned int bits;
+        int32_t version;
+        bool auxpow;
+    };
+
+    static const std::array<BoundarySample, 8> samples{{
+        {3599,    0x1e01ffffU, 0x00000002, false},
+        {3600,    0x1e00aaaaU, 0x00000002, false},
+        {451000,  0x1c04db28U, 0x00000002, false},
+        {498725,  0x1c03e9e0U, 0x00000002, false},
+        {657000,  0x1b13dc06U, 0x00560103, true},
+        {1971000, 0x1b19eb77U, 0x00560105, true},
+        {3974400, 0x1b038f64U, 0x00560180, true},
+        {4040000, 0x1b0422caU, 0x00560180, true},
+    }};
+
+    BOOST_CHECK_EQUAL(consensus.nAuxPowStartHeight, 498725);
+    BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 657000);
+    BOOST_CHECK_EQUAL(consensus.nWitnessStartHeight, 4040000);
+
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(3599, consensus), 0 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(3600, consensus), 0 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(451000, consensus), 5 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(498725, consensus), 5 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(657000, consensus), 5 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1971000, consensus), 5 * COIN);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(3974400, consensus), 31250000);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(4040000, consensus), 31250000);
+
+    for (const auto& sample : samples) {
+        CBlockHeader header;
+        header.nVersion = sample.version;
+        BOOST_CHECK_EQUAL(header.IsAuxPow(), sample.auxpow);
+        if (sample.auxpow) {
+            BOOST_CHECK_EQUAL(header.GetChainID(), AuxPow::CHAIN_ID);
+        } else {
+            BOOST_CHECK_EQUAL(header.GetChainID(), 0);
+        }
+    }
+
+    BOOST_CHECK_EQUAL(samples[0].bits, 0x1e01ffffU);
+    BOOST_CHECK_EQUAL(samples[1].bits, 0x1e00aaaaU);
+    BOOST_CHECK(samples[0].bits != samples[1].bits);
+    BOOST_CHECK_EQUAL(samples[2].bits, 0x1c04db28U);
+    BOOST_CHECK_EQUAL(samples[3].bits, 0x1c03e9e0U);
+    BOOST_CHECK_EQUAL(samples[4].version, 0x00560103);
+    BOOST_CHECK_EQUAL(samples[5].version, 0x00560105);
+    BOOST_CHECK_EQUAL(samples[6].version, 0x00560180);
+    BOOST_CHECK_EQUAL(samples[7].version, 0x00560180);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_historical_header_pow_samples)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+
+    struct HeaderSample {
+        int height;
+        const char* hash;
+        const char* hex;
+        unsigned int bits;
+        int32_t version;
+        bool auxpow;
+    };
+
+    static const std::array<HeaderSample, 3> samples{{
+        {3600, "bd42302be63766aefd286599532098f2f57809345b5559ce165c567a084706d1", "020000005660a601ee256937b71f7627634d9380fc49e313bcf30a9ee2806cd0d5238c3d6f328dc1459826f400b62f9468a25c4f5ac375215bf9a75562b022e828c0e7007eefc753aaaa001eb1801eff", 0x1e00aaaaU, 0x00000002, false},
+        {451000, "a96fc110c0b33be44b621bf6284c6051ccd21f6749b3965fcaf909c8bb674ff5", "02000000eb6968b5bf25dd64825cd38a599b1753b0d2c3eef238410e4e0b92e60544638beade2486b9ddbf325255240da5703a72597ca3a61631afbb9c84c5a954d5216036ec765428db041c7b0284da", 0x1c04db28U, 0x00000002, false},
+        {498725, "96a50d5b4eb4d1e554cbe08fc54910910c325c7bf191ce7dc941d144fc2476a3", "020000008d3eb9759428b4f4441c92add3588cf28c4818384755ad6e717a8e1317e632bc6a353a2f12decc082dee1eb8847aa7ed80c1331987a251fb66e73ad35cb7da283a698854e0e9031cf132be8c", 0x1c03e9e0U, 0x00000002, false},
+    }};
+
+    for (const auto& sample : samples) {
+        DataStream stream{ParseHex(sample.hex)};
+        CBlockHeader header;
+        stream >> header;
+        BOOST_CHECK_EQUAL(header.GetHash().ToString(), sample.hash);
+        BOOST_CHECK_EQUAL(header.nBits, sample.bits);
+        BOOST_CHECK_EQUAL(header.nVersion, sample.version);
+        BOOST_CHECK_EQUAL(header.IsAuxPow(), sample.auxpow);
+        BOOST_CHECK(CheckProofOfWork(header.GetPoWHash(), header.nBits, consensus));
+        if (sample.auxpow) {
+            BOOST_REQUIRE(header.auxpow);
+            BOOST_CHECK_EQUAL(header.GetChainID(), AuxPow::CHAIN_ID);
+            BOOST_CHECK(CheckProofOfWork(header.auxpow->GetParentBlockHash(), header.auxpow->parentBlockHeader.nBits, consensus));
+        } else {
+            BOOST_CHECK(!header.auxpow);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_historical_auxpow_parent_header_samples)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+
+    struct ParentSample {
+        int height;
+        const char* hash;
+        int32_t version;
+        const char* prev;
+        const char* merkle;
+        uint32_t time;
+        unsigned int bits;
+        uint32_t nonce;
+    };
+
+    static const std::array<ParentSample, 4> samples{{
+        {657000,  "9b2c4f35c94d5b1ebc3444270892b5623762df7bbd99755da0319bb7807afdc7", 0x00000002, "53d9d5f71e9f716f743ee8d864c94c2cf456a6b1bc9b43c8f7aea7a930cbee98", "a4b636d9147083f23eaabf2647242766e5ded346bd5255d1434b83d417025a88", 1422027058U, 0x1b01a691U, 1278192618U},
+        {1971000, "b065510f6c11db9722e292bf4bf453ebfa58368eb568fd71f857732bd8be2226", 0x00000004, "cc018196c232d3409a75563ed40d39707648cf747e2e1eccdd6580ac1f1d04b0", "c4bd4252e462f414a7f89df912436702d4eadc76ececf91a34d5869c53f737cb", 1453612804U, 0x1b013b3cU, 3103814379U},
+        {3974400, "180f7c63b5501ceed5e2b1e0775a18df5304038b6d3fb9c066296bd25176264e", 0x20000000, "cdf7336193b521d21a3e1b414705b64887bedcbc46f578f93288d0c47b7dbea4", "6e0d278667abca041b7317f16ac3733bf89acfb398411edaf91690070ef055b6", 1501787334U, 0x1a25e7f7U, 65630587U},
+        {4040000, "e60c8a538729e07cf685e2b08592c4eb918bcaf34ad12cbd9ca1d59414a805d9", 0x20000000, "54ef3eda3e6c46bce8da6d3199b69325a23a40ca7588721ebb2e3205f3060e34", "75acbab4bd1b44f63c1d7df849535207a37a5c819b854d8a9a904c75889b46c1", 1503364038U, 0x1a2636d3U, 3915006805U},
+    }};
+
+    for (const auto& sample : samples) {
+        CBlockHeader parent;
+        parent.nVersion = sample.version;
+        parent.hashPrevBlock = *Assert(uint256::FromHex(sample.prev));
+        parent.hashMerkleRoot = *Assert(uint256::FromHex(sample.merkle));
+        parent.nTime = sample.time;
+        parent.nBits = sample.bits;
+        parent.nNonce = sample.nonce;
+        BOOST_CHECK_EQUAL(parent.GetHash().ToString(), sample.hash);
+        BOOST_CHECK(!parent.GetPoWHash().IsNull());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)

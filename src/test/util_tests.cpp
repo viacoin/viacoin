@@ -1537,12 +1537,10 @@ BOOST_AUTO_TEST_CASE(message_verify)
             "Trust no one"),
         MessageVerificationResult::OK);
 
-    std::string generated_signature;
-    BOOST_REQUIRE(MessageSign(privkey, "Trust me", generated_signature));
     BOOST_CHECK_EQUAL(
         MessageVerify(
             pkh_address,
-            generated_signature,
+            "H+6b2NL1ATItJn2XI5jgNjspSEdvQMnSrVRILddKbhTcGtZG+0apzIqKvqX+voHnJBo29RbGmRgEjRwClYZpmo4=",
             "Trust me"),
         MessageVerificationResult::OK);
 }

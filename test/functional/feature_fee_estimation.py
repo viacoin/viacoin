@@ -200,11 +200,18 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.memutxo = newmem
 
     def initial_split(self, node):
-        """Split two coinbase UTxOs into many small coins"""
-        self.confutxo = self.wallet.send_self_transfer_multi(
-            from_node=node,
-            utxos_to_spend=[self.wallet.get_utxo() for _ in range(2)],
-            num_outputs=2048)['new_utxos']
+        """Split two coinbase UTxOs into many small coins.
+
+        Viacoin's lower MAX_BLOCK_WEIGHT makes a single 2048-output split
+        transaction consensus-invalid, so keep the total output count but do it
+        as two smaller transactions.
+        """
+        self.confutxo = []
+        for _ in range(2):
+            self.confutxo.extend(self.wallet.send_self_transfer_multi(
+                from_node=node,
+                utxos_to_spend=[self.wallet.get_utxo()],
+                num_outputs=1024)['new_utxos'])
         while len(node.getrawmempool()) > 0:
             self.generate(node, 1, sync_fun=self.no_op)
 

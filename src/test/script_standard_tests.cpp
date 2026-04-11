@@ -478,9 +478,7 @@ BOOST_AUTO_TEST_CASE(bip341_spk_test_vectors)
         parse_tree(vec["given"]["scriptTree"], 0);
         spktest.Finalize(XOnlyPubKey(ParseHex(vec["given"]["internalPubkey"].get_str())));
         BOOST_CHECK_EQUAL(HexStr(GetScriptForDestination(spktest.GetOutput())), vec["expected"]["scriptPubKey"].get_str());
-        const std::string local_address = EncodeDestination(spktest.GetOutput());
-        BOOST_CHECK(IsValidDestination(DecodeDestination(local_address)));
-        BOOST_CHECK_EQUAL(HexStr(GetScriptForDestination(DecodeDestination(local_address))), vec["expected"]["scriptPubKey"].get_str());
+        BOOST_CHECK_EQUAL(EncodeDestination(spktest.GetOutput()), vec["expected"]["bip350Address"].get_str());
         auto spend_data = spktest.GetSpendData();
         BOOST_CHECK_EQUAL(vec["intermediary"]["merkleRoot"].isNull(), spend_data.merkle_root.IsNull());
         if (!spend_data.merkle_root.IsNull()) {

@@ -237,7 +237,9 @@ BOOST_AUTO_TEST_CASE(package_validation_tests)
         BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().size(), 1);
         BOOST_CHECK_EQUAL(it_child->second.m_wtxids_fee_calculations.value().front(), tx_child->GetWitnessHash());
     }
-    // A single, giant transaction submitted through ProcessNewPackage fails on single tx policy.
+    // A single, giant transaction submitted through ProcessNewPackage fails.
+    // On Viacoin this placeholder is consensus-invalid before policy because
+    // MAX_BLOCK_WEIGHT is 240'000 WU, much lower than upstream Bitcoin's.
     CTransactionRef giant_ptx = create_placeholder_tx(999, 999);
     BOOST_CHECK(GetVirtualTransactionSize(*giant_ptx) > DEFAULT_ANCESTOR_SIZE_LIMIT_KVB * 1000);
     Package package_single_giant{giant_ptx};
@@ -248,7 +250,7 @@ BOOST_AUTO_TEST_CASE(package_validation_tests)
         BOOST_CHECK_EQUAL(result_single_large.m_state.GetResult(), PackageValidationResult::PCKG_TX);
         BOOST_CHECK_EQUAL(result_single_large.m_state.GetRejectReason(), "transaction failed");
         auto it_giant_tx = result_single_large.m_tx_results.find(giant_ptx->GetWitnessHash());
-        BOOST_CHECK_EQUAL(it_giant_tx->second.m_state.GetRejectReason(), "tx-size");
+        BOOST_CHECK_EQUAL(it_giant_tx->second.m_state.GetRejectReason(), "bad-txns-oversize");
     }
 
     // Check that mempool size hasn't changed.

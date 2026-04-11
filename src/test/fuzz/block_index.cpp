@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <auxpow/auxpow.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <node/blockstorage.h>
@@ -35,7 +36,14 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider)
     CBlockHeader header;
     header.nVersion = provider.ConsumeIntegral<decltype(header.nVersion)>();
     if (header.IsAuxPow()) {
-        header.nVersion &= ~AuxPow::BLOCK_VERSION_AUXPOW;
+        auto auxpow = std::make_shared<CAuxPow>();
+        auxpow->parentBlockHeader.nVersion = header.nVersion & ~AuxPow::BLOCK_VERSION_AUXPOW;
+        auxpow->parentBlockHeader.hashPrevBlock = g_block_hash;
+        auxpow->parentBlockHeader.hashMerkleRoot = g_block_hash;
+        auxpow->parentBlockHeader.nTime = provider.ConsumeIntegral<decltype(header.nTime)>();
+        auxpow->parentBlockHeader.nBits = Params().GenesisBlock().nBits;
+        auxpow->parentBlockHeader.nNonce = provider.ConsumeIntegral<decltype(header.nNonce)>();
+        header.auxpow = std::move(auxpow);
     }
     header.hashPrevBlock = g_block_hash;
     header.hashMerkleRoot = g_block_hash;
