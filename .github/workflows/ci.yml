@@ -220,7 +220,7 @@ jobs:
             throw "ProgramFiles(x86) environment variable is not set"
           }
           $vswherePath = Join-Path $programFilesX86 "Microsoft Visual Studio\Installer\vswhere.exe"
-          $installationPath = & $vswherePath -latest -property installationPath
+          $installationPath = & $vswherePath -latest -products * -property installationPath
           if (!$installationPath) {
             throw "No Visual Studio installation found by vswhere"
           }
