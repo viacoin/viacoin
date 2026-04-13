@@ -232,7 +232,11 @@ jobs:
             $name, $value = $_ -split '=', 2
             echo "$name=$value" >> $env:GITHUB_ENV
           }
-          echo "VCPKG_INSTALLATION_ROOT=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\vcpkg" >> $env:GITHUB_ENV
+          $vcpkgRoot = Join-Path $installationPath "VC\vcpkg"
+          if (!(Test-Path $vcpkgRoot)) {
+            throw "vcpkg not found at: $vcpkgRoot"
+          }
+          echo "VCPKG_INSTALLATION_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
 
       - name: Get tool information
         shell: pwsh
@@ -254,7 +258,7 @@ jobs:
       - name: vcpkg tools cache
         uses: actions/cache@v5
         with:
-          path: C:/vcpkg/downloads/tools
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}/downloads/tools
           key: ${{ github.job }}-vcpkg-tools
 
       - name: Restore vcpkg binary cache
