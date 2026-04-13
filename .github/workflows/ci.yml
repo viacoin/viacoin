@@ -215,9 +215,19 @@ jobs:
         name: Set up VS Developer Prompt
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vswherePath = "$env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (!(Test-Path $vswherePath)) {
+            throw "vswhere.exe not found at: $vswherePath"
+          }
           $installationPath = & $vswherePath -latest -property installationPath
-          & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -arch=x64 -no_logo && set" | foreach-object {
+          if (!$installationPath) {
+            throw "No Visual Studio installation found by vswhere"
+          }
+          $vsdevcmdPath = Join-Path $installationPath "Common7\Tools\vsdevcmd.bat"
+          if (!(Test-Path $vsdevcmdPath)) {
+            throw "vsdevcmd.bat not found at: $vsdevcmdPath"
+          }
+          & "${env:COMSPEC}" /d /s /c "call `"$vsdevcmdPath`" -arch=x64 -no_logo && set" | foreach-object {
             $name, $value = $_ -split '=', 2
             echo "$name=$value" >> $env:GITHUB_ENV
           }
