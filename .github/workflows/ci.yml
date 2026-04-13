@@ -596,4 +596,4 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             CIRRUS_PR_FLAG="-e CIRRUS_PR=1"
           fi
-          docker run --rm $CIRRUS_PR_FLAG -v "$(pwd)":/bitcoin "$CONTAINER_NAME"
+          docker run --rm $CIRRUS_PR_FLAG --user "$(id -u):$(id -g)" -v "$(pwd)":/bitcoin "$CONTAINER_NAME"
