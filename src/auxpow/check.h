@@ -65,9 +65,9 @@ inline bool CheckAuxpow(const std::shared_ptr<const CAuxPow>& auxpow, const uint
     const uint32_t nonce = ReadLE32(&cursor[4]);
 
     uint32_t slot = nonce;
-    slot = slot * 1103515245 + 12345;
-    slot += chain_id;
-    slot = slot * 1103515245 + 12345;
+    slot = static_cast<uint32_t>(static_cast<uint64_t>(slot) * 1103515245ULL + 12345ULL);
+    slot = static_cast<uint32_t>(static_cast<uint64_t>(slot) + static_cast<uint32_t>(chain_id));
+    slot = static_cast<uint32_t>(static_cast<uint64_t>(slot) * 1103515245ULL + 12345ULL);
 
     return auxpow->nChainIndex == (slot % tree_size);
 }
