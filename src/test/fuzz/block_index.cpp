@@ -36,14 +36,7 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider)
     CBlockHeader header;
     header.nVersion = provider.ConsumeIntegral<decltype(header.nVersion)>();
     if (header.IsAuxPow()) {
-        auto auxpow = std::make_shared<CAuxPow>();
-        auxpow->parentBlockHeader.nVersion = header.nVersion & ~AuxPow::BLOCK_VERSION_AUXPOW;
-        auxpow->parentBlockHeader.hashPrevBlock = g_block_hash;
-        auxpow->parentBlockHeader.hashMerkleRoot = g_block_hash;
-        auxpow->parentBlockHeader.nTime = provider.ConsumeIntegral<decltype(header.nTime)>();
-        auxpow->parentBlockHeader.nBits = Params().GenesisBlock().nBits;
-        auxpow->parentBlockHeader.nNonce = provider.ConsumeIntegral<decltype(header.nNonce)>();
-        header.auxpow = std::move(auxpow);
+        header.nVersion &= ~AuxPow::BLOCK_VERSION_AUXPOW;
     }
     header.hashPrevBlock = g_block_hash;
     header.hashMerkleRoot = g_block_hash;
