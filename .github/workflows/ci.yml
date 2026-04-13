@@ -215,10 +215,11 @@ jobs:
         name: Set up VS Developer Prompt
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          $vswherePath = "$env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-          if (!(Test-Path $vswherePath)) {
-            throw "vswhere.exe not found at: $vswherePath"
+          $programFilesX86 = [System.Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          if (!$programFilesX86) {
+            throw "ProgramFiles(x86) environment variable is not set"
           }
+          $vswherePath = Join-Path $programFilesX86 "Microsoft Visual Studio\Installer\vswhere.exe"
           $installationPath = & $vswherePath -latest -property installationPath
           if (!$installationPath) {
             throw "No Visual Studio installation found by vswhere"
