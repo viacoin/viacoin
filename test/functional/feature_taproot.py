@@ -118,7 +118,6 @@ from collections import OrderedDict, namedtuple
 import json
 import hashlib
 import os
-import random
 
 # Whether or not to output generated test vectors, in JSON format.
 GEN_TEST_VECTORS = False
