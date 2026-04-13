@@ -232,6 +232,7 @@ jobs:
             $name, $value = $_ -split '=', 2
             echo "$name=$value" >> $env:GITHUB_ENV
           }
+          echo "VCPKG_INSTALLATION_ROOT=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\vcpkg" >> $env:GITHUB_ENV
 
       - name: Get tool information
         shell: pwsh
