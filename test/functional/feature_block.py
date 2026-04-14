@@ -540,10 +540,13 @@ class FullBlockTest(BitcoinTestFramework):
 
         # Test sigops in P2SH redeem scripts
         #
-        # b40 creates 3333 tx's spending the 6-sigop P2SH outputs from b39 for a total of 19998 sigops.
-        # The first tx has one sigop and then at the end we add 2 more to put us just over the max.
+        # b40 creates tx's spending the b39_sigops_per_output-sigop P2SH outputs from b39,
+        # then fills remaining sigops with raw OP_CHECKSIG to put us just over the max.
+        # Under Viacoin's low weight limit, the P2SH-spending transactions consume
+        # significant weight, so numTxes may be capped and remaining sigops come
+        # from the fill tx instead of additional P2SH spends.
         #
-        # b41 does the same, less one, so it has the maximum sigops permitted.
+        # b41 does the same, less one sigop, so it has the maximum sigops permitted.
         #
         self.log.info("Reject a block with too many P2SH sigops")
         self.move_tip(39)
@@ -553,7 +556,8 @@ class FullBlockTest(BitcoinTestFramework):
         assert_equal(numTxes <= b39_outputs, True)
 
         lastOutpoint = COutPoint(b40.vtx[1].txid_int, 0)
-        new_txs = []
+        p2sh_txs = []
+        total_weight = b40.get_weight()
         for i in range(1, numTxes + 1):
             tx = CTransaction()
             tx.vout.append(CTxOut(1, CScript([OP_TRUE])))
@@ -563,15 +567,35 @@ class FullBlockTest(BitcoinTestFramework):
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
             tx.vin[1].scriptSig = CScript([redeem_script])
             sign_input_legacy(tx, 1, redeem_script, self.coinbase_key)
-            new_txs.append(tx)
+            total_weight += tx.get_weight()
+            if total_weight >= MAX_BLOCK_WEIGHT:
+                break
+            p2sh_txs.append(tx)
             lastOutpoint = COutPoint(tx.txid_int, 0)
 
+        numTxes = len(p2sh_txs)
         b40_sigops_to_fill = MAX_BLOCK_SIGOPS - (numTxes * b39_sigops_per_output + sigops) + 1
-        tx = CTransaction()
-        tx.vin.append(CTxIn(lastOutpoint, b''))
-        tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b40_sigops_to_fill)))
-        new_txs.append(tx)
-        self.update_block(40, new_txs)
+        fill_tx = CTransaction()
+        fill_tx.vin.append(CTxIn(lastOutpoint, b''))
+        fill_tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b40_sigops_to_fill)))
+
+        self.update_block(40, p2sh_txs + [fill_tx])
+
+        # The weight accounting above may be off due to compact-size encoding and
+        # ECDSA signature size non-determinism. Trim P2SH txs until under the limit.
+        # Note: update_block appends via extend, so we must reset vtx to the
+        # coinbase + initial spend tx before each call to avoid double-counting.
+        while b40.get_weight() >= MAX_BLOCK_WEIGHT and len(p2sh_txs) > 0:
+            del p2sh_txs[-1]
+            numTxes -= 1
+            lastOutpoint = COutPoint(p2sh_txs[-1].txid_int, 0) if p2sh_txs else COutPoint(b40.vtx[1].txid_int, 0)
+            b40_sigops_to_fill = MAX_BLOCK_SIGOPS - (numTxes * b39_sigops_per_output + sigops) + 1
+            fill_tx = CTransaction()
+            fill_tx.vin.append(CTxIn(lastOutpoint, b''))
+            fill_tx.vout.append(CTxOut(1, CScript([OP_CHECKSIG] * b40_sigops_to_fill)))
+            b40.vtx = b40.vtx[:2]  # keep coinbase and initial spend tx
+            self.update_block(40, p2sh_txs + [fill_tx])
+
         self.send_blocks([b40], success=False, reject_reason='bad-blk-sigops', reconnect=True)
 
         # same as b40, but one less sigop

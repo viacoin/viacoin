@@ -157,9 +157,11 @@ FUZZ_TARGET(versionbits, .init = initialize)
     if (checker.Condition(ver_nosignal)) return;
 
     // TOP_BITS should ensure version will be positive and meet min
-    // version requirement
-    assert(ver_signal > 0);
-    assert(ver_signal >= VERSIONBITS_LAST_OLD_BLOCK_VERSION);
+    // version requirement; however with Viacoin's VERSIONBITS_TOP_BITS=0x80,
+    // Condition() can match negative versions (e.g. 0xFFFFFF81). Bail out
+    // if the signalling version is not sensible.
+    if (ver_signal <= 0) return;
+    if (ver_signal < VERSIONBITS_LAST_OLD_BLOCK_VERSION) return;
 
     /* Strategy:
      *  * we will mine a final period worth of blocks, with
