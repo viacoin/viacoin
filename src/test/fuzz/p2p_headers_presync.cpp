@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
+#include <auxpow/auxpow.h>
 #include <blockencodings.h>
 #include <net.h>
 #include <net_processing.h>
@@ -124,6 +125,12 @@ CBlockHeader ConsumeHeader(FuzzedDataProvider& fuzzed_data_provider, const uint2
     header.nTime = ConsumeTime(fuzzed_data_provider);
     header.hashPrevBlock = prev_hash;
     header.nVersion = fuzzed_data_provider.ConsumeIntegral<int32_t>();
+    // Viacoin: mask out the AuxPoW version bit so the fuzz target does not
+    // synthesize AuxPoW-flagged headers.  The P2P deserializer would try to
+    // read additional AuxPoW data that is absent from the fuzz buffer.
+    if (header.IsAuxPow()) {
+        header.nVersion &= ~AuxPow::BLOCK_VERSION_AUXPOW;
+    }
     return header;
 }
 
