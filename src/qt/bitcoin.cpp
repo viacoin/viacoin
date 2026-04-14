@@ -54,6 +54,7 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QPalette>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -216,6 +217,27 @@ void BitcoinApplication::setupPlatformStyle()
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
     assert(platformStyle);
+
+    // Force light mode: Qt6 on Linux/GNOME inherits the system dark theme,
+    // which makes the UI unreadable with Viacoin's icon color scheme.
+    // Override the palette to the standard light palette on Linux.
+#ifdef Q_OS_LINUX
+    QPalette light_palette;
+    light_palette.setColor(QPalette::Window, QColor(255, 255, 255));
+    light_palette.setColor(QPalette::WindowText, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::Base, QColor(255, 255, 255));
+    light_palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
+    light_palette.setColor(QPalette::ToolTipBase, QColor(255, 255, 225));
+    light_palette.setColor(QPalette::ToolTipText, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::Text, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::Button, QColor(240, 240, 240));
+    light_palette.setColor(QPalette::ButtonText, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::BrightText, QColor(255, 0, 0));
+    light_palette.setColor(QPalette::Link, QColor(0, 0, 255));
+    light_palette.setColor(QPalette::Highlight, QColor(76, 163, 224));
+    light_palette.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
+    QApplication::setPalette(light_palette);
+#endif
 }
 
 BitcoinApplication::~BitcoinApplication()

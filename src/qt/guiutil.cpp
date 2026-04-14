@@ -601,8 +601,8 @@ fs::path static GetAutostartFilePath()
 {
     ChainType chain = gArgs.GetChainType();
     if (chain == ChainType::MAIN)
-        return GetAutostartDir() / "bitcoin.desktop";
-    return GetAutostartDir() / fs::u8path(strprintf("bitcoin-%s.desktop", ChainTypeToString(chain)));
+        return GetAutostartDir() / "viacoin.desktop";
+    return GetAutostartDir() / fs::u8path(strprintf("viacoin-%s.desktop", ChainTypeToString(chain)));
 }
 
 bool GetStartOnSystemStartup()

@@ -107,17 +107,17 @@ static int AppInitRawTx(int argc, char* argv[])
 
     if (argc < 2 || HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
         // First part of help message is specific to this utility
-        std::string strUsage = CLIENT_NAME " bitcoin-tx utility version " + FormatFullVersion() + "\n";
+        std::string strUsage = CLIENT_NAME " viacoin-tx utility version " + FormatFullVersion() + "\n";
 
         if (gArgs.GetBoolArg("-version", false)) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "The bitcoin-tx tool is used for creating and modifying viacoin transactions.\n\n"
+                "The viacoin-tx tool is used for creating and modifying viacoin transactions.\n\n"
                 "viacoin-tx can be used with \"<hex-tx> [commands]\" to update a hex-encoded viacoin transaction, or with \"-create [commands]\" to create a hex-encoded viacoin transaction.\n"
                 "\n"
-                "Usage: bitcoin-tx [options] <hex-tx> [commands]\n"
-                "or:    bitcoin-tx [options] -create [commands]\n"
+                "Usage: viacoin-tx [options] <hex-tx> [commands]\n"
+                "or:    viacoin-tx [options] -create [commands]\n"
                 "\n";
             strUsage += gArgs.GetHelpMessage();
         }
