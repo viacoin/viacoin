@@ -914,7 +914,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         }
         throw CConnectionFailed(strprintf("Could not connect to the server %s:%d%s\n\n"
                     "Make sure the bitcoind server is running and that you are connecting to the correct RPC port.\n"
-                    "Use \"bitcoin-cli -help\" for more info.",
+                    "Use \"viacoin-cli -help\" for more info.",
                     host, port, responseErrorMessage));
     } else if (response.status == HTTP_UNAUTHORIZED) {
         if (failedToGetAuthCookie) {
@@ -1001,7 +1001,7 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
         }
         if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED) {
             strPrint += " Or for the CLI, specify the \"-rpcwallet=<walletname>\" option before the command";
-            strPrint += " (run \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see which wallets are currently loaded).";
+            strPrint += " (run \"viacoin-cli -h\" for help or \"viacoin-cli listwallets\" to see which wallets are currently loaded).";
         }
     } else {
         strPrint = "error: " + error.write();

@@ -62,7 +62,7 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "bitcoin-wallet is an offline tool for creating and interacting with " CLIENT_NAME " wallet files.\n\n"
+                "viacoin-wallet is an offline tool for creating and interacting with " CLIENT_NAME " wallet files.\n\n"
                 "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n\n"
                 "To change the target wallet, use the -datadir, -wallet and (test)chain selection arguments.\n"
                 "\n"
