@@ -11,6 +11,14 @@
 #include <cstdint>
 #include <cstring>
 
+#if defined(USE_SSE2) && !defined(USE_SSE2_ALWAYS)
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <cpuid.h>
+#endif
+#endif
+
 namespace {
 static inline void be32enc(void* pp, uint32_t x)
 {
@@ -142,8 +150,44 @@ void scrypt_1024_1_1_256_sp_generic(const char* input, char* output, char* scrat
     PBKDF2_SHA256(reinterpret_cast<const uint8_t*>(input), 80, B.data(), B.size(), 1, reinterpret_cast<uint8_t*>(output), 32);
 }
 
+#if defined(USE_SSE2)
+// By default, set to generic scrypt function. This will prevent crash in case
+// when scrypt_detect_sse2() wasn't called in the non-USE_SSE2_ALWAYS path.
+void (*scrypt_1024_1_1_256_sp_detected)(const char* input, char* output, char* scratchpad) = &scrypt_1024_1_1_256_sp_generic;
+
+std::string scrypt_detect_sse2()
+{
+    std::string ret;
+#if defined(USE_SSE2_ALWAYS)
+    ret = "scrypt: using scrypt-sse2 as built-in";
+#else // USE_SSE2_ALWAYS
+    // 32-bit x86 Linux or Windows — detect cpuid features
+    unsigned int cpuid_edx = 0;
+#if defined(_MSC_VER)
+    // MSVC
+    int x86cpuid[4];
+    __cpuid(x86cpuid, 1);
+    cpuid_edx = static_cast<unsigned int>(x86cpuid[3]);
+#else // _MSC_VER
+    // Linux or i686-w64-mingw32 (gcc/clang)
+    unsigned int eax, ebx, ecx;
+    __get_cpuid(1, &eax, &ebx, &ecx, &cpuid_edx);
+#endif // _MSC_VER
+
+    if (cpuid_edx & (1 << 26)) {
+        scrypt_1024_1_1_256_sp_detected = &scrypt_1024_1_1_256_sp_sse2;
+        ret = "scrypt: using scrypt-sse2 as detected";
+    } else {
+        scrypt_1024_1_1_256_sp_detected = &scrypt_1024_1_1_256_sp_generic;
+        ret = "scrypt: using scrypt-generic, SSE2 unavailable";
+    }
+#endif // USE_SSE2_ALWAYS
+    return ret;
+}
+#endif // USE_SSE2
+
 void scrypt_1024_1_1_256(const char* input, char* output)
 {
     char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
-    scrypt_1024_1_1_256_sp_generic(input, output, scratchpad);
+    scrypt_1024_1_1_256_sp(input, output, scratchpad);
 }

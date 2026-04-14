@@ -15,6 +15,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <crypto/scrypt.h>
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/system.h>
@@ -1492,6 +1493,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!AppInitServers(node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
+
+#if defined(USE_SSE2)
+    LogInfo("%s\n", scrypt_detect_sse2());
+#endif
 
     // ********************************************************* Step 5: verify wallet database integrity
     for (const auto& client : node.chain_clients) {
