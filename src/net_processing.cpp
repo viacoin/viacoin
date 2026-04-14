@@ -125,7 +125,8 @@ static const unsigned int MAX_INV_SZ = 50000;
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
-static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+// Viacoin: 32x Bitcoin — 24s block time means more blocks to sync
+static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 512;
 /** Default time during which a peer must stall block download progress before being disconnected.
  * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
 static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
@@ -141,7 +142,8 @@ static_assert(MAX_BLOCKTXN_DEPTH <= MIN_BLOCKS_TO_KEEP, "MAX_BLOCKTXN_DEPTH too 
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
  *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We'll probably
  *  want to make this a per-peer adaptive value at some point. */
-static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
+// Viacoin: 32x Bitcoin — 24s block time means more blocks to sync
+static const unsigned int BLOCK_DOWNLOAD_WINDOW = 32768;
 /** Block download timeout base, expressed in multiples of the block interval (i.e. 10 min) */
 static constexpr double BLOCK_DOWNLOAD_TIMEOUT_BASE = 1;
 /** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
@@ -5524,8 +5526,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
 
         if (!state.fSyncStarted && CanServeBlocks(*peer) && !m_chainman.m_blockman.LoadingBlocks()) {
-            // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
+            // Viacoin: removed nSyncStarted == 0 guard to allow parallel header sync.
+            // With 24s block times there are more blocks to sync during IBD.
+            // Original: if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || ...)
+            if (sync_blocks_and_headers_from_peer || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
                 const CBlockIndex* pindexStart = m_chainman.m_best_header;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
@@ -5854,7 +5858,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (state.fSyncStarted && peer->m_headers_sync_timeout < std::chrono::microseconds::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
             if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
-                if (current_time > peer->m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
+                // Viacoin: changed nSyncStarted == 1 to nSyncStarted >= 1 to handle
+                // parallel header sync (we removed the nSyncStarted == 0 guard above)
+                if (current_time > peer->m_headers_sync_timeout && nSyncStarted >= 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
                     // Note: If all our peers are inbound, then we won't
