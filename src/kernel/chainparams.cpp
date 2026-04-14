@@ -149,8 +149,8 @@ public:
         pchMessageStart[3] = 0xcb;
         nDefaultPort = 5223;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 810;
-        m_assumed_chain_state_size = 14;
+        m_assumed_blockchain_size = 15;
+        m_assumed_chain_state_size = 2;
 
         genesis = CreateViacoinGenesisBlock(1405164774, 4016033, 0x1e01ffff, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -179,32 +179,13 @@ public:
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
 
-        m_assumeutxo_data = {
-            {
-                .height = 840'000,
-                .hash_serialized = AssumeutxoHash{uint256{"a2a5521b1b5ab65f67818e5e8eccabb7171a517f9e2382208f77687310768f96"}},
-                .m_chain_tx_count = 991032194,
-                .blockhash = consteval_ctor(uint256{"0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"}),
-            },
-            {
-                .height = 880'000,
-                .hash_serialized = AssumeutxoHash{uint256{"dbd190983eaf433ef7c15f78a278ae42c00ef52e0fd2a54953782175fbadcea9"}},
-                .m_chain_tx_count = 1145604538,
-                .blockhash = consteval_ctor(uint256{"000000000000000000010b17283c3c400507969a9c2afd1dcf2082ec5cca2880"}),
-            },
-            {
-                .height = 910'000,
-                .hash_serialized = AssumeutxoHash{uint256{"4daf8a17b4902498c5787966a2b51c613acdab5df5db73f196fa59a4da2f1568"}},
-                .m_chain_tx_count = 1226586151,
-                .blockhash = consteval_ctor(uint256{"0000000000000000000108970acb9522ffd516eae17acddcb1bd16469194a821"}),
-            }
-        };
+        m_assumeutxo_data = {};
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb
-            .nTime    = 1756722903,
-            .tx_count = 1235299397,
-            .dTxRate  = 5.456290459519495,
+            // Data from RPC: getchaintxstats 4096 b057393d1af96736631886cbf3321d3889874b391addbcdfbfef0bbc948c6c0e
+            .nTime    = 1776203386,
+            .tx_count = 14337559,
+            .dTxRate  = 0.03429767636592004,
         };
     }
 };
@@ -268,8 +249,8 @@ public:
         pchMessageStart[3] = 0x92;
         nDefaultPort = 25223;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 240;
-        m_assumed_chain_state_size = 19;
+        m_assumed_blockchain_size = 5;
+        m_assumed_chain_state_size = 1;
 
         genesis = CreateViacoinGenesisBlock(1405168772, 262929, 0x1e1fffff, 1, 0 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -295,20 +276,13 @@ public:
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
 
-        m_assumeutxo_data = {
-            {
-                .height = 2'500'000,
-                .hash_serialized = AssumeutxoHash{uint256{"f841584909f68e47897952345234e37fcd9128cd818f41ee6c3ca68db8071be7"}},
-                .m_chain_tx_count = 66484552,
-                .blockhash = consteval_ctor(uint256{"0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f"}),
-            }
-        };
+        m_assumeutxo_data = {};
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 0000000000000065c6c38258e201971a3fdfcc2ceee0dd6e85a6c022d45dee34
-            .nTime    = 1751816758,
-            .tx_count = 508468699,
-            .dTxRate  = 7.172978845985714,
+            // Data from rpc: getchaintxstats 4096 00000000000001c200b9790dc637d3bb141fe77d155b966ed775b17e109f7c6c
+            .nTime    = 1405625749,
+            .tx_count = 4440,
+            .dTxRate  = 5000,
         };
     }
 };
@@ -367,8 +341,8 @@ public:
         pchMessageStart[3] = 0x28;
         nDefaultPort = 48333;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 22;
-        m_assumed_chain_state_size = 2;
+        m_assumed_blockchain_size = 2;
+        m_assumed_chain_state_size = 1;
 
         const char* testnet4_genesis_msg = "03/May/2024 000000000000000000001ebd58c244970b3aa9d783bb001011fbe8ea8e98e00e";
         const CScript testnet4_genesis_script = CScript() << "000000000000000000000000000000000000000000000000000000000000000000"_hex << OP_CHECKSIG;
@@ -402,20 +376,13 @@ public:
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
 
-        m_assumeutxo_data = {
-            {
-                .height = 90'000,
-                .hash_serialized = AssumeutxoHash{uint256{"784fb5e98241de66fdd429f4392155c9e7db5c017148e66e8fdbc95746f8b9b5"}},
-                .m_chain_tx_count = 11347043,
-                .blockhash = consteval_ctor(uint256{"0000000002ebe8bcda020e0dd6ccfbdfac531d2f6a81457191b99fc2df2dbe3b"}),
-            }
-        };
+        m_assumeutxo_data = {};
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 000000000000000180a58e7fa3b0db84b5ea76377524894f53660d93ac839d9b
+            // Viacoin testnet4 has minimal activity
             .nTime    = 1752470331,
-            .tx_count = 11414302,
-            .dTxRate  = 0.2842619757327476,
+            .tx_count = 0,
+            .dTxRate  = 0,
         };
     }
 };
@@ -439,8 +406,8 @@ public:
 
             consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000000000000067d328e681a"};
             consensus.defaultAssumeValid = uint256{"000000128586e26813922680309f04e1de713c7542fee86ed908f56368aefe2e"}; // 267665
-            m_assumed_blockchain_size = 20;
-            m_assumed_chain_state_size = 4;
+            m_assumed_blockchain_size = 1;
+            m_assumed_chain_state_size = 1;
             chainTxData = ChainTxData{
                 // Data from RPC: getchaintxstats 4096 000000128586e26813922680309f04e1de713c7542fee86ed908f56368aefe2e
                 .nTime    = 1756723017,
