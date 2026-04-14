@@ -4010,6 +4010,18 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
     return true;
 }
 
+static bool CheckBlockHeaderForGenesis(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
+{
+    // For Viacoin: the genesis block's scrypt PoW hash is implicitly validated by
+    // the assert(consensus.hashGenesisBlock == genesis.GetHash()) in chainparams.
+    // Skip PoW check for the genesis block to avoid re-verifying scrypt at runtime,
+    // since GetHash() (SHA256d) differs from GetPoWHash() (scrypt) for Viacoin.
+    if (block.GetHash() == consensusParams.hashGenesisBlock) {
+        return true;
+    }
+    return CheckBlockHeader(block, state, consensusParams, fCheckPOW);
+}
+
 static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
 {
     if (block.m_checked_merkle_root) return true;
@@ -4100,7 +4112,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
+    if (!CheckBlockHeaderForGenesis(block, state, consensusParams, fCheckPOW))
         return false;
 
     // Signet only: check block solution

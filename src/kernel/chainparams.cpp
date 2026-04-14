@@ -98,7 +98,7 @@ public:
             uint256{"00000000000002dc756eebf4f49723ed8d30cc28a5f108eb94b1ba88ac4f9c22"}, SCRIPT_VERIFY_NONE);
         consensus.script_flag_exceptions.emplace( // Taproot exception
             uint256{"0000000000000000000f14c35b2d841e986ab5441de8c585d5ffe55ea1e395ad"}, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS);
-        consensus.BIP34Height = 0;
+        consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256{"4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1"};
         consensus.BIP65Height = 598725;
         consensus.BIP66Height = 1421641;
@@ -135,8 +135,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].threshold = 8100;
         consensus.vDeployments[Consensus::DEPLOYMENT_VIACOIN_SEGWIT].period = 10800;
 
-        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000dee8e2a309ad8a9820433c68"};
-        consensus.defaultAssumeValid = uint256{"00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb"}; // 912683
+        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000003967cac56f2a1b39348"};
+        consensus.defaultAssumeValid = uint256{"63898baba0b3a6aefe911fcc4877422510651cdaee3f6da5aa8d693849650975"}; // 13537313
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
