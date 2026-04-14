@@ -422,7 +422,7 @@ if os.path.exists(appname + ".zip"):
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Bitcoin-Qt.app")
+target = os.path.join("dist", "Viacoin-Qt.app")
 
 print("+ Copying source bundle +")
 if verbose:
@@ -499,7 +499,7 @@ if platform.system() == "Darwin":
 # ------------------------------------------------
 
 if config.zip is not None:
-    subprocess.check_call(["zip", "-ry", os.path.abspath(appname + ".zip"), 'Bitcoin-Qt.app'], cwd='dist')
+    subprocess.check_call(["zip", "-ry", os.path.abspath(appname + ".zip"), 'Viacoin-Qt.app'], cwd='dist')
 
 # ------------------------------------------------
 
