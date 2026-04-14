@@ -47,9 +47,9 @@ void initialize_tx_pool()
     BlockAssembler::Options options;
     options.coinbase_output_script = P2WSH_EMPTY;
 
-    for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
+    for (int i = 0; i < 2 * COINBASE_MATURITY_REGTEST; ++i) {
         COutPoint prevout{MineBlock(g_setup->m_node, options)};
-        if (i < COINBASE_MATURITY) {
+        if (i < COINBASE_MATURITY_REGTEST) {
             // Remember the txids to avoid expensive disk access later on
             g_outpoints_coinbase_init_mature.push_back(prevout);
         }
