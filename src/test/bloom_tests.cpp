@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
 {
     CKey key;
     constexpr auto secret{"f49addfd726a59abde172c86452f5f73038a02f4415878dc14934175e8418aff"_hex_u8};
-    key.Set(secret.begin(), secret.end(), /*compressed=*/false);
+    key.Set(secret.begin(), secret.end(), /*fCompressedIn=*/false);
     BOOST_REQUIRE(key.IsValid());
     CPubKey pubkey = key.GetPubKey();
     std::vector<unsigned char> vchPubKey(pubkey.begin(), pubkey.end());
