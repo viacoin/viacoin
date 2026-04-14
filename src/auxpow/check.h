@@ -31,7 +31,7 @@ inline bool CheckAuxpow(const std::shared_ptr<const CAuxPow>& auxpow, const uint
         return false;
     }
 
-    const uint256 chain_root = auxpow->CheckMerkleBranch(hash_aux_block, auxpow->vChainMerkleBranch, auxpow->nChainIndex);
+    const uint256 chain_root = auxpow->CheckMerkleBranch(hash_aux_block, auxpow->vChainMerkleBranch, static_cast<int>(auxpow->nChainIndex));
     std::vector<unsigned char> chain_root_bytes(chain_root.begin(), chain_root.end());
     std::reverse(chain_root_bytes.begin(), chain_root_bytes.end());
 
