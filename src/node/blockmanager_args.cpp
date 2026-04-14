@@ -35,6 +35,11 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Op
 
     if (auto value{args.GetBoolArg("-fastprune")}) opts.fast_prune = *value;
 
+    // Viacoin: skip PoW check when loading block index — scrypt recomputation is too slow.
+    // -skipcheckpowatload=true (default) means check_pow_at_load=false.
+    // Use -skipcheckpowatload=0 to force PoW verification at load.
+    if (auto value{args.GetBoolArg("-skipcheckpowatload")}) opts.check_pow_at_load = !*value;
+
     ReadDatabaseArgs(args, opts.block_tree_db_params.options);
 
     return {};

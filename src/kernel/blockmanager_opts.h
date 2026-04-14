@@ -29,6 +29,9 @@ struct BlockManagerOpts {
     const fs::path blocks_dir;
     Notifications& notifications;
     DBParams block_tree_db_params;
+    // Viacoin: skip PoW check when loading block index — scrypt recomputation is too slow.
+    // Default is to skip (-skipcheckpowatload=true). Set -skipcheckpowatload=0 to enforce.
+    bool check_pow_at_load{false};
 };
 
 } // namespace kernel
