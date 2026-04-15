@@ -47,6 +47,7 @@
 #include <boost/signals2/connection.hpp>
 #include <chrono>
 #include <memory>
+#include <vector>
 
 #include <QApplication>
 #include <QDebug>
@@ -60,6 +61,64 @@
 #include <QTimer>
 #include <QTranslator>
 #include <QWindow>
+
+// Viacoin: Runtime translation table to replace "Bitcoin"/"bitcoin" references
+// in user-facing Qt strings with "Viacoin"/"viacoin". This approach keeps .ui
+// files and locale sources identical to upstream, reducing merge conflicts.
+struct TranslationTable {
+    const wchar_t *From, *To;
+};
+
+static std::vector<TranslationTable> g_translationTable = {
+    {L"Bitcoin",   L"Viacoin"},
+    {L"bitcoin",   L"viacoin"},
+    {L"Bitcoins",  L"Viacoins"},
+    {L"bitcoins",  L"viacoins"},
+    {L"BITCOIN",   L"VIACOIN"},
+    {L"BITCOINS",  L"VIACOINS"},
+};
+
+static class ViacoinTranslatorInit {
+public:
+    struct QTranslationTable {
+        QString From, To;
+    };
+
+    std::vector<QTranslationTable> m_translationTable;
+
+    ViacoinTranslatorInit()
+    {
+        for (const auto& t : g_translationTable) {
+            QTranslationTable x = { QString::fromWCharArray(t.From), QString::fromWCharArray(t.To) };
+            m_translationTable.push_back(x);
+        }
+    }
+} g_ViacoinTranslatorInit;
+
+class ViacoinTranslator : public QTranslator
+{
+    bool m_isBase;
+public:
+    QString translate(const char *context, const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1) const override
+    {
+        auto s = QTranslator::translate(context, sourceText, disambiguation, n);
+        if (strstr(sourceText, "coin")
+            || strstr(sourceText, "Coin")
+            || strstr(sourceText, "COIN"))
+        {
+            if (m_isBase && s.isNull())
+                s = QString::fromUtf8(sourceText);
+            for (const auto& t : g_ViacoinTranslatorInit.m_translationTable)
+                s.replace(t.From, t.To);
+        }
+        return s;
+    }
+
+    ViacoinTranslator(bool isBase)
+        : m_isBase(isBase)
+    {
+    }
+};
 
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
@@ -584,7 +643,7 @@ int GuiMain(int argc, char* argv[])
 
     /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
-    QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
+    ViacoinTranslator qtTranslatorBase(true), qtTranslator(false), translatorBase(true), translator(false);
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
