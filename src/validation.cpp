@@ -4344,7 +4344,12 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB))
+    // Viacoin: BIP34 is active from height 0 (BIP34Height=0), but the nVersion>=2
+    // guard from the original BIP34 implementation must be preserved so that
+    // version-1 genesis blocks are exempt — the genesis coinbase does not embed
+    // the block height.  Bitcoin Core's 30.x refactor dropped the nVersion check
+    // because Bitcoin's BIP34Height=227931 makes it redundant there.
+    if (block.nVersion >= 2 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
