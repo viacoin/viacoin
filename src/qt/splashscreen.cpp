@@ -41,7 +41,7 @@ SplashScreen::SplashScreen(const NetworkStyle* networkStyle)
     // define text to place
     QString titleText       = CLIENT_NAME;
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
-    QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xA9 %u-%u ", 2009, COPYRIGHT_YEAR)).c_str());
+    QString copyrightText   = QString::fromUtf8(CopyrightHolders(strprintf("\xc2\xa9 %u-%u ", COPYRIGHT_HOLDERS_START_YEAR, COPYRIGHT_YEAR)).c_str());
     const QString& titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
