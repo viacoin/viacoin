@@ -183,11 +183,12 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
     // their parents.
     CKey wallet_key = GenerateRandomKey();
     CScript destination = GetScriptForDestination(PKHash(wallet_key.GetPubKey()));
-    // Amount for spending coinbase in a 1-in-1-out tx, at depth n, each time deducting 1000 from the amount as fees.
-    CAmount amount_depth_1{50 * COIN - 1000};
-    CAmount amount_depth_2{amount_depth_1 - 1000};
-    // Amount for spending coinbase in a 1-in-2-out tx, deducting 1000 in fees
-    CAmount amount_split_half{25 * COIN - 500};
+    // Amount for spending coinbase in a 1-in-1-out tx, at depth n, each time deducting 100000 from the amount as fees.
+    // Viacoin's min_relay_fee is 100000 sat/kvB (100x Bitcoin), so fees must be much higher.
+    CAmount amount_depth_1{50 * COIN - 100000};
+    CAmount amount_depth_2{amount_depth_1 - 100000};
+    // Amount for spending coinbase in a 1-in-2-out tx, deducting 100000 in fees
+    CAmount amount_split_half{25 * COIN - 50000};
     int test_chain_height{100};
 
     TxValidationState state_orphan;

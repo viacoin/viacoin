@@ -22,9 +22,14 @@
 
 using namespace util::hex_literals;
 
-// A fee amount that is above 1sat/vB but below 5sat/vB for most transactions created within these
-// unit tests.
-static const CAmount low_fee_amt{200};
+// A fee amount that is above Viacoin's min_relay_feerate but below the mock min fee
+// set by MockMempoolMinFee. Viacoin's min_relay_feerate=100000 sat/kvB (100x Bitcoin),
+// so typical P2WPKH tx (~140-200 vB) needs ~14000-20000 sat minimum fee.
+// low_fee_amt must satisfy: min_relay_feerate.GetFee(size) <= low_fee_amt < GetMinFee().GetFee(size)
+// With MockMempoolMinFee=500000 and min_relay=100000, for size S:
+//   0.1*S <= low_fee_amt < 0.5*S
+// For S=100-300: low_fee in [10000, 150000). Using 25000.
+static const CAmount low_fee_amt{25000};
 
 struct TxPackageTest : TestChain100Setup {
 // Create placeholder transactions that have no meaning.
@@ -359,7 +364,7 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
 {
     // Mine blocks to mature coinbases.
     mineBlocks(3);
-    MockMempoolMinFee(CFeeRate(5000));
+    MockMempoolMinFee(CFeeRate(500000));
     LOCK(cs_main);
     unsigned int expected_pool_size = m_node.mempool->size();
     CKey parent_key = GenerateRandomKey();
@@ -493,7 +498,7 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
         auto tx_parent_2 = MakeTransactionRef(CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,
                                                                             /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                                             /*output_destination=*/parent_locking_script,
-                                                                            /*output_amount=*/CAmount(50 * COIN - 800), /*submit=*/false));
+                                                                            /*output_amount=*/CAmount(50 * COIN - 80000), /*submit=*/false));
 
         auto tx_child_missing_parent = MakeTransactionRef(CreateValidMempoolTransaction({tx_parent_1, tx_parent_2},
                                                                                         {{tx_parent_1->GetHash(), 0}, {tx_parent_2->GetHash(), 0}},
@@ -547,7 +552,7 @@ BOOST_AUTO_TEST_CASE(package_single_tx)
     LOCK(cs_main);
     auto expected_pool_size{m_node.mempool->size()};
 
-    const CAmount high_fee{1000};
+    const CAmount high_fee{100000};
 
     // No unconfirmed parents
     CKey single_key = GenerateRandomKey();
@@ -636,7 +641,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
 {
     // Mine blocks to mature coinbases.
     mineBlocks(5);
-    MockMempoolMinFee(CFeeRate(5000));
+    MockMempoolMinFee(CFeeRate(500000));
     LOCK(cs_main);
 
     // Transactions with a same-txid-different-witness transaction in the mempool should be ignored,
@@ -869,7 +874,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
 BOOST_AUTO_TEST_CASE(package_cpfp_tests)
 {
     mineBlocks(5);
-    MockMempoolMinFee(CFeeRate(5000));
+    MockMempoolMinFee(CFeeRate(500000));
     LOCK(::cs_main);
     size_t expected_pool_size = m_node.mempool->size();
     CKey child_key = GenerateRandomKey();
@@ -951,11 +956,11 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
     }
 
     // Just because we allow low-fee parents doesn't mean we allow low-feerate packages.
-    // The mempool minimum feerate is 5sat/vB, but this package just pays 800 satoshis total.
+    // The mempool minimum feerate is 500000 sat/kvB (after MockMempoolMinFee), but this package just pays 50000 satoshis total.
     // The child fees would be able to pay for itself, but isn't enough for the entire package.
     Package package_still_too_low;
-    const CAmount parent_fee{200};
-    const CAmount child_fee{600};
+    const CAmount parent_fee{20000};
+    const CAmount child_fee{80000};
     auto mtx_parent_cheap = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
                                                           /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
                                                           /*output_destination=*/parent_spk,
@@ -1103,9 +1108,9 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         package1.push_back(tx_parent);
         package2.push_back(tx_parent);
 
-        CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - low_fee_amt - 300, false));
+        CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - low_fee_amt - 20000, false));
         package1.push_back(tx_child_1);
-        CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - low_fee_amt - 500, false));
+        CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, 0, 101, child_key, child_spk, coinbase_value - low_fee_amt - 30000, false));
         package2.push_back(tx_child_2);
 
         LOCK(m_node.mempool->cs);
@@ -1139,36 +1144,37 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
     }
 
     // Test package rbf.
+    // Viacoin: fees scaled 100x from Bitcoin values to exceed min_relay_feerate=100000 sat/kvB.
     {
         CTransactionRef tx_parent_1 = MakeTransactionRef(CreateValidMempoolTransaction(
             m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
-            coinbaseKey, parent_spk, coinbase_value - 200, /*submit=*/false));
+            coinbaseKey, parent_spk, coinbase_value - 20000, /*submit=*/false));
         CTransactionRef tx_child_1 = MakeTransactionRef(CreateValidMempoolTransaction(
             tx_parent_1, /*input_vout=*/0, /*input_height=*/101,
-            child_key, child_spk, coinbase_value - 400, /*submit=*/false));
+            child_key, child_spk, coinbase_value - 40000, /*submit=*/false));
 
         CTransactionRef tx_parent_2 = MakeTransactionRef(CreateValidMempoolTransaction(
             m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
-            coinbaseKey, parent_spk, coinbase_value - 800, /*submit=*/false));
+            coinbaseKey, parent_spk, coinbase_value - 80000, /*submit=*/false));
         CTransactionRef tx_child_2 = MakeTransactionRef(CreateValidMempoolTransaction(
             tx_parent_2, /*input_vout=*/0, /*input_height=*/101,
-            child_key, child_spk, coinbase_value - 800 - 200, /*submit=*/false));
+            child_key, child_spk, coinbase_value - 80000 - 20000, /*submit=*/false));
 
         CTransactionRef tx_parent_3 = MakeTransactionRef(CreateValidMempoolTransaction(
             m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/0,
-            coinbaseKey, parent_spk, coinbase_value - 199, /*submit=*/false));
+            coinbaseKey, parent_spk, coinbase_value - 19900, /*submit=*/false));
         CTransactionRef tx_child_3 = MakeTransactionRef(CreateValidMempoolTransaction(
             tx_parent_3, /*input_vout=*/0, /*input_height=*/101,
-            child_key, child_spk, coinbase_value - 199 - 1300, /*submit=*/false));
+            child_key, child_spk, coinbase_value - 19900 - 130000, /*submit=*/false));
 
         // In all packages, the parents conflict with each other
         BOOST_CHECK(tx_parent_1->GetHash() != tx_parent_2->GetHash() && tx_parent_2->GetHash() != tx_parent_3->GetHash());
 
-        // 1 parent paying 200sat, 1 child paying 200sat.
+        // 1 parent paying 20000sat, 1 child paying 20000sat.
         Package package1{tx_parent_1, tx_child_1};
-        // 1 parent paying 800sat, 1 child paying 200sat.
+        // 1 parent paying 80000sat, 1 child paying 20000sat.
         Package package2{tx_parent_2, tx_child_2};
-        // 1 parent paying 199sat, 1 child paying 1300sat.
+        // 1 parent paying 19900sat, 1 child paying 130000sat.
         Package package3{tx_parent_3, tx_child_3};
 
         const auto submit1 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, false, std::nullopt);
@@ -1212,8 +1218,8 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         const auto package3_total_vsize{GetVirtualTransactionSize(*tx_parent_3) + GetVirtualTransactionSize(*tx_child_3)};
         BOOST_CHECK(it_parent_3->second.m_wtxids_fee_calculations.value() == expected_package3_wtxids);
         BOOST_CHECK(it_child_3->second.m_wtxids_fee_calculations.value() == expected_package3_wtxids);
-        BOOST_CHECK_EQUAL(it_parent_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 199 + 1300);
-        BOOST_CHECK_EQUAL(it_child_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 199 + 1300);
+        BOOST_CHECK_EQUAL(it_parent_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 19900 + 130000);
+        BOOST_CHECK_EQUAL(it_child_3->second.m_effective_feerate.value().GetFee(package3_total_vsize), 19900 + 130000);
 
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
 
@@ -1223,7 +1229,7 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         if (auto err_4{CheckPackageMempoolAcceptResult(package1, submit4, /*expect_valid=*/false, m_node.mempool.get())}) {
             BOOST_ERROR(err_4.value());
         }
-        m_node.mempool->PrioritiseTransaction(tx_child_1->GetHash(), 1363);
+        m_node.mempool->PrioritiseTransaction(tx_child_1->GetHash(), 136300);
         const auto submit5 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package1, false, std::nullopt);
         if (auto err_5{CheckPackageMempoolAcceptResult(package1, submit5, /*expect_valid=*/true, m_node.mempool.get())}) {
             BOOST_ERROR(err_5.value());
