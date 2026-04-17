@@ -574,14 +574,16 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK_EQUAL(pool.GetMinFee(pool.DynamicMemoryUsage() * 9 / 2).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE)/8.0));
     // ... with a 1/4 halflife when mempool is < 1/4 its target size
 
-    // Viacoin: with higher fee constants, the rolling fee decays past the
-    // IRF/2 threshold sooner. Use fewer halflife periods so the fee is still
-    // above IRF/2 (clamped to IRF) instead of dropping to 0.
-    SetMockTime(42 + 4*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
+    // Viacoin: DEFAULT_INCREMENTAL_RELAY_FEE is 1000 (vs Bitcoin's 100) and
+    // DEFAULT_MIN_RELAY_TX_FEE is 100000 (vs Bitcoin's 100). The 100x higher
+    // maxFeeRateRemoved from scaled tx fees means the rolling fee starts ~100x
+    // higher and needs ~8 more half-lives to decay to the IRF floor, instead
+    // of Bitcoin's ~5. Use 10*H for the IRF clamp check, 11*H for zero.
+    SetMockTime(42 + 10*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), DEFAULT_INCREMENTAL_RELAY_FEE);
     // ... but feerate should never drop below DEFAULT_INCREMENTAL_RELAY_FEE
 
-    SetMockTime(42 + 5*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
+    SetMockTime(42 + 11*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), 0);
     // ... unless it has gone all the way to 0 (after getting past DEFAULT_INCREMENTAL_RELAY_FEE/2)
 }
