@@ -238,10 +238,12 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     BOOST_CHECK(PaysForRBF(high_fee, high_fee - 1, 1, CFeeRate(0), unused_txid).has_value());
     BOOST_CHECK(PaysForRBF(high_fee + 1, high_fee, 1, CFeeRate(0), unused_txid).has_value());
     // Additional fees must cover the replacement's vsize at incremental relay fee
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1, 11, incremental_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 1, 10, incremental_relay_feerate, unused_txid) == std::nullopt);
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 2, 11, higher_relay_feerate, unused_txid).has_value());
-    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 4, 20, higher_relay_feerate, unused_txid) == std::nullopt);
+    // Viacoin: DEFAULT_INCREMENTAL_RELAY_FEE is 1000 (10x Bitcoin's 100), so fee
+    // deltas must be 10x larger to cover the same vsize at the higher rate.
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 10, 11, incremental_relay_feerate, unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 10, 10, incremental_relay_feerate, unused_txid) == std::nullopt);
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 20, 11, higher_relay_feerate, unused_txid).has_value());
+    BOOST_CHECK(PaysForRBF(high_fee, high_fee + 40, 20, higher_relay_feerate, unused_txid) == std::nullopt);
     BOOST_CHECK(PaysForRBF(low_fee, high_fee, 99999999, incremental_relay_feerate, unused_txid).has_value());
     BOOST_CHECK(PaysForRBF(low_fee, high_fee + 99999999, 99999999, incremental_relay_feerate, unused_txid) == std::nullopt);
 

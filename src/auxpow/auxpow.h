@@ -32,6 +32,7 @@ public:
         Unserialize(s);
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     SERIALIZE_METHODS(CAuxPow, obj)
     {
         READWRITE(TX_WITH_WITNESS(obj.tx), obj.hashBlock, obj.vMerkleBranch, obj.nIndex, obj.vChainMerkleBranch, obj.nChainIndex);
