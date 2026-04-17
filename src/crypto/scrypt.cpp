@@ -150,7 +150,39 @@ void scrypt_1024_1_1_256_sp_generic(const char* input, char* output, char* scrat
     PBKDF2_SHA256(reinterpret_cast<const uint8_t*>(input), 80, B.data(), B.size(), 1, reinterpret_cast<uint8_t*>(output), 32);
 }
 
-#if defined(USE_SSE2)
+#if defined(USE_SCRYPT_AVX2)
+// By default, set to generic scrypt function. This will prevent crash in case
+// when scrypt_detect_avx2() wasn't called in the non-USE_SCRYPT_AVX2_ALWAYS path.
+void (*scrypt_1024_1_1_256_sp_detected)(const char* input, char* output, char* scratchpad) = &scrypt_1024_1_1_256_sp_generic;
+
+std::string scrypt_detect_avx2()
+{
+    std::string ret;
+#if defined(USE_SCRYPT_AVX2_ALWAYS)
+    ret = "scrypt: using scrypt-avx2 as built-in";
+#else // USE_SCRYPT_AVX2_ALWAYS
+    // 32-bit x86 — detect cpuid AVX2 feature
+    unsigned int cpuid_ebx = 0;
+#if defined(_MSC_VER)
+    int x86cpuid[4];
+    __cpuidex(x86cpuid, 7, 0);
+    cpuid_ebx = static_cast<unsigned int>(x86cpuid[1]);
+#else // _MSC_VER
+    unsigned int eax, ecx, edx;
+    __get_cpuid_count(7, 0, &eax, &cpuid_ebx, &ecx, &edx);
+#endif // _MSC_VER
+
+    if (cpuid_ebx & (1 << 5)) {
+        scrypt_1024_1_1_256_sp_detected = &scrypt_1024_1_1_256_sp_avx2;
+        ret = "scrypt: using scrypt-avx2 as detected";
+    } else {
+        scrypt_1024_1_1_256_sp_detected = &scrypt_1024_1_1_256_sp_generic;
+        ret = "scrypt: using scrypt-generic, AVX2 unavailable";
+    }
+#endif // USE_SCRYPT_AVX2_ALWAYS
+    return ret;
+}
+#elif defined(USE_SSE2)
 // By default, set to generic scrypt function. This will prevent crash in case
 // when scrypt_detect_sse2() wasn't called in the non-USE_SSE2_ALWAYS path.
 void (*scrypt_1024_1_1_256_sp_detected)(const char* input, char* output, char* scratchpad) = &scrypt_1024_1_1_256_sp_generic;

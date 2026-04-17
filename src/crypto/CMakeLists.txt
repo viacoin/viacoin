@@ -45,9 +45,12 @@ if(HAVE_SSE41)
 endif()
 
 if(HAVE_AVX2)
-  target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_AVX2)
-  target_sources(bitcoin_crypto PRIVATE sha256_avx2.cpp)
+  target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_AVX2 USE_SCRYPT_AVX2)
+  target_sources(bitcoin_crypto PRIVATE sha256_avx2.cpp scrypt-avx2.cpp)
   set_property(SOURCE sha256_avx2.cpp PROPERTY
+    COMPILE_OPTIONS ${AVX2_CXXFLAGS}
+  )
+  set_property(SOURCE scrypt-avx2.cpp PROPERTY
     COMPILE_OPTIONS ${AVX2_CXXFLAGS}
   )
 endif()

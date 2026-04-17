@@ -1494,7 +1494,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
-#if defined(USE_SSE2)
+#if defined(USE_SCRYPT_AVX2)
+    LogInfo("%s\n", scrypt_detect_avx2());
+#elif defined(USE_SSE2)
     LogInfo("%s\n", scrypt_detect_sse2());
 #endif
 

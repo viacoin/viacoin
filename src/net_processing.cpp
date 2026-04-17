@@ -2638,6 +2638,18 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
     // before we'll store it)
     arith_uint256 minimum_chain_work = GetAntiDoSWorkThreshold();
 
+    // Viacoin: Skip the low-work headers sync mechanism for chains with
+    // auxpow (merged mining). The presync/redownload mechanism uses
+    // CompressedHeader which strips auxpow data; GetFullHeader() then
+    // reconstructs headers without auxpow, causing PoW validation to fail
+    // for all merged-mined blocks. Since auxpow blocks derive their PoW
+    // from a parent chain, the two-phase compressed-header approach is
+    // fundamentally incompatible. Let such headers go directly to
+    // AcceptBlockHeader for full validation instead.
+    if (m_chainparams.GetConsensus().nAuxPowStartHeight >= 0) {
+        return false;
+    }
+
     // Avoid DoS via low-difficulty-headers by only processing if the headers
     // are part of a chain with sufficient work.
     if (total_work < minimum_chain_work) {

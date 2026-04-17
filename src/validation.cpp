@@ -2480,7 +2480,31 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
     // the clock to go backward).
-    if (!CheckBlock(block, state, params.GetConsensus(), !fJustCheck, !fJustCheck)) {
+
+    // Viacoin: Skip expensive scrypt PoW verification for blocks that are
+    // ancestors of the assume-valid block and whose chain has sufficient work.
+    // This mirrors the existing assumeValid optimisation that skips script
+    // checks for the same range of blocks.  Scrypt PoW is ~1000x slower than
+    // SHA-256, so skipping it during IBD is the single biggest sync-speedup
+    // available.  The assumeValid block hash is hardcoded and commits to a
+    // specific chain; merkle roots and chain continuity are still verified.
+    bool fCheckPOW = !fJustCheck;
+    bool fSkipPoWForAssumeValid = false;
+    if (fCheckPOW && !m_chainman.AssumedValidBlock().IsNull()) {
+        BlockMap::const_iterator it{m_blockman.m_block_index.find(m_chainman.AssumedValidBlock())};
+        if (it != m_blockman.m_block_index.end()) {
+            if (it->second.GetAncestor(pindex->nHeight) == pindex &&
+                m_chainman.m_best_header->GetAncestor(pindex->nHeight) == pindex &&
+                m_chainman.m_best_header->nChainWork >= m_chainman.MinimumChainWork()) {
+                fSkipPoWForAssumeValid = (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= 60 * 60 * 24 * 7 * 2);
+                if (fSkipPoWForAssumeValid) {
+                    fCheckPOW = false;
+                }
+            }
+        }
+    }
+
+    if (!CheckBlock(block, state, params.GetConsensus(), fCheckPOW, !fJustCheck)) {
         if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -4403,7 +4427,11 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, GetConsensus())) {
+        // Viacoin: When min_pow_checked=true, PoW was already validated by
+        // CheckHeadersPoW (P2P IBD) or the data is trusted (reindex from
+        // local disk). Skip the expensive scrypt/auxpow PoW re-check in
+        // CheckBlockHeader to avoid doubling IBD validation time.
+        if (!CheckBlockHeader(block, state, GetConsensus(), /*fCheckPOW=*/!min_pow_checked)) {
             LogDebug(BCLog::VALIDATION, "%s: Consensus::CheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
@@ -4546,7 +4574,10 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     const CChainParams& params{GetParams()};
 
-    if (!CheckBlock(block, state, params.GetConsensus()) ||
+    // Viacoin: When min_pow_checked=true, PoW was already validated by
+    // CheckHeadersPoW during P2P IBD. Skip the redundant PoW check in
+    // CheckBlock (which calls CheckBlockHeaderForGenesis with fCheckPOW).
+    if (!CheckBlock(block, state, params.GetConsensus(), /*fCheckPOW=*/!min_pow_checked) ||
         !ContextualCheckBlock(block, state, *this, pindex->pprev)) {
         if (Assume(state.IsInvalid())) {
             ActiveChainstate().InvalidBlockFound(pindex, state);

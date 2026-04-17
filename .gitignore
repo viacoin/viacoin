@@ -28,3 +28,4 @@ target/
 /ci/scratch/
 test/cache/
 .github/workflows/ci.yaml.bak
+.gitnexus

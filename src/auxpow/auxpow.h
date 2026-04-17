@@ -17,6 +17,7 @@ class CAuxPow
 {
 public:
     CTransactionRef tx{MakeTransactionRef(CMutableTransaction{})};
+    uint256 hashBlock;
     std::vector<uint256> vMerkleBranch;
     int nIndex{0};
     std::vector<uint256> vChainMerkleBranch;
@@ -33,13 +34,8 @@ public:
 
     SERIALIZE_METHODS(CAuxPow, obj)
     {
-        READWRITE(TX_WITH_WITNESS(obj.tx), obj.vMerkleBranch, obj.nIndex, obj.vChainMerkleBranch, obj.nChainIndex);
-        READWRITE(obj.parentBlockHeader.nVersion,
-                  obj.parentBlockHeader.hashPrevBlock,
-                  obj.parentBlockHeader.hashMerkleRoot,
-                  obj.parentBlockHeader.nTime,
-                  obj.parentBlockHeader.nBits,
-                  obj.parentBlockHeader.nNonce);
+        READWRITE(TX_WITH_WITNESS(obj.tx), obj.hashBlock, obj.vMerkleBranch, obj.nIndex, obj.vChainMerkleBranch, obj.nChainIndex);
+        READWRITE(obj.parentBlockHeader);
     }
 
     uint256 CheckMerkleBranch(const uint256& hash, const std::vector<uint256>& merkle_branch, int index) const
