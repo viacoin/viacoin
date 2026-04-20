@@ -179,13 +179,20 @@ public:
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
 
-        m_assumeutxo_data = {};
+        m_assumeutxo_data = {
+            {
+                .height = 13'644'731,
+                .hash_serialized = AssumeutxoHash{uint256{"92015bf35909d0c19665d94077f363fd506970c4ec35a53f80f9527603d1310c"}},
+                .m_chain_tx_count = 14'345'241,
+                .blockhash = uint256{"4fbc17c6edf747be9bb16ba3c99dfc3925ed1d891098398d082adcdadcb9afcd"},
+            },
+        };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 b057393d1af96736631886cbf3321d3889874b391addbcdfbfef0bbc948c6c0e
-            .nTime    = 1776203386,
-            .tx_count = 14337559,
-            .dTxRate  = 0.03429767636592004,
+            // Data from RPC: getchaintxstats 108000 c1e5cc53182775eb61d35afa655994f94e13a91dc761bae2d76296211a3653d6
+            .nTime    = 1776692608,
+            .tx_count = 14345240,
+            .dTxRate  = 0.002634042715850739,
         };
     }
 };
