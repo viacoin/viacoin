@@ -3,26 +3,61 @@
 This guide covers upgrading from Viacoin Core 0.16 (or earlier) to Viacoin Core 30.x.
 This is a major version jump — read carefully before proceeding.
 
-## Before You Start
+---
 
-- **Back up your wallet** — Run `viacoin-cli dumpwallet backup.txt` on your old node
-  before doing anything else. Store this file somewhere safe.
-- **Back up your `wallet.dat`** — Copy it to a safe location. Do NOT just move it;
-  keep the original intact on the old node until migration is confirmed.
-- **Keep your old 0.16 node available** — Do not uninstall it until you have
-  verified your wallet on 30.x.
+## STOP — Back Up Your Wallet First
+
+**Before doing anything else, back up your wallet.dat. Do not continue until
+you have a confirmed backup in a safe location.**
+
+If anything goes wrong during migration, your coins are only as safe as your
+backup. There is no way to recover a lost or corrupted wallet without a backup.
+
+1. **Copy `wallet.dat` to at least two safe locations** (USB drive, different
+   machine, cloud storage — somewhere other than the machine you're migrating).
+
+2. **Also dump your wallet** as a secondary backup:
+
+   ```
+   viacoin-cli dumpwallet /path/to/safe/location/viacoin-dump.txt
+   ```
+
+3. **Verify your backups** — Confirm the file sizes are reasonable and the
+   dump file contains keys (open it in a text editor and look for private keys).
+
+4. **Keep your old 0.16 node running** — Do not uninstall it until you have
+   confirmed your wallet balance on 30.x.
+
+---
+
+## Data Directory Locations
+
+Your Viacoin data directory depends on your operating system:
+
+| OS | Path |
+|----|------|
+| Linux | `~/.viacoin/` |
+| macOS | `~/Library/Application Support/Viacoin/` |
+| Windows | `%APPDATA%\Viacoin\` |
+
+Throughout this guide, `<DATADIR>` refers to the path for your OS from the
+table above. The old 0.16 data and the new 30.x data typically live in the
+same directory — 30.x will create its own wallet and chainstate alongside
+the old ones.
+
+---
 
 ## Wallet Migration
 
 **You CANNOT copy `wallet.dat` from 0.16 into 30.x.** The BDB wallet format
-changed across these major versions. Attempting to load an old `wallet.dat` will
-fail and may corrupt the file.
+changed across these major versions. Attempting to load an old `wallet.dat`
+will fail and may corrupt the file.
 
 ### Method 1: Dump and Import (Recommended)
 
 On the **old 0.16 node**:
 
-```bash
+```
 viacoin-cli dumpwallet /path/to/safe/location/viacoin-dump.txt
 ```
 
@@ -31,7 +66,7 @@ and transaction metadata.
 
 On the **new 30.x node**:
 
-```bash
+```
 # Create a new wallet first
 viacoin-cli createwallet "viacoin-wallet"
 
@@ -47,7 +82,7 @@ many transactions are associated with your keys.
 If you have your HD seed (12 or 24 words written down when you first created
 the wallet):
 
-```bash
+```
 viacoin-cli createwallet "viacoin-wallet"
 # Then use the GUI: File -> Restore wallet from seed
 # Or use the RPC:
@@ -60,13 +95,15 @@ This is the cleanest approach and captures all derived addresses.
 
 If you only have a few keys:
 
-```bash
+```
 viacoin-cli createwallet "viacoin-wallet"
 viacoin-cli importprivkey "VPRIVATEKEY..." "label" false
 ```
 
 Set the last argument to `true` to trigger a rescan. This method is tedious
 for many keys and does not capture labels or metadata from the old wallet.
+
+---
 
 ## Blockchain Data Migration
 
@@ -75,30 +112,54 @@ You do not need to sync from scratch. You can reuse block data from your
 
 ### Using Donor Block Data
 
-1. Install and set up the 30.x binary.
-2. Create a new data directory (do NOT reuse the 0.16 datadir directly):
-
-   ```bash
-   mkdir -p ~/.viacoin-30x
-   ```
+1. Install the 30.x binary for your platform.
+2. Create a new data directory (do NOT reuse the 0.16 datadir directly).
 
 3. Copy only the block files from your 0.16 datadir:
 
+   **Linux:**
    ```bash
-   cp ~/.viacoin/blocks/blk*.dat ~/.viacoin-30x/blocks/
-   cp ~/.viacoin/blocks/rev*.dat ~/.viacoin-30x/blocks/
+   mkdir -p ~/.viacoin/blocks/
+   cp ~/.viacoin/blocks/blk*.dat ~/.viacoin/blocks/
+   cp ~/.viacoin/blocks/rev*.dat ~/.viacoin/blocks/
+   ```
+
+   **macOS:**
+   ```bash
+   mkdir -p ~/Library/Application\ Support/Viacoin/blocks/
+   cp ~/Library/Application\ Support/Viacoin/blocks/blk*.dat ~/Library/Application\ Support/Viacoin/blocks/
+   cp ~/Library/Application\ Support/Viacoin/blocks/rev*.dat ~/Library/Application\ Support/Viacoin/blocks/
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   New-Item -ItemType Directory -Force -Path "$env:APPDATA\Viacoin\blocks"
+   Copy-Item "$env:APPDATA\Viacoin\blocks\blk*.dat" "$env:APPDATA\Viacoin\blocks\"
+   Copy-Item "$env:APPDATA\Viacoin\blocks\rev*.dat" "$env:APPDATA\Viacoin\blocks\"
    ```
 
 4. Start 30.x with `-reindex` to rebuild the chainstate and block index
    from the block files:
 
+   **Linux/macOS:**
    ```bash
-   viacoind -datadir=~/.viacoin-30x -reindex
+   viacoind -reindex
+   ```
+
+   **Windows:**
+   ```powershell
+   viacoind -reindex
    ```
 
    The reindex reads the block files and rebuilds all indexes from scratch.
    With Viacoin's PoW skip at load (default enabled), this should complete
    in reasonable time.
+
+### Fast Sync with assumeUTXO (Alternative)
+
+If you don't have access to old block data, you can use an assumeUTXO snapshot
+to bootstrap quickly. See [viacoin-assumeutxo.md](/doc/viacoin-assumeutxo.md)
+for platform-specific instructions.
 
 ### What NOT to Copy
 
@@ -115,13 +176,15 @@ You do not need to sync from scratch. You can reuse block data from your
 
 If you prefer a clean start or don't have access to old block data:
 
-```bash
-viacoind -datadir=~/.viacoin-30x
+```
+viacoind
 ```
 
 The 30.x binary has optimized IBD parameters (32x block download window,
 parallel header sync) which should speed up the initial sync compared to
 older versions.
+
+---
 
 ## Configuration Changes
 
@@ -132,6 +195,8 @@ Your old `viacoin.conf` will mostly work, but note these differences:
 - Fee defaults are different (see below)
 - The `-skipcheckpowatload` option (default: true) skips PoW verification at
   startup for faster load times on trusted local data
+
+---
 
 ## Fee Defaults
 
@@ -149,17 +214,22 @@ smaller block size:
 If your old `viacoin.conf` sets explicit fee values, review them — some
 may now be below the new minimums.
 
-## SSE2 Scrypt Acceleration
+---
 
-Viacoin 30.x includes SSE2-optimized scrypt for faster PoW verification.
-On x86-64 systems (virtually all modern PCs), SSE2 is always enabled.
-On 32-bit x86, it is detected at runtime via CPUID.
+## SSE2/AVX2 Scrypt Acceleration
 
-You can verify SSE2 is active by checking the debug log at startup:
+Viacoin 30.x includes SSE2- and AVX2-optimized scrypt for faster PoW
+verification. On x86-64 systems (virtually all modern PCs), SSE2 is always
+enabled. AVX2 is detected at runtime.
+
+You can verify which implementation is active by checking the debug log
+at startup:
 
 ```
 scrypt: using scrypt-sse2 as built-in
 ```
+
+---
 
 ## Verifying Your Migration
 
@@ -173,6 +243,8 @@ After starting 30.x, verify:
    completeness.
 4. **Addresses** — Verify that receiving addresses you've shared are still
    accessible via `viacoin-cli listaddressgroupings` or the GUI.
+
+---
 
 ## Troubleshooting
 
@@ -197,4 +269,7 @@ with `viacoin-cli rescanblockchain`.
 The `-reindex` process recomputes scrypt hashes for every block. With the
 default `-skipcheckpowatload=true`, PoW verification is skipped at startup,
 but the full reindex still takes time. On a modern machine, expect
-30-90 minutes for Viacoin's ~5.6M blocks.
+several hours for Viacoin's 13.6M+ blocks.
+
+Consider using assumeUTXO for a faster bootstrap — see
+[viacoin-assumeutxo.md](/doc/viacoin-assumeutxo.md).

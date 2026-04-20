@@ -1,131 +1,193 @@
-v30.x Release Notes
-===================
+Viacoin Core v30.0 Release Notes
+=================================
 
-Bitcoin Core version v30.x is now available from:
+Viacoin Core version v30.0 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
+  <https://github.com/romanornr/viacoin/releases>
 
-This release includes new features, various bug fixes and performance
-improvements, as well as updated translations.
+This is the first release of Viacoin Core based on Bitcoin Core 30.x,
+bringing modern node features, performance improvements, and security fixes
+to the Viacoin network.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
-
-To receive security and update notifications, please subscribe to:
-
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://github.com/romanornr/viacoin/issues>
 
 How to Upgrade
 ==============
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+If you are running an older Viacoin Core version, shut it down. Wait until it
+has completely shut down (which might take a few minutes), then run the
+installer (on Windows) or just copy over `/Applications/Viacoin-Qt` (on macOS)
+or `viacoind`/`viacoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+**Important:** This is a major version upgrade from 0.16. You cannot directly
+copy `wallet.dat` from 0.16 into 30.x. See the
+[migration guide](/doc/viacoin-migration.md) for step-by-step instructions,
+including how to back up your wallet and migrate your keys.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and tested on operating systems using the
-Linux Kernel 3.17+, macOS 13+, and Windows 10+. Bitcoin
+Viacoin Core is supported and tested on operating systems using the
+Linux Kernel 3.17+, macOS 13+, and Windows 10+. Viacoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them. It is not recommended to use Bitcoin Core on
+frequently tested on them. It is not recommended to use Viacoin Core on
 unsupported systems.
 
-Notable changes
+Notable Changes
 ===============
 
-### Wallet
+assumeUTXO Fast-Sync
+--------------------
 
-- #34358 wallet: fix removeprunedfunds bug with conflicting transactions
+Viacoin Core 30.x supports assumeUTXO, allowing new nodes to bootstrap from
+a UTXO snapshot at a trusted block height instead of validating all 13.6M+
+blocks from genesis. A snapshot at height 13,644,731 is hardcoded in the
+source code. See [viacoin-assumeutxo.md](/doc/viacoin-assumeutxo.md) for
+platform-specific instructions.
 
-### Net
+AuxPow Memory Optimization (Bug C)
+-----------------------------------
 
-- #34093 netif: fix compilation warning in QueryDefaultGatewayImpl()
-- #34549 net: reduce log level for PCP/NAT-PMP NOT_AUTHORIZED failures
+The `auxpow` shared_ptr has been removed from `CBlockIndex`, saving
+approximately 3.5 GB of memory for Viacoin's 13.6M blocks. AuxPow data is
+now read from disk on demand via `ReadBlockHeaderFromDisk()` when needed for
+P2P, RPC, and REST serialization. This is a transparent change -- no user
+action required.
 
-### PSBT
+P2P Headers Presync Skip (Bug B)
+---------------------------------
 
-- #34272 psbt: Fix PSBTInputSignedAndVerified bounds assert
-- #34219 psbt: validate pubkeys in MuSig2 pubnonce/partial sig deserialization
+Viacoin's auxpow chains now skip the low-work headers presync phase, which
+was causing IBD stalls. The presync optimization is designed for SHA-256d
+chains and is not applicable to auxpow/merged-mining chains.
 
-### Miniscript
+Scrypt SSE2/AVX2 Acceleration
+------------------------------
 
-- #34434 miniscript: correct and_v() properties
+Viacoin Core 30.x includes SSE2- and AVX2-optimized scrypt implementations
+for faster proof-of-work verification. SSE2 is always enabled on x86-64.
+AVX2 is auto-detected at build time. No configuration needed.
 
-### Build
+-skipcheckpowatload
+--------------------
 
-- #34281 build: Temporarily remove confusing and brittle -fdebug-prefix-map
-- #34554 build: avoid exporting secp256k1 symbols
-- #34627 guix: use a temporary file over sponge, drop moreutils
-- #34713 depends: Allow building Qt packages after interruption
-- #34754 depends: Qt fixes for GCC 16 compatibility
-- #34787 build: fix native macOS deployment
+New option `-skipcheckpowatload` (default: true) skips scrypt PoW
+verification when loading the block index from disk. This dramatically
+speeds up node startup on trusted local data. Re-enable with
+`-skipcheckpowatload=0` if verifying data from untrusted sources.
 
-### Test
+32x IBD Download Parameters
+----------------------------
 
-- #34185 test: fix feature_pruning when built without wallet
-- #34282 qa: Fix Windows logging bug
-- #34390 test: allow overriding tar in get_previous_releases.py
-- #34409 test: use ModuleNotFoundError in interface_ipc.py
-- #34445 fuzz: Use AFL_SHM_ID for naming test directories
-- #34608 test: Fix broken --valgrind handling after bitcoin wrapper
-- #34690 test: Add missing timeout_factor to zmq socket
+Block download concurrency has been increased to 32x (from Bitcoin's
+default) to match Viacoin's 24-second block time. Parallel header sync is
+also enabled, significantly reducing initial block download time.
 
-### Util
+Wallet Migration from 0.16
+---------------------------
 
-- #34597 util: Fix UB in SetStdinEcho when ENOTTY
+The BDB wallet format from Viacoin Core 0.16 is not compatible with 30.x.
+Use `dumpwallet` on the old node and `importwallet` on the new node, or
+restore from HD seed words. See the
+[migration guide](/doc/viacoin-migration.md) for details.
 
-### Doc
+ViacoinTranslator
+-----------------
 
-- #34252 doc: add 433 (Pay to Anchor) to bips.md
-- #34413 doc: Remove outdated -fdebug-prefix-map section in dev notes
-- #34510 doc: fix broken bpftrace installation link
-- #34561 wallet: rpc: manpage: fix example missing `fee_rate` argument
-- #34671 doc: Update Guix install for Debian/Ubuntu
-- #34702 doc: Fix fee field in getblock RPC result
-- #34706 doc: Improve dependencies.md IPC documentation
-- #34789 doc: update build guides pre v31
+A `QTranslator` subclass performs runtime string replacement of
+"Bitcoin" → "Viacoin" in all Qt translatable strings. This keeps the `.ui`
+files and locale sources identical to upstream Bitcoin Core, reducing merge
+conflict surface.
 
-### CI
+Binary Names
+------------
 
-- #32513 ci: remove 3rd party js from windows dll gha job
-- #34344 ci: update GitHub Actions versions
-- #34453 ci: Always print low ccache hit rate notice
-- #34461 ci: Print verbose build error message in test-each-commit
-- #34802 ci: Bump GHA actions versions
-- #34815 ci: bump cirruslabs actions versions
+All binaries use the `viacoin-` prefix:
+
+| Binary | Description |
+|--------|-------------|
+| `viacoind` | Node daemon |
+| `viacoin-qt` | GUI wallet |
+| `viacoin-cli` | RPC client |
+| `viacoin-tx` | Transaction utility |
+| `viacoin-wallet` | Wallet tool |
+| `viacoin-util` | General utility |
+
+Fee Defaults
+------------
+
+Viacoin 30.x uses higher fee defaults than Bitcoin Core due to Viacoin's
+smaller block size:
+
+| Setting | Viacoin | Bitcoin |
+|---------|---------|---------|
+| Incremental relay fee | 0.001 VIAC/kB | 0.00001 BTC/kB |
+| Minimum relay fee | 0.001 VIAC/kB | 0.000001 BTC/kB |
+| Fallback fee | 0.002 VIAC/kB | 0 BTC/kB |
+| Discard fee | 0.001 VIAC/kB | 0.0001 BTC/kB |
+| Dust relay fee | 0.003 VIAC/kB | 0.00003 BTC/kB |
+
+Consensus Parameters
+--------------------
+
+Viacoin-specific consensus parameters carried forward from legacy:
+
+- Block interval: 24 seconds
+- Block weight limit: 240,000 (vs Bitcoin's 4,000,000)
+- Subsidy: 0.00625 VIAC per block, halving every 1,059,840 blocks
+- Max money: 23,593,400 VIAC
+- Chain ID: 0x56 (nVersion auxpow chain ID bits)
+- COINBASE_MATURITY: 120 blocks
+- PoW algorithm: scrypt (with SSE2/AVX2 acceleration)
+
+Build System
+------------
+
+- GUI is OFF by default -- use `-DBUILD_GUI=ON` to build `viacoin-qt`
+- Scrypt SSE2/AVX2 is auto-detected at configure time
+- Self-hosted CI runner support (GTX1080 label)
+
+Low-Level Changes
+-----------------
+
+### P2P
+
+- Skip presync for auxpow chains (avoids IBD stalls)
+- AuxPow blocks: `ReadBlockHeaderFromDisk()` used instead of
+  `GetBlockHeader()` for P2P header serialization
+- BIP34 activation height set to Viacoin's historical value
+- Protocol version set to Viacoin's network version
+
+### RPC
+
+- `getblockheader`: returns full header with auxpow via disk read
+- `dumptxoutset`: now available for assumeUTXO snapshot generation
+- `loadtxoutset`: now available for assumeUTXO snapshot loading
+
+### REST
+
+- `/rest/headers`: returns full headers with auxpow via disk read
+
+### Block Storage
+
+- New `BlockManager::ReadBlockHeaderFromDisk()` for reading just the
+  block header (with auxpow) from blk*.dat, much cheaper than reading
+  the full block
+- PoW check skipped for auxpow blocks in `LoadBlockIndexGuts` (auxpow
+  data not available in CBlockIndex)
+- `CDiskBlockIndex` no longer serializes auxpow to the block index
+  database (backward-compatible: old entries with trailing auxpow bytes
+  are ignored by the deserializer)
 
 Credits
 =======
 
-Thanks to everyone who directly contributed to this release:
+Thanks to everyone who directly contributed to this Viacoin Core release:
 
-- ANAVHEOBA
-- brunoerg
-- darosior
-- fanquake
-- Hennadii Stepanov
-- jayvaliya
-- Lőrinc
-- m3dwards
-- marcofleon
-- MarcoFalke
-- mzumsande
-- nervana21
-- Padraic Slattery
-- ryanofsky
-- Sebastian Falbesoner
-- SomberNight
-- tboy1337
-- theuni
-- ToRyVand
-- willcl-ark
+- romanornr
 
-As well as to everyone that helped with translations on
-[Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
+As well as the Bitcoin Core developers whose work this release is built upon.
+See the Bitcoin Core 30.x release notes for the full list of upstream
+contributors.
