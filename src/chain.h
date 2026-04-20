@@ -190,7 +190,9 @@ public:
     uint32_t nTime{0};
     uint32_t nBits{0};
     uint32_t nNonce{0};
-    std::shared_ptr<const CAuxPow> auxpow;
+    //! auxpow is NOT stored in CBlockIndex to save memory (~3.5GB for
+    //! Viacoin's 13.6M blocks).  For auxpow blocks, the data is read
+    //! from disk on demand via ReadBlockHeaderFromDisk().
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
@@ -203,8 +205,7 @@ public:
           hashMerkleRoot{block.hashMerkleRoot},
           nTime{block.nTime},
           nBits{block.nBits},
-          nNonce{block.nNonce},
-          auxpow{block.auxpow}
+          nNonce{block.nNonce}
     {
     }
 
@@ -240,7 +241,8 @@ public:
         block.nTime = nTime;
         block.nBits = nBits;
         block.nNonce = nNonce;
-        block.auxpow = auxpow;
+        // auxpow is not stored in CBlockIndex; for auxpow blocks,
+        // use ReadBlockHeaderFromDisk() to get the full header with auxpow.
         return block;
     }
 
@@ -403,9 +405,12 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
-        if (obj.IsAuxPow()) {
-            READWRITE(obj.auxpow);
-        }
+        // Viacoin: auxpow is NOT stored in the block index database.
+        // For auxpow blocks, the data is read from blk*.dat on demand
+        // via ReadBlockHeaderFromDisk().  This saves ~3.5GB of memory
+        // for Viacoin's 13.6M blocks.  Old database entries with
+        // trailing auxpow bytes are backward-compatible -- the
+        // deserializer stops after nNonce and ignores the rest.
     }
 
     uint256 ConstructBlockHash() const

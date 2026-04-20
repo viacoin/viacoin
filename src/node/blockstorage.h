@@ -415,6 +415,13 @@ public:
     bool ReadBlock(CBlock& block, const CBlockIndex& index) const;
     bool ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos& pos) const;
 
+    /** Viacoin: Read just the block header (with auxpow) from disk.
+     *  Since CBlockIndex does not store auxpow in memory, this function
+     *  is used when the full header including auxpow data is needed
+     *  (e.g. for PoW validation of auxpow blocks).
+     */
+    bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex& index) const;
+
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
     void CleanupBlockRevFiles() const;

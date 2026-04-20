@@ -633,7 +633,14 @@ static RPCHelpMan getblockheader()
     if (!fVerbose)
     {
         DataStream ssBlock{};
-        ssBlock << pblockindex->GetBlockHeader();
+        if (pblockindex->IsAuxPow()) {
+            CBlockHeader header;
+            if (!chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pblockindex))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block header from disk");
+            ssBlock << header;
+        } else {
+            ssBlock << pblockindex->GetBlockHeader();
+        }
         std::string strHex = HexStr(ssBlock);
         return strHex;
     }

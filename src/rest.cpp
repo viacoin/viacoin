@@ -247,7 +247,14 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::BINARY: {
         DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            if (pindex->IsAuxPow()) {
+                CBlockHeader header;
+                if (!chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex))
+                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Failed to read block header from disk");
+                ssHeader << header;
+            } else {
+                ssHeader << pindex->GetBlockHeader();
+            }
         }
 
         req->WriteHeader("Content-Type", "application/octet-stream");
@@ -258,7 +265,14 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::HEX: {
         DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            if (pindex->IsAuxPow()) {
+                CBlockHeader header;
+                if (!chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex))
+                    return RESTERR(req, HTTP_INTERNAL_SERVER_ERROR, "Failed to read block header from disk");
+                ssHeader << header;
+            } else {
+                ssHeader << pindex->GetBlockHeader();
+            }
         }
 
         std::string strHex = HexStr(ssHeader) + "\n";

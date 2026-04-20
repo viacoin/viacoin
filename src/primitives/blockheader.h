@@ -24,7 +24,7 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
-    std::shared_ptr<const CAuxPow> auxpow;
+    std::shared_ptr<CAuxPow> auxpow;
 
     CBlockHeader()
     {
@@ -36,7 +36,17 @@ public:
     {
         READWRITE(obj.nVersion, obj.hashPrevBlock, obj.hashMerkleRoot, obj.nTime, obj.nBits, obj.nNonce);
         if (obj.IsAuxPow()) {
-            READWRITE(obj.auxpow);
+            // Safe shared_ptr serialization: on read, allocate before
+            // deserializing into it.  On write, the auxpow data is
+            // always present for fully-constructed headers (from P2P or
+            // disk); for headers returned by CBlockIndex::GetBlockHeader()
+            // (no auxpow in memory), IsAuxPow() is true but auxpow is
+            // null -- the 6 basic fields are serialized, auxpow omitted.
+            SER_READ(obj, obj.auxpow = std::make_shared<CAuxPow>());
+            assert(obj.auxpow != nullptr);
+            READWRITE(*obj.auxpow);
+        } else {
+            SER_READ(obj, obj.auxpow.reset());
         }
     }
 

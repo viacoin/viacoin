@@ -175,8 +175,10 @@ BOOST_AUTO_TEST_CASE(check_auxpow_rejects_non_generate_coinbase)
     BOOST_CHECK(!CheckAuxpow(auxpow, aux_block_hash, AuxPow::CHAIN_ID, params->GetConsensus()));
 }
 
-BOOST_AUTO_TEST_CASE(block_index_getblockheader_preserves_auxpow_payload)
+BOOST_AUTO_TEST_CASE(block_index_getblockheader_does_not_include_auxpow)
 {
+    // CBlockIndex no longer stores auxpow in memory.  GetBlockHeader()
+    // returns the basic header fields without auxpow data.
     CBlockHeader header = MakeBaseAuxpowHeader();
     header.SetAuxPow(new CAuxPow(*MakeAuxpowPayload(77)));
 
@@ -184,14 +186,17 @@ BOOST_AUTO_TEST_CASE(block_index_getblockheader_preserves_auxpow_payload)
     CBlockHeader restored = index.GetBlockHeader();
 
     BOOST_REQUIRE(restored.IsAuxPow());
-    BOOST_REQUIRE(restored.auxpow);
+    // auxpow is NOT carried through CBlockIndex::GetBlockHeader()
+    BOOST_CHECK(!restored.auxpow);
     BOOST_CHECK_EQUAL(restored.nVersion, header.nVersion);
     BOOST_CHECK_EQUAL(restored.hashMerkleRoot, header.hashMerkleRoot);
-    BOOST_CHECK_EQUAL(restored.auxpow->GetParentBlockHash(), header.auxpow->GetParentBlockHash());
 }
 
-BOOST_AUTO_TEST_CASE(disk_block_index_roundtrip_keeps_auxpow_payload)
+BOOST_AUTO_TEST_CASE(disk_block_index_roundtrip_does_not_include_auxpow)
 {
+    // CDiskBlockIndex no longer serializes auxpow to the block index
+    // database.  The basic header fields survive the roundtrip, but
+    // auxpow is not stored.
     CBlockHeader header = MakeBaseAuxpowHeader();
     header.SetAuxPow(new CAuxPow(*MakeAuxpowPayload(91)));
 
@@ -204,9 +209,10 @@ BOOST_AUTO_TEST_CASE(disk_block_index_roundtrip_keeps_auxpow_payload)
     CDiskBlockIndex restored;
     stream >> restored;
 
-    BOOST_REQUIRE(restored.auxpow);
+    // auxpow is NOT persisted in CDiskBlockIndex (field removed from CBlockIndex).
+    // The nVersion still carries the auxpow bit, but the auxpow field no longer exists.
+    BOOST_CHECK(restored.IsAuxPow()); // nVersion bit survives
     BOOST_CHECK_EQUAL(restored.nVersion, header.nVersion);
-    BOOST_CHECK_EQUAL(restored.auxpow->GetParentBlockHash(), header.auxpow->GetParentBlockHash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

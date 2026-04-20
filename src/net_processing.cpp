@@ -4233,12 +4233,25 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
+        // For auxpow blocks, GetBlockHeader() returns a header without auxpow data
+        // (which would crash during P2P serialization), so we must read the full
+        // header from disk instead.
         std::vector<CBlock> vHeaders;
         int nLimit = m_opts.max_headers_result;
         LogDebug(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            vHeaders.emplace_back(pindex->GetBlockHeader());
+            if (pindex->IsAuxPow()) {
+                CBlockHeader header;
+                if (!m_chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex)) {
+                    LogDebug(BCLog::NET, "getheaders: failed to read auxpow header for %s from peer=%d\n",
+                             pindex->GetBlockHash().ToString(), pfrom.GetId());
+                    break;
+                }
+                vHeaders.emplace_back(header);
+            } else {
+                vHeaders.emplace_back(pindex->GetBlockHeader());
+            }
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
                 break;
         }
@@ -5618,14 +5631,26 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
+                        if (pindex->IsAuxPow()) {
+                            CBlockHeader header;
+                            if (!m_chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex)) break;
+                            vHeaders.emplace_back(header);
+                        } else {
+                            vHeaders.emplace_back(pindex->GetBlockHeader());
+                        }
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
                         // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
+                        if (pindex->IsAuxPow()) {
+                            CBlockHeader header;
+                            if (!m_chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex)) break;
+                            vHeaders.emplace_back(header);
+                        } else {
+                            vHeaders.emplace_back(pindex->GetBlockHeader());
+                        }
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
