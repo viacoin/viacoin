@@ -1,9 +1,9 @@
-Viacoin Core v30.0 Release Notes
+Viacoin Core v30.2.0 Release Notes
 =================================
 
-Viacoin Core version v30.0 is now available from:
+Viacoin Core version v30.2.0 is now available from:
 
-  <https://github.com/romanornr/viacoin/releases>
+  <https://github.com/viacoin/viacoin/releases>
 
 This is the first release of Viacoin Core based on Bitcoin Core 30.x,
 bringing modern node features, performance improvements, and security fixes
@@ -11,7 +11,7 @@ to the Viacoin network.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/romanornr/viacoin/issues>
+  <https://github.com/viacoin/viacoin/issues>
 
 How to Upgrade
 ==============
@@ -21,10 +21,10 @@ has completely shut down (which might take a few minutes), then run the
 installer (on Windows) or just copy over `/Applications/Viacoin-Qt` (on macOS)
 or `viacoind`/`viacoin-qt` (on Linux).
 
-**Important:** This is a major version upgrade from 0.16. You cannot directly
-copy `wallet.dat` from 0.16 into 30.x. See the
-[migration guide](/doc/viacoin-migration.md) for step-by-step instructions,
-including how to back up your wallet and migrate your keys.
+**Important:** This is a major version upgrade from 0.16. Back up your
+wallet and datadir first, do not load the old `wallet.dat` directly in 30.x,
+and prepare the existing datadir before the first 30.x start. See the
+[migration guide](/doc/viacoin-migration.md).
 
 Compatibility
 ==============
@@ -89,9 +89,8 @@ Wallet Migration from 0.16
 ---------------------------
 
 The BDB wallet format from Viacoin Core 0.16 is not compatible with 30.x.
-Use `dumpwallet` on the old node and `importwallet` on the new node, or
-restore from HD seed words. See the
-[migration guide](/doc/viacoin-migration.md) for details.
+Use `dumpwallet` on the old node and `importwallet` on the new node. See
+the [migration guide](/doc/viacoin-migration.md) for details.
 
 ViacoinTranslator
 -----------------
@@ -118,16 +117,16 @@ All binaries use the `viacoin-` prefix:
 Fee Defaults
 ------------
 
-Viacoin 30.x uses higher fee defaults than Bitcoin Core due to Viacoin's
-smaller block size:
+Viacoin 30.x uses Viacoin-specific fee defaults, including higher relay and
+wallet fallback thresholds due to Viacoin's smaller block size:
 
 | Setting | Viacoin | Bitcoin |
 |---------|---------|---------|
-| Incremental relay fee | 0.001 VIAC/kB | 0.00001 BTC/kB |
-| Minimum relay fee | 0.001 VIAC/kB | 0.000001 BTC/kB |
-| Fallback fee | 0.002 VIAC/kB | 0 BTC/kB |
-| Discard fee | 0.001 VIAC/kB | 0.0001 BTC/kB |
-| Dust relay fee | 0.003 VIAC/kB | 0.00003 BTC/kB |
+| Incremental relay fee | 0.00001 VIA/kvB | 0.00001 BTC/kvB |
+| Minimum relay fee | 0.001 VIA/kvB | 0.000001 BTC/kvB |
+| Fallback fee | 0.002 VIA/kvB | 0 BTC/kvB |
+| Discard fee | 0.001 VIA/kvB | 0.0001 BTC/kvB |
+| Dust relay fee | 0.003 VIA/kvB | 0.00003 BTC/kvB |
 
 Consensus Parameters
 --------------------
@@ -136,10 +135,10 @@ Viacoin-specific consensus parameters carried forward from legacy:
 
 - Block interval: 24 seconds
 - Block weight limit: 240,000 (vs Bitcoin's 4,000,000)
-- Subsidy: 0.00625 VIAC per block, halving every 1,059,840 blocks
-- Max money: 23,593,400 VIAC
+- Max money: 23,000,000 VIA
+- Mainnet subsidy halving interval: 657,000 blocks
 - Chain ID: 0x56 (nVersion auxpow chain ID bits)
-- COINBASE_MATURITY: 120 blocks
+- COINBASE_MATURITY: 3,600 blocks
 - PoW algorithm: scrypt (with SSE2/AVX2 acceleration)
 
 Build System

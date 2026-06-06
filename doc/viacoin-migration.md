@@ -40,10 +40,11 @@ Your Viacoin data directory depends on your operating system:
 | macOS | `~/Library/Application Support/Viacoin/` |
 | Windows | `%APPDATA%\Viacoin\` |
 
-Throughout this guide, `<DATADIR>` refers to the path for your OS from the
-table above. The old 0.16 data and the new 30.x data typically live in the
-same directory — 30.x will create its own wallet and chainstate alongside
-the old ones.
+For most users, this existing default data directory is where Viacoin 0.16
+already stores wallets and blocks, and it is also where Viacoin Core 30.x will
+look by default. Before the first 30.x start, make a full backup and prepare the
+directory as described below. Release/testing operators should use an isolated
+`-datadir`; normal users usually do not need a second data directory.
 
 ---
 
@@ -64,7 +65,7 @@ viacoin-cli dumpwallet /path/to/safe/location/viacoin-dump.txt
 This creates a text file containing all private keys, watch-only addresses,
 and transaction metadata.
 
-On the **new 30.x node**:
+On the **new 30.x node**, after preparing the data directory:
 
 ```
 # Create a new wallet first
@@ -77,21 +78,7 @@ viacoin-cli importwallet /path/to/safe/location/viacoin-dump.txt
 After import, let the node rescan. This may take a while depending on how
 many transactions are associated with your keys.
 
-### Method 2: Restore from Seed Words
-
-If you have your HD seed (12 or 24 words written down when you first created
-the wallet):
-
-```
-viacoin-cli createwallet "viacoin-wallet"
-# Then use the GUI: File -> Restore wallet from seed
-# Or use the RPC:
-viacoin-cli restorewallet "viacoin-wallet" "word1 word2 word3 ... word24"
-```
-
-This is the cleanest approach and captures all derived addresses.
-
-### Method 3: Import Individual Private Keys
+### Method 2: Import Individual Private Keys
 
 If you only have a few keys:
 
@@ -102,44 +89,32 @@ viacoin-cli importprivkey "VPRIVATEKEY..." "label" false
 
 Set the last argument to `true` to trigger a rescan. This method is tedious
 for many keys and does not capture labels or metadata from the old wallet.
+Prefer `dumpwallet`/`importwallet` for a full 0.16 wallet migration.
+
 
 ---
 
 ## Blockchain Data Migration
 
-You do not need to sync from scratch. You can reuse block data from your
-0.16 node.
+Most users can reuse their existing default datadir, but they must not reuse
+the old wallet file, chainstate, or block index directly. The safest public
+migration is:
 
-### Using Donor Block Data
+1. Stop Viacoin Core 0.16 and wait until it exits fully.
+2. Back up the whole data directory from the table above.
+3. Keep `blocks/blk*.dat` and `blocks/rev*.dat`.
+4. Move the incompatible old wallet and indexes out of the active datadir:
 
-1. Install the 30.x binary for your platform.
-2. Create a new data directory (do NOT reuse the 0.16 datadir directly).
+   | File/Directory | Action |
+   |----------------|--------|
+   | `wallet.dat` | Move aside after `dumpwallet`; do not load directly in 30.x |
+   | `chainstate/` | Move aside or delete after backup; 30.x rebuilds it |
+   | `blocks/index/` | Move aside or delete after backup; 30.x rebuilds it |
+   | `database/` | Move aside or delete after backup; old BDB environment |
+   | `fee_estimates.dat` | Move aside or delete after backup; 30.x recreates it |
 
-3. Copy only the block files from your 0.16 datadir:
-
-   **Linux:**
-   ```bash
-   mkdir -p ~/.viacoin/blocks/
-   cp ~/.viacoin/blocks/blk*.dat ~/.viacoin/blocks/
-   cp ~/.viacoin/blocks/rev*.dat ~/.viacoin/blocks/
-   ```
-
-   **macOS:**
-   ```bash
-   mkdir -p ~/Library/Application\ Support/Viacoin/blocks/
-   cp ~/Library/Application\ Support/Viacoin/blocks/blk*.dat ~/Library/Application\ Support/Viacoin/blocks/
-   cp ~/Library/Application\ Support/Viacoin/blocks/rev*.dat ~/Library/Application\ Support/Viacoin/blocks/
-   ```
-
-   **Windows (PowerShell):**
-   ```powershell
-   New-Item -ItemType Directory -Force -Path "$env:APPDATA\Viacoin\blocks"
-   Copy-Item "$env:APPDATA\Viacoin\blocks\blk*.dat" "$env:APPDATA\Viacoin\blocks\"
-   Copy-Item "$env:APPDATA\Viacoin\blocks\rev*.dat" "$env:APPDATA\Viacoin\blocks\"
-   ```
-
-4. Start 30.x with `-reindex` to rebuild the chainstate and block index
-   from the block files:
+5. Start 30.x with `-reindex` once to rebuild the chainstate and block index
+   from the existing block files:
 
    **Linux/macOS:**
    ```bash
@@ -151,9 +126,49 @@ You do not need to sync from scratch. You can reuse block data from your
    viacoind -reindex
    ```
 
-   The reindex reads the block files and rebuilds all indexes from scratch.
-   With Viacoin's PoW skip at load (default enabled), this should complete
-   in reasonable time.
+   The reindex reads the existing block files and rebuilds all indexes from
+   scratch. With Viacoin's PoW skip at load (default enabled), this should
+   complete in reasonable time.
+
+### Using Donor Block Data
+
+If you prefer to create a fresh 30.x datadir instead of preparing the existing
+default datadir, you can copy only the old block files from a backed-up 0.16
+datadir.
+
+In the examples below, replace `<OLD_DATADIR>` with the 0.16 datadir and
+`<NEW_DATADIR>` with the fresh 30.x datadir. Do not use the same path for both.
+
+1. Install the 30.x binary for your platform.
+2. Create a new data directory.
+3. Copy only the block files:
+
+   **Linux/macOS:**
+   ```bash
+   mkdir -p "<NEW_DATADIR>/blocks"
+   cp "<OLD_DATADIR>/blocks"/blk*.dat "<NEW_DATADIR>/blocks/"
+   cp "<OLD_DATADIR>/blocks"/rev*.dat "<NEW_DATADIR>/blocks/"
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   New-Item -ItemType Directory -Force -Path "<NEW_DATADIR>\blocks"
+   Copy-Item "<OLD_DATADIR>\blocks\blk*.dat" "<NEW_DATADIR>\blocks\"
+   Copy-Item "<OLD_DATADIR>\blocks\rev*.dat" "<NEW_DATADIR>\blocks\"
+   ```
+
+4. Start 30.x with `-datadir=<NEW_DATADIR> -reindex` to rebuild the chainstate
+   and block index from the copied block files:
+
+   **Linux/macOS:**
+   ```bash
+   viacoind -datadir=<NEW_DATADIR> -reindex
+   ```
+
+   **Windows:**
+   ```powershell
+   viacoind -datadir=<NEW_DATADIR> -reindex
+   ```
 
 ### Fast Sync with assumeUTXO (Alternative)
 
@@ -174,7 +189,8 @@ for platform-specific instructions.
 
 ### Full Network Sync (Alternative)
 
-If you prefer a clean start or don't have access to old block data:
+If you prefer a clean start, back up the old datadir, move it aside, and let
+30.x create a fresh default datadir:
 
 ```
 viacoind
@@ -188,7 +204,8 @@ older versions.
 
 ## Configuration Changes
 
-Your old `viacoin.conf` will mostly work, but note these differences:
+Review old `viacoin.conf` settings before reusing them with 30.x. Notable
+differences:
 
 - The 30.x binary reads `viacoin.conf` (not `bitcoin.conf`)
 - Some RPC commands have changed — check `viacoin-cli help` for the current list
@@ -200,16 +217,16 @@ Your old `viacoin.conf` will mostly work, but note these differences:
 
 ## Fee Defaults
 
-Viacoin 30.x uses higher fee defaults than Bitcoin Core due to Viacoin's
-smaller block size:
+Viacoin 30.x uses Viacoin-specific fee defaults, including higher relay and
+wallet fallback thresholds due to Viacoin's smaller block size:
 
 | Setting | Viacoin | Bitcoin |
 |---------|---------|---------|
-| Incremental relay fee | 0.001 VIAC/kB | 0.00001 BTC/kB |
-| Minimum relay fee | 0.001 VIAC/kB | 0.000001 BTC/kB |
-| Fallback fee | 0.002 VIAC/kB | 0 BTC/kB |
-| Discard fee | 0.001 VIAC/kB | 0.0001 BTC/kB |
-| Dust relay fee | 0.003 VIAC/kB | 0.00003 BTC/kB |
+| Incremental relay fee | 0.00001 VIA/kvB | 0.00001 BTC/kvB |
+| Minimum relay fee | 0.001 VIA/kvB | 0.000001 BTC/kvB |
+| Fallback fee | 0.002 VIA/kvB | 0 BTC/kvB |
+| Discard fee | 0.001 VIA/kvB | 0.0001 BTC/kvB |
+| Dust relay fee | 0.003 VIA/kvB | 0.00003 BTC/kvB |
 
 If your old `viacoin.conf` sets explicit fee values, review them — some
 may now be below the new minimums.
