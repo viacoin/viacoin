@@ -279,6 +279,7 @@ if(ENABLE_IPC)
     bitcoin_node
     bitcoin_ipc
   )
+  set_target_properties(bitcoin-gui PROPERTIES OUTPUT_NAME viacoin-gui)
   import_plugins(bitcoin-gui)
   install_binary_component(bitcoin-gui INTERNAL)
   if(WIN32)
