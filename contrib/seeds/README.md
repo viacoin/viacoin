@@ -1,30 +1,57 @@
-# Seeds
+# Viacoin Seed Nodes
 
-Utility to generate the seeds.txt list that is compiled into the client
-(see [src/chainparamsseeds.h](/src/chainparamsseeds.h) and other utilities in [contrib/seeds](/contrib/seeds)).
+Utility to generate the seeds list compiled into the Viacoin client
+(see [src/chainparamsseeds.h](/src/chainparamsseeds.h)).
 
-Be sure to update `PATTERN_AGENT` in `makeseeds.py` to include the current version,
-and remove old versions as necessary (at a minimum when SeedsServiceFlags()
-changes its default return value, as those are the services which seeds are added
-to addrman with).
+Unlike Bitcoin Core which uses DNS crawlers to produce `seeds_main.txt`,
+Viacoin's network is small enough that seed nodes are maintained manually in
+`nodes_main.txt`. These are known stable Viacoin nodes with good uptime that
+serve the Viacoin P2P network on port 5223.
 
-Update `MIN_BLOCKS` in  `makeseeds.py` and the `-m`/`--minblocks` arguments below, as needed.
+## Adding or Removing Seed Nodes
 
-The seeds compiled into the release are created from sipa's and achow101's
-DNS seed, virtu's crawler, and asmap community AS map data. Run the following commands
-from the `/contrib/seeds` directory:
+Edit `nodes_main.txt` directly. Each line should be in the format:
 
 ```
-curl https://bitcoin.sipa.be/seeds.txt.gz | gzip -dc > seeds_main.txt
-curl https://21.ninja/seeds.txt.gz | gzip -dc >> seeds_main.txt
-curl https://mainnet.achownodes.xyz/seeds.txt.gz | gzip -dc >> seeds_main.txt
-curl https://signet.achownodes.xyz/seeds.txt.gz | gzip -dc > seeds_signet.txt
-curl https://testnet.achownodes.xyz/seeds.txt.gz | gzip -dc > seeds_test.txt
-curl https://testnet4.achownodes.xyz/seeds.txt.gz | gzip -dc > seeds_testnet4.txt
-curl https://raw.githubusercontent.com/asmap/asmap-data/main/latest_asmap.dat > asmap-filled.dat
-python3 makeseeds.py -a asmap-filled.dat -s seeds_main.txt > nodes_main.txt
-python3 makeseeds.py -a asmap-filled.dat -s seeds_signet.txt -m 266000 > nodes_signet.txt
-python3 makeseeds.py -a asmap-filled.dat -s seeds_test.txt -m 4650000 > nodes_test.txt
-python3 makeseeds.py -a asmap-filled.dat -s seeds_testnet4.txt -m 100000 > nodes_testnet4.txt
+<ip>:<port>
+[<ipv6>]:<port>
+<onion>.onion:<port>
+```
+
+Then regenerate the compiled seeds header:
+
+```bash
+cd contrib/seeds
 python3 generate-seeds.py . > ../../src/chainparamsseeds.h
 ```
+
+## Guidelines for Seed Nodes
+
+- Must have service bit 1 (NODE_NETWORK) -- serves full blocks
+- Must be on port 5223 (Viacoin mainnet default)
+- Should have reliable uptime (>50% over 30 days)
+- Should run a recent Viacoin Core version
+- Do not include personal/home IP addresses without the operator's consent
+- Do not include IP addresses that are known to be unstable or abusive
+
+## DNS Seeders
+
+Viacoin also has DNS seeders that provide dynamic peer discovery at runtime.
+These are configured in `src/kernel/chainparams.cpp`:
+
+- `seed.viacoin.net`
+- `mainnet.viacoin.net`
+
+The fixed seeds in `nodes_main.txt` serve as a fallback when DNS seeders
+are unreachable.
+
+## Regenerating the Seeds Header
+
+From the repository root:
+
+```bash
+python3 contrib/seeds/generate-seeds.py contrib/seeds > src/chainparamsseeds.h
+```
+
+Then rebuild the binary. Verify the new seeds are loaded by checking the
+debug log at startup for "adding fixed seed" messages.

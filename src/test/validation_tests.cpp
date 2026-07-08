@@ -2,12 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <auxpow/auxpow.h>
+#include <auxpow/consensus.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <hash.h>
 #include <net.h>
+#include <pow.h>
+#include <script/interpreter.h>
 #include <signet.h>
 #include <uint256.h>
 #include <util/chaintype.h>
@@ -21,49 +25,144 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 
-static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
-{
-    int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
+unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const ChainstateManager& chainman);
+bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+bool ContextualCheckAuxPowHeaderForTest(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height);
 
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
-    }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
+static void FillSyntheticIndex(CBlockIndex& index, int height, const CBlockIndex* prev = nullptr)
+{
+    index.nHeight = height;
+    index.pprev = const_cast<CBlockIndex*>(prev);
+    index.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
+    index.nTime = 1'500'000'000 + height;
+    static uint256 synthetic_hash{};
+    index.phashBlock = &synthetic_hash;
 }
 
-static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
+static CBlockHeader MakeAuxPowHeaderForContextTest(int chain_id = AuxPow::CHAIN_ID)
 {
-    Consensus::Params consensusParams;
-    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    TestBlockSubsidyHalvings(consensusParams);
+    CBlockHeader header;
+    header.nVersion = AuxPow::BLOCK_VERSION_DEFAULT |
+        AuxPow::BLOCK_VERSION_AUXPOW |
+        (chain_id * AuxPow::BLOCK_VERSION_CHAIN_START);
+    header.hashPrevBlock = uint256{1};
+    header.hashMerkleRoot = uint256{2};
+    header.nTime = 1'600'000'000;
+    header.nBits = 0x1e0fffff;
+    header.nNonce = 3;
+    header.SetAuxPow(new CAuxPow());
+    return header;
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    TestBlockSubsidyHalvings(chainParams->GetConsensus()); // As in main
-    TestBlockSubsidyHalvings(150); // As in regtest
-    TestBlockSubsidyHalvings(1000); // Just another interval
+
+    struct {
+        int height;
+        CAmount subsidy;
+    } subsidyinfo[] = {
+        {0, 0 * COIN},
+        {1, 10000000 * COIN},
+        {2, 0 * COIN},
+        {10001, 0 * COIN},
+        {10002, 10 * COIN},
+        {20801, 10 * COIN},
+        {20802, 7 * COIN},
+        {31601, 7 * COIN},
+        {31602, 6 * COIN},
+        {42401, 6 * COIN},
+        {42402, 5 * COIN},
+        {1971000, 5 * COIN},
+        {1971001, 250000000},
+        {2628000, 125000000},
+    };
+
+    for (const auto& s : subsidyinfo) {
+        BOOST_CHECK_EQUAL(GetBlockSubsidy(s.height, chainParams->GetConsensus()), s.subsidy);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
+    CAmount max_subsidy = 0;
+    for (int nHeight = 0; nHeight < 1971000; nHeight += 1000) {
+        const CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
+        max_subsidy = std::max(max_subsidy, nSubsidy);
         nSum += nSubsidy * 1000;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
+    BOOST_CHECK_EQUAL(max_subsidy, 10 * COIN);
+    BOOST_CHECK_EQUAL(nSum, CAmount{988300000000000ULL});
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_auxpow_activation_params_red)
+{
+    const auto main_params = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto test_params = CreateChainParams(*m_node.args, ChainType::TESTNET);
+    const auto regtest_params = CreateChainParams(*m_node.args, ChainType::REGTEST);
+
+    BOOST_CHECK_EQUAL(main_params->GetConsensus().nAuxPowStartHeight, AuxPow::START_MAINNET);
+    BOOST_CHECK_EQUAL(test_params->GetConsensus().nAuxPowStartHeight, AuxPow::START_TESTNET);
+    BOOST_CHECK_EQUAL(regtest_params->GetConsensus().nAuxPowStartHeight, AuxPow::START_REGTEST);
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_auxpow_contextual_activation_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    {
+        BlockValidationState state;
+        const CBlockHeader premature = MakeAuxPowHeaderForContextTest();
+        BOOST_CHECK(!ContextualCheckAuxPowHeaderForTest(premature, state, consensus, consensus.nAuxPowStartHeight - 1));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "time-too-new");
+    }
+
+    {
+        BlockValidationState state;
+        const CBlockHeader wrong_chain = MakeAuxPowHeaderForContextTest(AuxPow::CHAIN_ID + 1);
+        BOOST_CHECK(!ContextualCheckAuxPowHeaderForTest(wrong_chain, state, consensus, consensus.nAuxPowStartHeight));
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-auxpow");
+    }
+
+    {
+        BlockValidationState state;
+        const CBlockHeader valid = MakeAuxPowHeaderForContextTest();
+        BOOST_CHECK(ContextualCheckAuxPowHeaderForTest(valid, state, consensus, consensus.nAuxPowStartHeight));
+        BOOST_CHECK(state.IsValid());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(viacoin_script_flag_activation_red)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus = chainParams->GetConsensus();
+
+    CBlockIndex before_bip16;
+    FillSyntheticIndex(before_bip16, std::max(0, consensus.BIP34Height));
+    const unsigned int before_flags = GetBlockScriptFlagsForTest(before_bip16, *m_node.chainman);
+    BOOST_CHECK_EQUAL(before_flags & SCRIPT_VERIFY_P2SH, SCRIPT_VERIFY_P2SH);
+    BOOST_CHECK_EQUAL(before_flags & SCRIPT_VERIFY_WITNESS, 0U);
+    BOOST_CHECK_EQUAL(before_flags & SCRIPT_VERIFY_TAPROOT, 0U);
+
+    CBlockIndex before_witness_prev;
+    FillSyntheticIndex(before_witness_prev, consensus.nWitnessStartHeight - 2);
+    BOOST_CHECK(!IsWitnessEnabledForTest(&before_witness_prev, consensus));
+
+    CBlockIndex witness_prev;
+    FillSyntheticIndex(witness_prev, consensus.nWitnessStartHeight - 1);
+    BOOST_CHECK(IsWitnessEnabledForTest(&witness_prev, consensus));
+
+    CBlockIndex after_witness;
+    FillSyntheticIndex(after_witness, consensus.nWitnessStartHeight, &witness_prev);
+    const unsigned int after_flags = GetBlockScriptFlagsForTest(after_witness, *m_node.chainman);
+    BOOST_CHECK(after_flags & SCRIPT_VERIFY_P2SH);
+    BOOST_CHECK(after_flags & SCRIPT_VERIFY_WITNESS);
+    BOOST_CHECK(after_flags & SCRIPT_VERIFY_NULLDUMMY);
+    BOOST_CHECK_EQUAL(after_flags & SCRIPT_VERIFY_TAPROOT, 0U);
 }
 
 BOOST_AUTO_TEST_CASE(signet_parse_tests)
@@ -145,7 +244,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "b952555c8ab81fec46f3d4253b7af256d766ceb39fb7752b9d18cdf4a0141327");
     BOOST_CHECK_EQUAL(out110.m_chain_tx_count, 111U);
 
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256{"6affe030b7965ab538f820a56ef56c8149b7dc1d1c144af57113be080db7c397"});
+    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256{"d0ef984810fbff08c6e80c79cc60dfaf8900b457a68a1748714d39e09d74d187"});
     BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "b952555c8ab81fec46f3d4253b7af256d766ceb39fb7752b9d18cdf4a0141327");
     BOOST_CHECK_EQUAL(out110_2.m_chain_tx_count, 111U);
 }
