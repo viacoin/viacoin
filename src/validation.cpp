@@ -376,7 +376,8 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                 const Coin& coin{CoinsTip().AccessCoin(txin.prevout)};
                 assert(!coin.IsSpent());
                 const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
-                if (coin.IsCoinBase() && mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
+                const int coinbase_maturity = m_chainman.GetConsensus().fPowNoRetargeting ? COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
+                if (coin.IsCoinBase() && mempool_spend_height - coin.nHeight < coinbase_maturity) {
                     return true;
                 }
             }
@@ -893,7 +894,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees, m_active_chainstate.m_chainman.GetConsensus())) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -1921,13 +1922,29 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    if (consensusParams.fPowNoRetargeting && consensusParams.fPowAllowMinDifficultyBlocks) {
+        int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        if (halvings >= 64) return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        CAmount nSubsidy = 50 * COIN;
+        nSubsidy >>= halvings;
+        return nSubsidy;
+    }
+
+    const int zero_reward_height = consensusParams.fPowAllowMinDifficultyBlocks ? 2001 : 10001;
+    const int ramp_height = zero_reward_height + 43200;
+
+    if (nHeight == 0) return 0;
+    if (nHeight == 1) return 10000000 * COIN;
+    if (nHeight <= zero_reward_height) return 0;
+    if (nHeight <= zero_reward_height + 10800) return 10 * COIN;
+    if (nHeight <= ramp_height) return (8 - ((nHeight - zero_reward_height - 1) / 10800)) * COIN;
+    if (nHeight <= 1971000) return 5 * COIN;
+
+    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    if (halvings >= 64) return 0;
+
+    CAmount nSubsidy = 20 * COIN;
     nSubsidy >>= halvings;
     return nSubsidy;
 }
@@ -2330,45 +2347,108 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
-{
-    const Consensus::Params& consensusparams = chainman.GetConsensus();
+static constexpr unsigned int LOCKTIME_MEDIAN_TIME_PAST = (1U << 1);
 
-    // BIP16 didn't become active until Apr 1 2012 (on mainnet, and
-    // retroactively applied to testnet)
-    // However, only one historical block violated the P2SH rules (on both
-    // mainnet and testnet).
-    // Similarly, only one historical block violated the TAPROOT rules on
-    // mainnet.
-    // For simplicity, always leave P2SH+WITNESS+TAPROOT on except for the two
-    // violating blocks.
-    uint32_t flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
-    const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
-    if (it != consensusparams.script_flag_exceptions.end()) {
-        flags = it->second;
+static bool IsCSVEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache = nullptr)
+{
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           (versionbitscache != nullptr && DeploymentActiveAfter(pindexPrev, params, Consensus::DEPLOYMENT_VIACOIN_CSV, *versionbitscache));
+}
+
+static bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache = nullptr)
+{
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           (versionbitscache != nullptr && DeploymentActiveAfter(pindexPrev, params, Consensus::DEPLOYMENT_VIACOIN_SEGWIT, *versionbitscache));
+}
+
+static unsigned int GetLockTimeFlags(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache = nullptr)
+{
+    unsigned int flags{0};
+    if (IsCSVEnabled(pindexPrev, params, versionbitscache)) {
+        flags |= LOCKTIME_MEDIAN_TIME_PAST;
+    }
+    return flags;
+}
+
+static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Consensus::Params& consensusparams, VersionBitsCache* versionbitscache)
+{
+    uint32_t flags{SCRIPT_VERIFY_NONE};
+
+    if (block_index.nHeight >= consensusparams.BIP16Height) {
+        flags |= SCRIPT_VERIFY_P2SH;
     }
 
-    // Enforce the DERSIG (BIP66) rule
-    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_DERSIG)) {
+    if (block_index.nHeight >= consensusparams.BIP66Height) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
-    // Enforce CHECKLOCKTIMEVERIFY (BIP65)
-    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_CLTV)) {
+    if (block_index.nHeight >= consensusparams.BIP65Height) {
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    // Enforce CHECKSEQUENCEVERIFY (BIP112)
-    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (IsCSVEnabled(block_index.pprev, consensusparams, versionbitscache)) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
-    // Enforce BIP147 NULLDUMMY (activated simultaneously with segwit)
-    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_SEGWIT)) {
+    if (IsWitnessEnabled(block_index.pprev, consensusparams, versionbitscache)) {
+        flags |= SCRIPT_VERIFY_WITNESS;
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
     return flags;
+}
+
+static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
+{
+    return GetBlockScriptFlags(block_index, chainman.GetConsensus(), &chainman.m_versionbitscache);
+}
+
+static bool ContextualCheckAuxPowHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height)
+{
+    if (!block.auxpow) {
+        return true;
+    }
+    if (height < consensus_params.nAuxPowStartHeight) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-new", "premature auxpow block");
+    }
+    if (!CheckAuxPowValidity(block, consensus_params)) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-auxpow", "invalid auxpow block");
+    }
+    return true;
+}
+
+namespace validation_tests {
+unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const ChainstateManager& chainman)
+{
+    return GetBlockScriptFlags(block_index, chainman);
+}
+
+unsigned int GetBlockScriptFlagsForTest(const CBlockIndex& block_index, const Consensus::Params& params, VersionBitsCache& versionbitscache)
+{
+    return GetBlockScriptFlags(block_index, params, &versionbitscache);
+}
+
+bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    return IsWitnessEnabled(pindexPrev, params);
+}
+
+bool IsWitnessEnabledForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache)
+{
+    return IsWitnessEnabled(pindexPrev, params, versionbitscache);
+}
+
+unsigned int GetLockTimeFlagsForTest(const CBlockIndex* pindexPrev, const Consensus::Params& params, VersionBitsCache* versionbitscache)
+{
+    return GetLockTimeFlags(pindexPrev, params, versionbitscache);
+}
+
+bool ContextualCheckAuxPowHeaderForTest(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensus_params, int height)
+{
+    return ContextualCheckAuxPowHeader(block, state, consensus_params, height);
+}
 }
 
 
@@ -2400,7 +2480,31 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
     // the clock to go backward).
-    if (!CheckBlock(block, state, params.GetConsensus(), !fJustCheck, !fJustCheck)) {
+
+    // Viacoin: Skip expensive scrypt PoW verification for blocks that are
+    // ancestors of the assume-valid block and whose chain has sufficient work.
+    // This mirrors the existing assumeValid optimisation that skips script
+    // checks for the same range of blocks.  Scrypt PoW is ~1000x slower than
+    // SHA-256, so skipping it during IBD is the single biggest sync-speedup
+    // available.  The assumeValid block hash is hardcoded and commits to a
+    // specific chain; merkle roots and chain continuity are still verified.
+    bool fCheckPOW = !fJustCheck;
+    bool fSkipPoWForAssumeValid = false;
+    if (fCheckPOW && !m_chainman.AssumedValidBlock().IsNull()) {
+        BlockMap::const_iterator it{m_blockman.m_block_index.find(m_chainman.AssumedValidBlock())};
+        if (it != m_blockman.m_block_index.end()) {
+            if (it->second.GetAncestor(pindex->nHeight) == pindex &&
+                m_chainman.m_best_header->GetAncestor(pindex->nHeight) == pindex &&
+                m_chainman.m_best_header->nChainWork >= m_chainman.MinimumChainWork()) {
+                fSkipPoWForAssumeValid = (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= 60 * 60 * 24 * 7 * 2);
+                if (fSkipPoWForAssumeValid) {
+                    fCheckPOW = false;
+                }
+            }
+        }
+    }
+
+    if (!CheckBlock(block, state, params.GetConsensus(), fCheckPOW, !fJustCheck)) {
         if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -2551,7 +2655,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // Enforce BIP68 (sequence locks)
     int nLockTimeFlags = 0;
-    if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (IsCSVEnabled(pindex->pprev, m_chainman.GetConsensus(), &m_chainman.m_versionbitscache)) {
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
@@ -2598,7 +2702,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee, m_chainman.GetConsensus())) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(),
@@ -3878,7 +3982,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
-    if (DeploymentActiveAt(*pindexNew, *this, Consensus::DEPLOYMENT_SEGWIT)) {
+    if (ViacoinSegwitActiveAt(*pindexNew, *this)) {
         pindexNew->nStatus |= BLOCK_OPT_WITNESS;
     }
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
@@ -3924,10 +4028,22 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (fCheckPOW && !CheckBlockProofOfWork(block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
     return true;
+}
+
+static bool CheckBlockHeaderForGenesis(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
+{
+    // For Viacoin: the genesis block's scrypt PoW hash is implicitly validated by
+    // the assert(consensus.hashGenesisBlock == genesis.GetHash()) in chainparams.
+    // Skip PoW check for the genesis block to avoid re-verifying scrypt at runtime,
+    // since GetHash() (SHA256d) differs from GetPoWHash() (scrypt) for Viacoin.
+    if (block.GetHash() == consensusParams.hashGenesisBlock) {
+        return true;
+    }
+    return CheckBlockHeader(block, state, consensusParams, fCheckPOW);
 }
 
 static bool CheckMerkleRoot(const CBlock& block, BlockValidationState& state)
@@ -4020,7 +4136,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, consensusParams, fCheckPOW))
+    if (!CheckBlockHeaderForGenesis(block, state, consensusParams, fCheckPOW))
         return false;
 
     // Signet only: check block solution
@@ -4082,7 +4198,7 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
 {
     int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce(32, 0x00);
-    if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
+    if (commitpos != NO_WITNESS_COMMITMENT && ViacoinSegwitActiveAfter(pindexPrev, *this) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
         tx.vin[0].scriptWitness.stack.resize(1);
         tx.vin[0].scriptWitness.stack[0] = nonce;
@@ -4120,7 +4236,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
 bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
 {
     return std::all_of(headers.cbegin(), headers.cend(),
-            [&](const auto& header) { return CheckProofOfWork(header.GetHash(), header.nBits, consensusParams);});
+            [&](const auto& header) { return CheckBlockProofOfWork(header, consensusParams); });
 }
 
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
@@ -4185,6 +4301,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     // Check proof of work
     const Consensus::Params& consensusParams = chainman.GetConsensus();
+    if (!ContextualCheckAuxPowHeader(block, state, consensusParams, nHeight)) {
+        return false;
+    }
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 
@@ -4209,10 +4328,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
     }
 
-    // Reject blocks with outdated version
-    if ((block.nVersion < 2 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB)) ||
-        (block.nVersion < 3 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_DERSIG)) ||
-        (block.nVersion < 4 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CLTV))) {
+    const int32_t block_version = block.nVersion & 0xFF;
+    if (((block_version < VERSIONBITS_TOP_BITS) && block_version < 3 && nHeight >= consensusParams.BIP65Height) ||
+        ((block_version < VERSIONBITS_TOP_BITS) && block_version < 4 && nHeight >= consensusParams.BIP66Height) ||
+        ((block_version < VERSIONBITS_TOP_BITS) && block_version < 5 && nHeight >= consensusParams.BlockVer5Height)) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
     }
@@ -4232,7 +4351,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
 
     // Enforce BIP113 (Median Time Past).
     bool enforce_locktime_median_time_past{false};
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CSV)) {
+    if (GetLockTimeFlags(pindexPrev, chainman.GetConsensus(), &chainman.m_versionbitscache) != 0) {
         assert(pindexPrev != nullptr);
         enforce_locktime_median_time_past = true;
     }
@@ -4249,7 +4368,12 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB))
+    // Viacoin: BIP34 is active from height 0 (BIP34Height=0), but the nVersion>=2
+    // guard from the original BIP34 implementation must be preserved so that
+    // version-1 genesis blocks are exempt — the genesis coinbase does not embed
+    // the block height.  Bitcoin Core's 30.x refactor dropped the nVersion check
+    // because Bitcoin's BIP34Height=227931 makes it redundant there.
+    if (block.nVersion >= 2 && DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_HEIGHTINCB))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
@@ -4266,7 +4390,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     // * There must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness reserved value). In case there are
     //   multiple, the last one is used.
-    if (!CheckWitnessMalleation(block, DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT), state)) {
+    if (!CheckWitnessMalleation(block, ViacoinSegwitActiveAfter(pindexPrev, chainman), state)) {
         return false;
     }
 
@@ -4303,7 +4427,11 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, GetConsensus())) {
+        // Viacoin: When min_pow_checked=true, PoW was already validated by
+        // CheckHeadersPoW (P2P IBD) or the data is trusted (reindex from
+        // local disk). Skip the expensive scrypt/auxpow PoW re-check in
+        // CheckBlockHeader to avoid doubling IBD validation time.
+        if (!CheckBlockHeader(block, state, GetConsensus(), /*fCheckPOW=*/!min_pow_checked)) {
             LogDebug(BCLog::VALIDATION, "%s: Consensus::CheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
             return false;
         }
@@ -4446,7 +4574,10 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     const CChainParams& params{GetParams()};
 
-    if (!CheckBlock(block, state, params.GetConsensus()) ||
+    // Viacoin: When min_pow_checked=true, PoW was already validated by
+    // CheckHeadersPoW during P2P IBD. Skip the redundant PoW check in
+    // CheckBlock (which calls CheckBlockHeaderForGenesis with fCheckPOW).
+    if (!CheckBlock(block, state, params.GetConsensus(), /*fCheckPOW=*/!min_pow_checked) ||
         !ContextualCheckBlock(block, state, *this, pindex->pprev)) {
         if (Assume(state.IsInvalid())) {
             ActiveChainstate().InvalidBlockFound(pindex, state);
@@ -4935,7 +5066,7 @@ bool Chainstate::NeedsRedownload() const
     // At and above m_params.SegwitHeight, segwit consensus rules must be validated
     CBlockIndex* block{m_chain.Tip()};
 
-    while (block != nullptr && DeploymentActiveAt(*block, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
+    while (block != nullptr && ViacoinSegwitActiveAt(*block, m_chainman)) {
         if (!(block->nStatus & BLOCK_OPT_WITNESS)) {
             // block is insufficiently validated for a segwit client
             return true;
@@ -6030,7 +6161,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
         // Fake BLOCK_OPT_WITNESS so that Chainstate::NeedsRedownload()
         // won't ask for -reindex on startup.
-        if (DeploymentActiveAt(*index, *this, Consensus::DEPLOYMENT_SEGWIT)) {
+        if (ViacoinSegwitActiveAt(*index, *this)) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
 

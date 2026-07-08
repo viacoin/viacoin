@@ -14,7 +14,11 @@ const std::array<VBDeploymentInfo,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> Versi
         .gbt_optional_rule = true,
     },
     VBDeploymentInfo{
-        .name = "taproot",
+        .name = "csv",
+        .gbt_optional_rule = false,
+    },
+    VBDeploymentInfo{
+        .name = "segwit",
         .gbt_optional_rule = true,
     },
 };

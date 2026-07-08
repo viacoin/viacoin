@@ -69,7 +69,7 @@ class SignalInterrupt;
 
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ActiveChain().Tip() will not be pruned. */
 static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
-static const signed int DEFAULT_CHECKBLOCKS = 6;
+static const signed int DEFAULT_CHECKBLOCKS = 6 * 25;
 static constexpr int DEFAULT_CHECKLEVEL{3};
 // Require that user allocate at least 550 MiB for block & undo files (blk???.dat and rev???.dat)
 // At 1MB per block, 288 blocks = 288MB.
@@ -1357,6 +1357,32 @@ template<typename DEP>
 bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
 {
     return DeploymentEnabled(chainman.GetConsensus(), dep);
+}
+
+inline bool ViacoinCSVActiveAfter(const CBlockIndex* pindexPrev, const ChainstateManager& chainman)
+{
+    const auto& params = chainman.GetConsensus();
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_VIACOIN_CSV);
+}
+
+inline bool ViacoinCSVActiveAt(const CBlockIndex& index, const ChainstateManager& chainman)
+{
+    return ViacoinCSVActiveAfter(index.pprev, chainman);
+}
+
+inline bool ViacoinSegwitActiveAfter(const CBlockIndex* pindexPrev, const ChainstateManager& chainman)
+{
+    const auto& params = chainman.GetConsensus();
+    const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
+    return nHeight >= params.nWitnessStartHeight ||
+           DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_VIACOIN_SEGWIT);
+}
+
+inline bool ViacoinSegwitActiveAt(const CBlockIndex& index, const ChainstateManager& chainman)
+{
+    return ViacoinSegwitActiveAfter(index.pprev, chainman);
 }
 
 /** Identifies blocks that overwrote an existing coinbase output in the UTXO set (see BIP30) */
