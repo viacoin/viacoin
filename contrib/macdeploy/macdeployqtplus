@@ -145,8 +145,8 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path: str):
         self.path = path
-        # for backwards compatibility reasons, this must remain as Bitcoin-Qt
-        self.binaryPath = os.path.join(path, "Contents", "MacOS", "Bitcoin-Qt")
+        # for backwards compatibility reasons, this must remain as Viacoin-Qt
+        self.binaryPath = os.path.join(path, "Contents", "MacOS", "Viacoin-Qt")
         if not os.path.exists(self.binaryPath):
             raise RuntimeError(f"Could not find bundle binary for {path}")
         self.resourcesPath = os.path.join(path, "Contents", "Resources")
@@ -422,7 +422,7 @@ if os.path.exists(appname + ".zip"):
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Bitcoin-Qt.app")
+target = os.path.join("dist", "Viacoin-Qt.app")
 
 print("+ Copying source bundle +")
 if verbose:
@@ -499,7 +499,7 @@ if platform.system() == "Darwin":
 # ------------------------------------------------
 
 if config.zip is not None:
-    subprocess.check_call(["zip", "-ry", os.path.abspath(appname + ".zip"), 'Bitcoin-Qt.app'], cwd='dist')
+    subprocess.check_call(["zip", "-ry", os.path.abspath(appname + ".zip"), 'Viacoin-Qt.app'], cwd='dist')
 
 # ------------------------------------------------
 
