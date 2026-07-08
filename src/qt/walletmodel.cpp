@@ -111,7 +111,7 @@ void WalletModel::pollBalanceChanged()
         m_cached_last_update_tip = block_hash;
 
         checkBalanceChanged(new_balances);
-        if(transactionTableModel)
+        if(transactionTableModel && qApp->applicationState() == Qt::ApplicationActive)
             transactionTableModel->updateConfirmations();
     }
 }
