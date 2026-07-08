@@ -103,7 +103,7 @@ static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork */
 static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
 /** How frequently to check for stale tips */
-static constexpr auto STALE_CHECK_INTERVAL{10min};
+static constexpr auto STALE_CHECK_INTERVAL{1min};
 /** How frequently to check for extra outbound peers and disconnect */
 static constexpr auto EXTRA_PEER_CHECK_INTERVAL{45s};
 /** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict */
@@ -125,7 +125,8 @@ static const unsigned int MAX_INV_SZ = 50000;
 /** Limit to avoid sending big packets. Not used in processing incoming GETDATA for compatibility */
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
-static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+// Viacoin: 32x Bitcoin — 24s block time means more blocks to sync
+static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 512;
 /** Default time during which a peer must stall block download progress before being disconnected.
  * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
 static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
@@ -141,7 +142,8 @@ static_assert(MAX_BLOCKTXN_DEPTH <= MIN_BLOCKS_TO_KEEP, "MAX_BLOCKTXN_DEPTH too 
  *  Larger windows tolerate larger download speed differences between peer, but increase the potential
  *  degree of disordering of blocks on disk (which make reindexing and pruning harder). We'll probably
  *  want to make this a per-peer adaptive value at some point. */
-static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
+// Viacoin: 32x Bitcoin — 24s block time means more blocks to sync
+static const unsigned int BLOCK_DOWNLOAD_WINDOW = 32768;
 /** Block download timeout base, expressed in multiples of the block interval (i.e. 10 min) */
 static constexpr double BLOCK_DOWNLOAD_TIMEOUT_BASE = 1;
 /** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
@@ -1471,7 +1473,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 return;
             }
 
-            if (!CanServeWitnesses(peer) && DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) {
+            if (!CanServeWitnesses(peer) && ViacoinSegwitActiveAt(*pindex, m_chainman)) {
                 // We wouldn't download this block or its descendants from this peer.
                 return;
             }
@@ -1988,7 +1990,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         return;
     m_highest_fast_announce = pindex->nHeight;
 
-    if (!DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) return;
+    if (!ViacoinSegwitActiveAt(*pindex, m_chainman)) return;
 
     uint256 hashBlock(pblock->GetHash());
     const std::shared_future<CSerializedNetMsg> lazy_ser{
@@ -2636,6 +2638,18 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
     // before we'll store it)
     arith_uint256 minimum_chain_work = GetAntiDoSWorkThreshold();
 
+    // Viacoin: Skip the low-work headers sync mechanism for chains with
+    // auxpow (merged mining). The presync/redownload mechanism uses
+    // CompressedHeader which strips auxpow data; GetFullHeader() then
+    // reconstructs headers without auxpow, causing PoW validation to fail
+    // for all merged-mined blocks. Since auxpow blocks derive their PoW
+    // from a parent chain, the two-phase compressed-header approach is
+    // fundamentally incompatible. Let such headers go directly to
+    // AcceptBlockHeader for full validation instead.
+    if (m_chainparams.GetConsensus().nAuxPowStartHeight >= 0) {
+        return false;
+    }
+
     // Avoid DoS via low-difficulty-headers by only processing if the headers
     // are part of a chain with sufficient work.
     if (total_work < minimum_chain_work) {
@@ -2716,7 +2730,7 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
         while (pindexWalk && !m_chainman.ActiveChain().Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
                     !IsBlockRequested(pindexWalk->GetBlockHash()) &&
-                    (!DeploymentActiveAt(*pindexWalk, m_chainman, Consensus::DEPLOYMENT_SEGWIT) || CanServeWitnesses(peer))) {
+                    (!ViacoinSegwitActiveAt(*pindexWalk, m_chainman) || CanServeWitnesses(peer))) {
                 // We don't have this block, and it's not yet in flight.
                 vToFetch.push_back(pindexWalk);
             }
@@ -3342,7 +3356,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         // We should not have gotten this far in compact block processing unless it's attached to a known header
         const CBlockIndex* prev_block{Assume(m_chainman.m_blockman.LookupBlockIndex(partialBlock.header.hashPrevBlock))};
         ReadStatus status = partialBlock.FillBlock(*pblock, block_transactions.txn,
-                                                   /*segwit_active=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT));
+                                                   /*segwit_active=*/ViacoinSegwitActiveAfter(prev_block, m_chainman));
         if (status == READ_STATUS_INVALID) {
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // Reset in-flight state in case Misbehaving does not result in a disconnect
             Misbehaving(peer, "invalid compact block/non-matching block transactions");
@@ -4219,12 +4233,25 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
+        // For auxpow blocks, GetBlockHeader() returns a header without auxpow data
+        // (which would crash during P2P serialization), so we must read the full
+        // header from disk instead.
         std::vector<CBlock> vHeaders;
         int nLimit = m_opts.max_headers_result;
         LogDebug(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            vHeaders.emplace_back(pindex->GetBlockHeader());
+            if (pindex->IsAuxPow()) {
+                CBlockHeader header;
+                if (!m_chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex)) {
+                    LogDebug(BCLog::NET, "getheaders: failed to read auxpow header for %s from peer=%d\n",
+                             pindex->GetBlockHash().ToString(), pfrom.GetId());
+                    break;
+                }
+                vHeaders.emplace_back(header);
+            } else {
+                vHeaders.emplace_back(pindex->GetBlockHeader());
+            }
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
                 break;
         }
@@ -4499,7 +4526,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 std::vector<CTransactionRef> dummy;
                 const CBlockIndex* prev_block{Assume(m_chainman.m_blockman.LookupBlockIndex(cmpctblock.header.hashPrevBlock))};
                 status = tempBlock.FillBlock(*pblock, dummy,
-                                             /*segwit_active=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT));
+                                             /*segwit_active=*/ViacoinSegwitActiveAfter(prev_block, m_chainman));
                 if (status == READ_STATUS_OK) {
                     fBlockReconstructed = true;
                 }
@@ -4633,9 +4660,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
 
-        // Check for possible mutation if it connects to something we know so we can check for DEPLOYMENT_SEGWIT being active
+        // Check for possible mutation if it connects to something we know so we can check whether witness rules are active.
         if (prev_block && IsBlockMutated(/*block=*/*pblock,
-                           /*check_witness_root=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT))) {
+                           /*check_witness_root=*/ViacoinSegwitActiveAfter(prev_block, m_chainman))) {
             LogDebug(BCLog::NET, "Received mutated block from peer=%d\n", peer->m_id);
             Misbehaving(*peer, "mutated block");
             WITH_LOCK(cs_main, RemoveBlockRequest(pblock->GetHash(), peer->m_id));
@@ -5524,8 +5551,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
 
         if (!state.fSyncStarted && CanServeBlocks(*peer) && !m_chainman.m_blockman.LoadingBlocks()) {
-            // Only actively request headers from a single peer, unless we're close to today.
-            if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
+            // Viacoin: removed nSyncStarted == 0 guard to allow parallel header sync.
+            // With 24s block times there are more blocks to sync during IBD.
+            // Original: if ((nSyncStarted == 0 && sync_blocks_and_headers_from_peer) || ...)
+            if (sync_blocks_and_headers_from_peer || m_chainman.m_best_header->Time() > NodeClock::now() - 24h) {
                 const CBlockIndex* pindexStart = m_chainman.m_best_header;
                 /* If possible, start at the block preceding the currently
                    best known header.  This ensures that we always get a
@@ -5602,14 +5631,26 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
+                        if (pindex->IsAuxPow()) {
+                            CBlockHeader header;
+                            if (!m_chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex)) break;
+                            vHeaders.emplace_back(header);
+                        } else {
+                            vHeaders.emplace_back(pindex->GetBlockHeader());
+                        }
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
                         // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
+                        if (pindex->IsAuxPow()) {
+                            CBlockHeader header;
+                            if (!m_chainman.m_blockman.ReadBlockHeaderFromDisk(header, *pindex)) break;
+                            vHeaders.emplace_back(header);
+                        } else {
+                            vHeaders.emplace_back(pindex->GetBlockHeader());
+                        }
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
@@ -5854,7 +5895,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (state.fSyncStarted && peer->m_headers_sync_timeout < std::chrono::microseconds::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
             if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
-                if (current_time > peer->m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
+                // Viacoin: changed nSyncStarted == 1 to nSyncStarted >= 1 to handle
+                // parallel header sync (we removed the nSyncStarted == 0 guard above)
+                if (current_time > peer->m_headers_sync_timeout && nSyncStarted >= 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
                     // Note: If all our peers are inbound, then we won't

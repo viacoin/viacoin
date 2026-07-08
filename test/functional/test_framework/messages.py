@@ -32,14 +32,14 @@ from test_framework.crypto.siphash import siphash256
 from test_framework.util import assert_equal
 
 MAX_LOCATOR_SZ = 101
-MAX_BLOCK_WEIGHT = 4000000
+MAX_BLOCK_WEIGHT = 240000
 DEFAULT_BLOCK_RESERVED_WEIGHT = 8000
 MINIMUM_BLOCK_RESERVED_WEIGHT = 2000
 MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 
-COIN = 100000000  # 1 btc in satoshis
-MAX_MONEY = 21000000 * COIN
+COIN = 100000000  # 1 via in satoshis
+MAX_MONEY = 23000000 * COIN
 
 MAX_BIP125_RBF_SEQUENCE = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
 MAX_SEQUENCE_NONFINAL = 0xfffffffe  # Sequence number that is csv-opt-out (BIP 68)
@@ -84,9 +84,9 @@ TX_MIN_STANDARD_VERSION = 1
 TX_MAX_STANDARD_VERSION = 3
 
 MAGIC_BYTES = {
-    "mainnet": b"\xf9\xbe\xb4\xd9",
+    "mainnet": b"\x0f\x68\xc6\xcb",
     "testnet4": b"\x1c\x16\x3f\x28",
-    "regtest": b"\xfa\xbf\xb5\xda",
+    "regtest": b"\x2d\x97\x7b\x37",
     "signet": b"\x0a\x03\xcf\x40",
 }
 
@@ -100,6 +100,10 @@ def sha3(s):
 
 def hash256(s):
     return sha256(sha256(s))
+
+
+def scrypt256(s):
+    return hashlib.scrypt(s, salt=s, n=1024, r=1, p=1, dklen=32)
 
 
 def ser_compact_size(l):
@@ -687,7 +691,7 @@ class CTransaction:
 
     def is_valid(self):
         for tout in self.vout:
-            if tout.nValue < 0 or tout.nValue > 21000000 * COIN:
+            if tout.nValue < 0 or tout.nValue > MAX_MONEY:
                 return False
         return True
 
@@ -760,6 +764,11 @@ class CBlockHeader:
         """Return block header hash as integer."""
         return uint256_from_str(hash256(self._serialize_header()))
 
+    @property
+    def pow_hash_int(self):
+        """Return Viacoin PoW header hash as integer."""
+        return uint256_from_str(scrypt256(self._serialize_header()))
+
     def __repr__(self):
         return "CBlockHeader(nVersion=%i hashPrevBlock=%064x hashMerkleRoot=%064x nTime=%s nBits=%08x nNonce=%08x)" \
             % (self.nVersion, self.hashPrevBlock, self.hashMerkleRoot,
@@ -818,7 +827,7 @@ class CBlock(CBlockHeader):
 
     def is_valid(self):
         target = uint256_from_compact(self.nBits)
-        if self.hash_int > target:
+        if self.pow_hash_int > target:
             return False
         for tx in self.vtx:
             if not tx.is_valid():
@@ -829,7 +838,7 @@ class CBlock(CBlockHeader):
 
     def solve(self):
         target = uint256_from_compact(self.nBits)
-        while self.hash_int > target:
+        while self.pow_hash_int > target:
             self.nNonce += 1
 
     # Calculate the block weight using witness and non-witness

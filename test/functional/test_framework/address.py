@@ -36,6 +36,7 @@ ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
 # Coins sent to this address can be spent with a witness stack of just OP_TRUE
 ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85'
+VIACOIN_REGTEST_SEGWIT_HRP = 'rvia'
 
 
 class AddressType(enum.Enum):
@@ -47,7 +48,7 @@ class AddressType(enum.Enum):
 b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 
-def create_deterministic_address_bcrt1_p2tr_op_true(explicit_internal_key=None):
+def create_deterministic_address_p2tr_op_true(hrp, explicit_internal_key=None):
     """
     Generates a deterministic bech32m address (segwit v1 output) that
     can be spent with a witness stack of OP_TRUE and the control block
@@ -57,10 +58,19 @@ def create_deterministic_address_bcrt1_p2tr_op_true(explicit_internal_key=None):
     """
     internal_key = explicit_internal_key or (1).to_bytes(32, 'big')
     taproot_info = taproot_construct(internal_key, [("only-path", CScript([OP_TRUE]))])
-    address = output_key_to_p2tr(taproot_info.output_pubkey)
+    address = encode_segwit_address(hrp, 1, taproot_info.output_pubkey)
+    return (address, taproot_info)
+
+
+def create_deterministic_address_bcrt1_p2tr_op_true(explicit_internal_key=None):
+    address, taproot_info = create_deterministic_address_p2tr_op_true('bcrt', explicit_internal_key)
     if explicit_internal_key is None:
         assert_equal(address, 'bcrt1p9yfmy5h72durp7zrhlw9lf7jpwjgvwdg0jr0lqmmjtgg83266lqsekaqka')
     return (address, taproot_info)
+
+
+def create_deterministic_address_rvia_p2tr_op_true(explicit_internal_key=None):
+    return create_deterministic_address_p2tr_op_true(VIACOIN_REGTEST_SEGWIT_HRP, explicit_internal_key)
 
 
 def byte_to_base58(b, version):
@@ -175,7 +185,7 @@ def check_script(script):
 
 def bech32_to_bytes(address):
     hrp = address.split('1')[0]
-    if hrp not in ['bc', 'tb', 'bcrt']:
+    if hrp not in ['bc', 'tb', 'bcrt', 'via', 'tvia', VIACOIN_REGTEST_SEGWIT_HRP]:
         return (None, None)
     version, payload = decode_segwit_address(hrp, address)
     if version is None:

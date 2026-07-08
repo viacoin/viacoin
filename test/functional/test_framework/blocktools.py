@@ -47,9 +47,12 @@ from .script_util import (
 )
 from .util import assert_equal
 
-MAX_BLOCK_SIGOPS = 20000
+# Viacoin consensus keeps Bitcoin's witness scale factor but uses a lower
+# block sigops budget: MAX_BLOCK_SIGOPS_COST = 8000, i.e. 2000 legacy sigops.
+MAX_BLOCK_SIGOPS = 2000
 MAX_BLOCK_SIGOPS_WEIGHT = MAX_BLOCK_SIGOPS * WITNESS_SCALE_FACTOR
-MAX_STANDARD_TX_SIGOPS = 4000
+# MAX_STANDARD_TX_SIGOPS_COST = MAX_BLOCK_SIGOPS_COST / 5 = 1600, i.e. 400 legacy sigops.
+MAX_STANDARD_TX_SIGOPS = 400
 MAX_STANDARD_TX_WEIGHT = 400000
 
 # Genesis block time (regtest)

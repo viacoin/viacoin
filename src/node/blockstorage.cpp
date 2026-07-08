@@ -106,9 +106,12 @@ bool BlockTreeDB::ReadFlag(const std::string& name, bool& fValue)
     return true;
 }
 
-bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt)
+bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex, const util::SignalInterrupt& interrupt, bool check_pow)
 {
     AssertLockHeld(::cs_main);
+    if (!check_pow) {
+        LogInfo("Viacoin: skipping proof-of-work verification at block index load\n");
+    }
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->Seek(std::make_pair(DB_BLOCK_INDEX, uint256()));
 
@@ -134,7 +137,14 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
+                // Viacoin: PoW check at load is optional. With scrypt, recomputing
+                // GetPoWHash() for every block index entry on startup is extremely slow
+                // (5M+ scrypt hashes). The data on local disk is trusted; full PoW
+                // verification happens when blocks are read from disk during validation.
+                // For auxpow blocks, we cannot verify PoW here because CBlockIndex
+                // does not store auxpow data -- it would need to be read from disk
+                // on demand. Skip the check since the data is trusted anyway.
+                if (check_pow && !pindexNew->IsAuxPow() && !CheckBlockProofOfWork(pindexNew->GetBlockHeader(), consensusParams)) {
                     LogError("%s: CheckProofOfWork failed: %s\n", __func__, pindexNew->ToString());
                     return false;
                 }
@@ -400,7 +410,7 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
 {
     if (!m_block_tree_db->LoadBlockIndexGuts(
-            GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
+            GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt, m_opts.check_pow_at_load)) {
         return false;
     }
 
@@ -1017,8 +1027,7 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 
     const auto block_hash{block.GetHash()};
 
-    // Check the header
-    if (!CheckProofOfWork(block_hash, block.nBits, GetConsensus())) {
+    if (!CheckBlockProofOfWork(block, GetConsensus())) {
         LogError("Errors in block header at %s while reading block", pos.ToString());
         return false;
     }
@@ -1042,6 +1051,43 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 {
     const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
     return ReadBlock(block, block_pos, index.GetBlockHash());
+}
+
+bool BlockManager::ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex& index) const
+{
+    // Read only the block header from disk, not the full block.
+    // The header includes auxpow data which is not stored in CBlockIndex.
+    // This is much cheaper than reading the full block: a header is ~80 bytes
+    // (non-auxpow) or ~200 bytes (auxpow), versus potentially megabytes of
+    // transaction data for the full block.
+    const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
+
+    AutoFile filein{OpenBlockFile(block_pos, /*fReadOnly=*/true)};
+    if (filein.IsNull()) {
+        LogError("%s: OpenBlockFile failed for %s\n", __func__, block_pos.ToString());
+        return false;
+    }
+
+    try {
+        filein >> block;
+    } catch (const std::exception& e) {
+        LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), block_pos.ToString());
+        return false;
+    }
+
+    if (!CheckBlockProofOfWork(block, GetConsensus())) {
+        LogError("%s: Errors in block header at %s\n", __func__, block_pos.ToString());
+        return false;
+    }
+
+    // Verify the hash matches the index
+    if (block.GetHash() != index.GetBlockHash()) {
+        LogError("%s: GetHash() doesn't match index for %s at %s\n",
+                     __func__, index.ToString(), block_pos.ToString());
+        return false;
+    }
+
+    return true;
 }
 
 bool BlockManager::ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos& pos) const
