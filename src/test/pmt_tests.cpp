@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <merkleblock.h>
 #include <serialize.h>
@@ -33,10 +34,10 @@ BOOST_FIXTURE_TEST_SUITE(pmt_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(pmt_test1)
 {
-    static const unsigned int tx_counts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
+    const unsigned int max_supported_transactions = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT;
+    const std::vector<unsigned int> tx_counts = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, max_supported_transactions};
 
-    for (int i = 0; i < 12; i++) {
-        unsigned int nTx = tx_counts[i];
+    for (const unsigned int nTx : tx_counts) {
 
         // build a block with some dummy transactions
         CBlock block;

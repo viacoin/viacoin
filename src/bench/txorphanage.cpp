@@ -42,9 +42,10 @@ static CTransactionRef MakeTransactionBulkedTo(unsigned int num_inputs, int64_t 
 }
 
 // Constructs a transaction using a subset of inputs[start_input : start_input + num_inputs] up to the weight_limit.
-static CTransactionRef MakeTransactionSpendingUpTo(const std::vector<CTxIn>& inputs, unsigned int start_input, unsigned int num_inputs, int64_t weight_limit)
+static CTransactionRef MakeTransactionSpendingUpTo(const std::vector<CTxIn>& inputs, unsigned int start_input, unsigned int num_inputs, int64_t weight_limit, unsigned int unique_tag)
 {
     CMutableTransaction tx;
+    tx.nLockTime = unique_tag;
     for (unsigned int i{start_input}; i < start_input + num_inputs; ++i) {
         if (GetTransactionWeight(*MakeTransactionRef(tx)) + APPROX_WEIGHT_PER_INPUT >= weight_limit) break;
         tx.vin.emplace_back(inputs.at(i % inputs.size()));
@@ -199,14 +200,15 @@ static void OrphanageEraseAll(benchmark::Bench& bench, bool block_or_disconnect)
 
     // Transactions with 9 inputs maximize the computation / LatencyScore ratio.
     constexpr unsigned int INPUTS_PER_TX{9};
-    constexpr unsigned int NUM_PEERS{125};
+    constexpr unsigned int TARGET_INPUTS_PER_PEER{76};
+    constexpr unsigned int NUM_PEERS{(NUM_BLOCK_INPUTS + TARGET_INPUTS_PER_PEER - 1) / TARGET_INPUTS_PER_PEER};
     constexpr unsigned int NUM_TXNS_PER_PEER = node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE / NUM_PEERS;
 
     // Divide the block's inputs evenly among the peers.
     constexpr unsigned int INPUTS_PER_PEER = NUM_BLOCK_INPUTS / NUM_PEERS;
     static_assert(INPUTS_PER_PEER > 0);
-    // All the block inputs are spent by the orphanage transactions. Each peer is assigned 76 of them.
-    // Each peer has 24 transactions spending 9 inputs each, so jumping by 3 ensures we cover all of the inputs.
+    // Keep the per-peer input budget in the same rough range as upstream so transaction templates remain unique.
+    static_assert(INPUTS_PER_PEER >= INPUTS_PER_TX);
     static_assert(7 * NUM_TXNS_PER_PEER + INPUTS_PER_TX - 1 >= INPUTS_PER_PEER);
 
     for (NodeId peer{0}; peer < NUM_PEERS; ++peer) {
@@ -217,7 +219,7 @@ static void OrphanageEraseAll(benchmark::Bench& bench, bool block_or_disconnect)
 
             // Note that we shouldn't be able to hit the weight limit with these small transactions.
             const int64_t weight_limit{std::min<int64_t>(weight_left_for_peer, MAX_STANDARD_TX_WEIGHT)};
-            auto ptx = MakeTransactionSpendingUpTo(block_tx->vin, /*start_input=*/start_input, /*num_inputs=*/INPUTS_PER_TX, /*weight_limit=*/weight_limit);
+            auto ptx = MakeTransactionSpendingUpTo(block_tx->vin, /*start_input=*/start_input, /*num_inputs=*/INPUTS_PER_TX, /*weight_limit=*/weight_limit, /*unique_tag=*/peer * NUM_TXNS_PER_PEER + txnum);
 
             assert(GetTransactionWeight(*ptx) <= MAX_STANDARD_TX_WEIGHT);
             assert(!orphanage->HaveTx(ptx->GetWitnessHash()));

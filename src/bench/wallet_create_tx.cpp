@@ -128,15 +128,16 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 
     // Generate chain; each coinbase will have two outputs to fill-up the wallet
     const auto& params = Params();
+    const auto coinbase_maturity = test_setup->m_node.chainman->GetConsensus().fPowNoRetargeting ? COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
     const CScript coinbase_out{GetScriptForDestination(dest)};
-    unsigned int chain_size = 5000; // 5k blocks means 10k UTXO for the wallet (minus 200 due COINBASE_MATURITY)
+    unsigned int chain_size = 5000;
     for (unsigned int i = 0; i < chain_size; ++i) {
         generateFakeBlock(params, test_setup->m_node, wallet, coinbase_out);
     }
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
+    assert(bal == 49 * COIN * (chain_size - coinbase_maturity));
 
     wallet::CCoinControl coin_control;
     coin_control.m_allow_other_inputs = allow_other_inputs;
@@ -187,6 +188,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 
     // Generate chain; each coinbase will have two outputs to fill-up the wallet
     const auto& params = Params();
+    const auto coinbase_maturity = test_setup->m_node.chainman->GetConsensus().fPowNoRetargeting ? COINBASE_MATURITY_REGTEST : COINBASE_MATURITY;
     unsigned int chain_size = 1000;
     for (unsigned int i = 0; i < chain_size / dest_wallet.size(); ++i) {
         for (const auto& dest : dest_wallet) {
@@ -196,12 +198,12 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
+    assert(bal == 49 * COIN * (chain_size - coinbase_maturity));
 
     bench.run([&] {
         LOCK(wallet.cs_wallet);
         const auto& res = wallet::AvailableCoins(wallet);
-        assert(res.All().size() == (chain_size - COINBASE_MATURITY) * 2);
+        assert(res.All().size() == (chain_size - coinbase_maturity) * 2);
     });
 }
 

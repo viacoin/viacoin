@@ -14,6 +14,9 @@
 #include <optional>
 
 class ValidationSignals;
+namespace Consensus {
+struct Params;
+}
 
 /** Default for -maxmempool, maximum megabytes of mempool memory usage */
 static constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
@@ -55,6 +58,7 @@ struct MemPoolOptions {
     bool require_standard{true};
     bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
+    const Consensus::Params* consensus{nullptr};
 
     ValidationSignals* signals{nullptr};
 };

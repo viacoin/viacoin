@@ -11,6 +11,7 @@
 
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
+#include <kernel/messagestartchars.h>
 #include <key.h>
 #include <pubkey.h>
 #include <span.h>
@@ -60,6 +61,9 @@ public:
      * and decryption can be tested without knowing the other side's private key.
      */
     void Initialize(const EllSwiftPubKey& their_pubkey, bool initiator, bool self_decrypt = false) noexcept;
+
+    /** Initialize using explicit network magic for HKDF salt derivation (testing only). */
+    void Initialize(const EllSwiftPubKey& their_pubkey, bool initiator, const MessageStartChars& message_header, bool self_decrypt) noexcept;
 
     /** Determine whether this cipher is fully initialized. */
     explicit operator bool() const noexcept { return m_send_l_cipher.has_value(); }

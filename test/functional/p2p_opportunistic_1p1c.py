@@ -465,7 +465,7 @@ class PackageRelayTest(BitcoinTestFramework):
         high_fee_child = self.wallet.create_self_transfer(
             utxo_to_spend=low_fee_parent["new_utxo"],
             fee_rate=200*FEERATE_1SAT_VB,
-            target_vsize=100000
+            target_vsize=50000
         )
 
         # Announce

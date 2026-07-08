@@ -24,10 +24,10 @@ import tempfile
 import time
 import types
 
-from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from .authproxy import JSONRPCException
 from . import coverage
 from .p2p import NetworkThread
+from .wallet import MiniWallet
 from .test_node import TestNode
 from .util import (
     MAX_NODES,
@@ -911,20 +911,25 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Set a time in the past, so that blocks don't end up in the future
             cache_node.setmocktime(cache_node.getblockheader(cache_node.getbestblockhash())['time'])
 
-            # Create a 199-block-long chain; each of the 3 first nodes
-            # gets 25 mature blocks and 25 immature.
-            # The 4th address gets 25 mature and only 24 immature blocks so that the very last
-            # block in the cache does not age too much (have an old tip age).
-            # This is needed so that we are out of IBD when the test starts,
-            # see the tip age check in IsInitialBlockDownload().
-            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [create_deterministic_address_bcrt1_p2tr_op_true()[0]]
-            assert_equal(len(gen_addresses), 4)
+            # Create a 199-block-long chain; each of the 3 first nodes gets
+            # 25 mature blocks and 25 immature. The 4th target must fund
+            # MiniWallet's default descriptor so functional tests like
+            # feature_fee_estimation can spend the pre-generated cache coins.
+            # The final tranche uses 24 blocks so the tip does not age too much.
+            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3]
+            assert_equal(len(gen_addresses), 3)
+            miniwallet = MiniWallet(cache_node)
             for i in range(8):
-                self.generatetoaddress(
-                    cache_node,
-                    nblocks=25 if i != 7 else 24,
-                    address=gen_addresses[i % len(gen_addresses)],
-                )
+                nblocks = 25 if i != 7 else 24
+                if i % 4 == 3:
+                    cache_node.generatetodescriptor(nblocks, miniwallet.get_descriptor(), called_by_framework=True)
+                    miniwallet.rescan_utxos()
+                else:
+                    self.generatetoaddress(
+                        cache_node,
+                        nblocks=nblocks,
+                        address=gen_addresses[i % len(gen_addresses)],
+                    )
 
             assert_equal(cache_node.getblockchaininfo()["blocks"], 199)
 
@@ -944,7 +949,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.debug("Copy cache directory {} to node {}".format(cache_node_dir, i))
             to_dir = get_datadir_path(self.options.tmpdir, i)
             shutil.copytree(cache_node_dir, to_dir)
-            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in bitcoin.conf
+            initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)  # Overwrite port/rpcport in viacoin.conf
 
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.

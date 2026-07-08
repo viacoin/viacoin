@@ -163,8 +163,8 @@ void IpcSocketTest(const fs::path& datadir)
     // addresses in the data directory would fail with errors like:
     //   Address 'unix' path '"/tmp/test_common_Bitcoin Core/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/test_bitcoin.sock"' exceeded maximum socket path length
     std::vector<std::string> addresses{
-        strprintf("unix:%s", TempPath("bitcoin_sock0_XXXXXX")),
-        strprintf("unix:%s", TempPath("bitcoin_sock1_XXXXXX")),
+        strprintf("unix:%s", TempPath("viacoin_sock0_XXXXXX")),
+        strprintf("unix:%s", TempPath("viacoin_sock1_XXXXXX")),
     };
 
     // Bind and listen on multiple addresses
