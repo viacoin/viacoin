@@ -52,16 +52,16 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
 
     if (HelpRequested(args) || args.GetBoolArg("-version", false)) {
         // First part of help message is specific to this utility
-        std::string strUsage = CLIENT_NAME " bitcoin-util utility version " + FormatFullVersion() + "\n";
+        std::string strUsage = CLIENT_NAME " viacoin-util utility version " + FormatFullVersion() + "\n";
 
         if (args.GetBoolArg("-version", false)) {
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "The bitcoin-util tool provides bitcoin related functionality that does not rely on the ability to access a running node. Available [commands] are listed below.\n"
+                "The viacoin-util tool provides viacoin related functionality that does not rely on the ability to access a running node. Available [commands] are listed below.\n"
                 "\n"
-                "Usage:  bitcoin-util [options] [command]\n"
-                "or:     bitcoin-util [options] grind <hex-block-header>\n";
+                "Usage:  viacoin-util [options] [command]\n"
+                "or:     viacoin-util [options] grind <hex-block-header>\n";
             strUsage += "\n" + args.GetHelpMessage();
         }
 
@@ -99,7 +99,7 @@ static void grind_task(uint32_t nBits, CBlockHeader header, uint32_t offset, uin
     while (!found && header.nNonce < finish) {
         const uint32_t next = (finish - header.nNonce < 5000*step) ? finish : header.nNonce + 5000*step;
         do {
-            if (UintToArith256(header.GetHash()) <= target) {
+            if (UintToArith256(header.GetPoWHash()) <= target) {
                 if (!found.exchange(true)) {
                     proposed_nonce = header.nNonce;
                 }

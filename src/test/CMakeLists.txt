@@ -11,6 +11,7 @@ add_executable(test_bitcoin
   amount_tests.cpp
   argsman_tests.cpp
   arith_uint256_tests.cpp
+  auxpow_tests.cpp
   banman_tests.cpp
   base32_tests.cpp
   base58_tests.cpp
@@ -47,6 +48,7 @@ add_executable(test_bitcoin
   getarg_tests.cpp
   hash_tests.cpp
   headers_sync_chainwork_tests.cpp
+  scrypt_tests.cpp
   httpserver_tests.cpp
   i2p_tests.cpp
   interfaces_tests.cpp
@@ -104,7 +106,6 @@ add_executable(test_bitcoin
   sync_tests.cpp
   system_ram_tests.cpp
   system_tests.cpp
-  testnet4_miner_tests.cpp
   timeoffsets_tests.cpp
   torcontrol_tests.cpp
   transaction_tests.cpp

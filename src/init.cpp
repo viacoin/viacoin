@@ -15,6 +15,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <crypto/scrypt.h>
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/system.h>
@@ -163,7 +164,7 @@ static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
+static const char* BITCOIN_PID_FILENAME = "viacoind.pid";
 /**
  * True if this process has created a PID file.
  * Used to determine whether we should remove the PID file on shutdown.
@@ -626,6 +627,8 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     hidden_args.emplace_back("-zmqpubsequencehwm=<n>");
 #endif
 
+    // Viacoin: skip PoW check at load — scrypt recomputation on every block index entry is extremely slow
+    argsman.AddArg("-skipcheckpowatload", strprintf("Skip proof-of-work check when loading block index from disk (default: %u)", true), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-checkblocks=<n>", strprintf("How many blocks to check at startup (default: %u, 0 = all)", DEFAULT_CHECKBLOCKS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-checklevel=<n>", strprintf("How thorough the block verification of -checkblocks is: %s (0-4, default: %u)", Join(CHECKLEVEL_DOC, ", "), DEFAULT_CHECKLEVEL), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-checkblockindex", strprintf("Do a consistency check for the block tree, chainstate, and other validation data structures every <n> operations. Use 0 to disable. (default: %u, regtest: %u)", defaultChainParams->DefaultConsistencyChecks(), regtestChainParams->DefaultConsistencyChecks()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
@@ -1251,6 +1254,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
 
     CTxMemPool::Options mempool_opts{
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
+        .consensus = &chainparams.GetConsensus(),
         .signals = node.validation_signals.get(),
     };
     Assert(ApplyArgsManOptions(args, chainparams, mempool_opts)); // no error can happen, already checked in AppInitParameterInteraction
@@ -1489,6 +1493,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!AppInitServers(node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
+
+#if defined(USE_SCRYPT_AVX2)
+    LogInfo("%s\n", scrypt_detect_avx2());
+#elif defined(USE_SSE2)
+    LogInfo("%s\n", scrypt_detect_sse2());
+#endif
 
     // ********************************************************* Step 5: verify wallet database integrity
     for (const auto& client : node.chain_clients) {

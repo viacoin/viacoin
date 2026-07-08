@@ -76,7 +76,7 @@ using node::VerifyLoadedChainstate;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
-constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common bitcoin"}; // Includes a space to catch possible path escape issues.
+constexpr inline auto TEST_DIR_PATH_ELEMENT{"test_common viacoin"}; // Includes a space to catch possible path escape issues.
 /** Random context to get unique temp data dirs. Separate from m_rng, which can be seeded from a const env var */
 static FastRandomContext g_rng_temp_path;
 static const bool g_rng_temp_path_init{[] {
@@ -384,14 +384,14 @@ TestChain100Setup::TestChain100Setup(
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
-    // Generate a 100-block chain:
-    this->mineBlocks(COINBASE_MATURITY);
+    this->mineBlocks(COINBASE_MATURITY_REGTEST);
 
     {
         LOCK(::cs_main);
-        assert(
-            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "0c8c5f79505775a0f6aed6aca2350718ceb9c6f2c878667864d5c7a6d8ffa2a6");
+        assert(m_node.chainman->ActiveChain().Tip() != nullptr);
+        assert(m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
+               "072cd674d628a4f71cad11db20ff664518796caddf3accd0b369c06619aebb82");
+        assert(m_node.chainman->ActiveChain().Tip()->nHeight == COINBASE_MATURITY_REGTEST);
     }
 }
 
@@ -421,7 +421,7 @@ CBlock TestChain100Setup::CreateBlock(
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetPoWHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
 
     return block;
 }

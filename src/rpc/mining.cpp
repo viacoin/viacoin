@@ -5,6 +5,7 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <auxpow/auxpow.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -33,6 +34,7 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <streams.h>
 #include <txmempool.h>
 #include <univalue.h>
 #include <util/signalinterrupt.h>
@@ -44,6 +46,7 @@
 #include <validationinterface.h>
 
 #include <cstdint>
+#include <map>
 #include <memory>
 
 using interfaces::BlockRef;
@@ -139,7 +142,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t&
     block_out.reset();
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainman.GetConsensus()) && !chainman.m_interrupt) {
+    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetPoWHash(), block.nBits, chainman.GetConsensus()) && !chainman.m_interrupt) {
         ++block.nNonce;
         --max_tries;
     }
@@ -886,7 +889,7 @@ static RPCHelpMan getblocktemplate()
     block.nNonce = 0;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
-    const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
+    const bool fPreSegWit = !ViacoinSegwitActiveAfter(pindexPrev, chainman);
 
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
 
@@ -1042,6 +1045,126 @@ protected:
     }
 };
 
+static RPCHelpMan getauxblock()
+{
+    return RPCHelpMan{
+        "getauxblock",
+        "Create or submit AuxPoW work for merged mining.\n",
+        {
+            {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Block hash returned by a prior getauxblock call."},
+            {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Serialized AuxPoW payload for the block hash."},
+        },
+        {
+            RPCResult{"When requesting work", RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "target", "Parent block target"},
+                {RPCResult::Type::STR_HEX, "hash", "AuxPoW block hash"},
+                {RPCResult::Type::NUM, "chainid", "Viacoin chain id"},
+            }},
+            RPCResult{"When submitting work", RPCResult::Type::STR, "", "BIP22-style submission result string"},
+        },
+        RPCExamples{
+            HelpExampleCli("getauxblock", "") +
+            HelpExampleCli("getauxblock", "\"hash\" \"auxpow\"") +
+            HelpExampleRpc("getauxblock", "\"hash\", \"auxpow\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    Mining& miner = EnsureMining(node);
+
+    if (!miner.isTestChain()) {
+        const CConnman& connman = EnsureConnman(node);
+        if (connman.GetNodeCount(ConnectionDirection::Both) == 0) {
+            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, CLIENT_NAME " is not connected!");
+        }
+        if (miner.isInitialBlockDownload()) {
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, CLIENT_NAME " is in initial sync and waiting for blocks...");
+        }
+    }
+
+    static std::map<uint256, std::shared_ptr<CBlock>> map_new_block;
+    static uint256 prev_tip_hash;
+
+    const auto tip = CHECK_NONFATAL(miner.getTip());
+    if (!tip) {
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, CLIENT_NAME " is not connected!");
+    }
+
+    const Consensus::Params& consensus_params = chainman.GetParams().GetConsensus();
+
+    if (request.params.empty() || request.params[0].isNull()) {
+        if (tip->height < consensus_params.nAuxPowStartHeight - 1) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Merged mining not enabled at current block height yet");
+        }
+
+        if (prev_tip_hash != tip->hash) {
+            map_new_block.clear();
+            prev_tip_hash = tip->hash;
+        }
+
+        std::unique_ptr<BlockTemplate> block_template = miner.createNewBlock();
+        CHECK_NONFATAL(block_template);
+        auto block = std::make_shared<CBlock>(block_template->getBlock());
+        block->SetAuxPow(new CAuxPow());
+        map_new_block[block->GetHash()] = block;
+
+        bool f_negative;
+        bool f_overflow;
+        const arith_uint256 hash_target = arith_uint256().SetCompact(block->nBits, &f_negative, &f_overflow);
+        if (hash_target == 0 || f_negative || f_overflow) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "block has invalid difficulty bits");
+        }
+
+        UniValue result(UniValue::VOBJ);
+        result.pushKV("target", hash_target.GetHex());
+        result.pushKV("hash", block->GetHash().GetHex());
+        result.pushKV("chainid", block->GetChainID());
+        return result;
+    }
+
+    if (request.params.size() < 2 || request.params[1].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock requires both hash and auxpow when submitting work");
+    }
+
+    const uint256 hash = ParseHashV(request.params[0], "hash");
+    auto it = map_new_block.find(hash);
+    if (it == map_new_block.end()) {
+        return UniValue{"stale-work"};
+    }
+
+    DataStream stream{ParseHexV(request.params[1], "auxpow")};
+    auto pow = std::make_unique<CAuxPow>();
+    stream >> *pow;
+
+    std::shared_ptr<CBlock> block = std::make_shared<CBlock>(*it->second);
+    block->SetAuxPow(pow.release());
+
+    {
+        LOCK(cs_main);
+        const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(block->hashPrevBlock);
+        if (pindex) {
+            chainman.UpdateUncommittedBlockStructures(*block, pindex);
+        }
+    }
+
+    bool new_block;
+    auto sc = std::make_shared<submitblock_StateCatcher>(block->GetHash());
+    CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
+    const bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/false, /*new_block=*/&new_block);
+    CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
+    if (!new_block && accepted) {
+        return UniValue{"duplicate"};
+    }
+    if (!sc->found) {
+        return UniValue{"inconclusive"};
+    }
+    return BIP22ValidationResult(sc->state);
+},
+    };
+}
+
 static RPCHelpMan submitblock()
 {
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
@@ -1141,6 +1264,7 @@ void RegisterMiningRPCCommands(CRPCTable& t)
         {"mining", &getmininginfo},
         {"mining", &prioritisetransaction},
         {"mining", &getprioritisedtransactions},
+        {"mining", &getauxblock},
         {"mining", &getblocktemplate},
         {"mining", &submitblock},
         {"mining", &submitheader},
