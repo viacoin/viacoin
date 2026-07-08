@@ -5,7 +5,7 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/bitcoin/bitcoin.conf, but keep in mind those explicitly
+# /etc/viacoin/viacoin.conf, but keep in mind those explicitly
 # specified as arguments in ExecStart= will override those in the
 # config file.
 
@@ -18,21 +18,21 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
-                            -conf=/etc/bitcoin/bitcoin.conf \
-                            -datadir=/var/lib/bitcoind \
+ExecStart=/usr/bin/bitcoind -pid=/run/viacoind/viacoind.pid \
+                            -conf=/etc/viacoin/viacoin.conf \
+                            -datadir=/var/lib/viacoind \
                             -startupnotify='systemd-notify --ready' \
                             -shutdownnotify='systemd-notify --stopping'
 
 # Make sure the config directory is readable by the service user
-ExecStartPre=!/bin/chgrp bitcoin /etc/bitcoin
+ExecStartPre=!/bin/chgrp viacoin /etc/viacoin
 
 # Process management
 ####################
 
 Type=notify
 NotifyAccess=all
-PIDFile=/run/bitcoind/bitcoind.pid
+PIDFile=/run/viacoind/viacoind.pid
 
 Restart=on-failure
 TimeoutStartSec=infinity
@@ -41,19 +41,19 @@ TimeoutStopSec=600
 # Directory creation and permissions
 ####################################
 
-# Run as bitcoin:bitcoin
-User=bitcoin
+# Run as viacoin:viacoin
+User=viacoin
 
-# /run/bitcoind
-RuntimeDirectory=bitcoind
+# /run/viacoind
+RuntimeDirectory=viacoind
 RuntimeDirectoryMode=0710
 
-# /etc/bitcoin
-ConfigurationDirectory=bitcoin
+# /etc/viacoin
+ConfigurationDirectory=viacoin
 ConfigurationDirectoryMode=0710
 
-# /var/lib/bitcoind
-StateDirectory=bitcoind
+# /var/lib/viacoind
+StateDirectory=viacoind
 StateDirectoryMode=0710
 
 # Hardening measures
