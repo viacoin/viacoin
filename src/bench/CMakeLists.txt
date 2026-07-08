@@ -85,5 +85,8 @@ endif()
 add_test(NAME bench_sanity_check
   COMMAND bench_bitcoin -sanity-check
 )
+# Benchmark sanity checks can be very slow under sanitizers (ASan/TSan/MSan).
+# Give this test 2x the default CTest timeout to avoid CI false-failures.
+set_tests_properties(bench_sanity_check PROPERTIES TIMEOUT 7200)
 
 install_binary_component(bench_bitcoin INTERNAL)

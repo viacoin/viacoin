@@ -13,6 +13,11 @@ function(install_binary_component component)
     ""                          # multi_value_keywords
   )
   set(target_name ${component})
+  # Get the actual output binary name (respects OUTPUT_NAME property)
+  get_target_property(output_name ${target_name} OUTPUT_NAME)
+  if(NOT output_name)
+    set(output_name ${target_name})
+  endif()
   if(IC_INTERNAL)
     set(runtime_dest ${CMAKE_INSTALL_LIBEXECDIR})
   else()
@@ -23,7 +28,7 @@ function(install_binary_component component)
     COMPONENT ${component}
   )
   if(INSTALL_MAN AND IC_HAS_MANPAGE)
-    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target_name}.1
+    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${output_name}.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
       COMPONENT ${component}
     )

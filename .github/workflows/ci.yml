@@ -188,7 +188,7 @@ jobs:
 
   windows-native-dll:
     name: ${{ matrix.job-name }}
-    runs-on: windows-2022
+    runs-on: [self-hosted, Windows, X64]
 
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
@@ -215,12 +215,28 @@ jobs:
         name: Set up VS Developer Prompt
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $installationPath = & $vswherePath -latest -property installationPath
-          & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -arch=x64 -no_logo && set" | foreach-object {
+          $programFilesX86 = [System.Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          if (!$programFilesX86) {
+            throw "ProgramFiles(x86) environment variable is not set"
+          }
+          $vswherePath = Join-Path $programFilesX86 "Microsoft Visual Studio\Installer\vswhere.exe"
+          $installationPath = & $vswherePath -latest -products * -property installationPath
+          if (!$installationPath) {
+            throw "No Visual Studio installation found by vswhere"
+          }
+          $vsdevcmdPath = Join-Path $installationPath "Common7\Tools\vsdevcmd.bat"
+          if (!(Test-Path $vsdevcmdPath)) {
+            throw "vsdevcmd.bat not found at: $vsdevcmdPath"
+          }
+          & "${env:COMSPEC}" /d /s /c "call `"$vsdevcmdPath`" -arch=x64 -no_logo && set" | foreach-object {
             $name, $value = $_ -split '=', 2
             echo "$name=$value" >> $env:GITHUB_ENV
           }
+          $vcpkgRoot = Join-Path $installationPath "VC\vcpkg"
+          if (!(Test-Path $vcpkgRoot)) {
+            throw "vcpkg not found at: $vcpkgRoot"
+          }
+          echo "VCPKG_INSTALLATION_ROOT=$vcpkgRoot" >> $env:GITHUB_ENV
 
       - name: Get tool information
         shell: pwsh
@@ -242,7 +258,7 @@ jobs:
       - name: vcpkg tools cache
         uses: actions/cache@v5
         with:
-          path: C:/vcpkg/downloads/tools
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}/downloads/tools
           key: ${{ github.job }}-vcpkg-tools
 
       - name: Restore vcpkg binary cache
@@ -273,14 +289,14 @@ jobs:
         working-directory: build
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin\Release\bitcoind.exe -out:bitcoind.manifest
-          Get-Content bitcoind.manifest
+          mt.exe -nologo -inputresource:bin\Release\viacoind.exe -out:viacoind.manifest
+          Get-Content viacoind.manifest
 
           Get-ChildItem -Filter "bin\Release\*.exe" | ForEach-Object {
             $exeName = $_.Name
 
             # Skip as they currently do not have manifests
-            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe" -or $exeName -eq "test_bitcoin-qt.exe") {
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_viacoin.exe" -or $exeName -eq "test_bitcoin-qt.exe") {
               Write-Host "Skipping $exeName (no manifest present)"
               return
             }
@@ -301,12 +317,12 @@ jobs:
         if: matrix.job-type == 'standard'
         working-directory: build
         env:
-          BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
-          BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
-          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
-          BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
-          BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
-          BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
+          BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\viacoin.exe'
+          BITCOIND: '${{ github.workspace }}\build\bin\Release\viacoind.exe'
+          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\viacoin-cli.exe'
+          BITCOINTX: '${{ github.workspace }}\build\bin\Release\viacoin-tx.exe'
+          BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\viacoin-util.exe'
+          BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\viacoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
 
@@ -369,7 +385,7 @@ jobs:
 
   windows-native-test:
     name: 'Windows, test cross-built'
-    runs-on: windows-2022
+    runs-on: [self-hosted, Windows, X64]
     needs: windows-cross
 
     env:
@@ -384,22 +400,22 @@ jobs:
         with:
           name: x86_64-w64-mingw32-executables-${{ github.run_id }}
 
-      - name: Run bitcoind.exe
-        run: ./bin/bitcoind.exe -version
+      - name: Run viacoind.exe
+        run: ./bin/viacoind.exe -version
 
       - *SET_UP_VS
 
       - name: Check executable manifests
         shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
-          Get-Content bitcoind.manifest
+          mt.exe -nologo -inputresource:bin\viacoind.exe -out:viacoind.manifest
+          Get-Content viacoind.manifest
 
           Get-ChildItem -Filter "bin\*.exe" | ForEach-Object {
             $exeName = $_.Name
 
             # Skip as they currently do not have manifests
-            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe") {
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_viacoin.exe") {
               Write-Host "Skipping $exeName (no manifest present)"
               return
             }
@@ -419,7 +435,7 @@ jobs:
           ./src/univalue/unitester.exe
 
       - name: Run benchmarks
-        run: ./bin/bench_bitcoin.exe -sanity-check
+        run: ./bin/bench_viacoin.exe -sanity-check
 
       - name: Adjust paths in test/config.ini
         shell: pwsh
@@ -560,7 +576,7 @@ jobs:
   lint:
     name: 'lint'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-xs' || 'ubuntu-24.04' }}
+    runs-on: [self-hosted, Linux, X64]
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 20
     env:
@@ -585,4 +601,4 @@ jobs:
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             CIRRUS_PR_FLAG="-e CIRRUS_PR=1"
           fi
-          docker run --rm $CIRRUS_PR_FLAG -v "$(pwd)":/bitcoin "$CONTAINER_NAME"
+          docker run --rm $CIRRUS_PR_FLAG --user "$(id -u):$(id -g)" -v "$(pwd)":/bitcoin "$CONTAINER_NAME"

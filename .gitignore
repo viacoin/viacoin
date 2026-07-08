@@ -26,3 +26,6 @@ target/
 /guix-build-*
 
 /ci/scratch/
+test/cache/
+.github/workflows/ci.yaml.bak
+.gitnexus
