@@ -47,6 +47,7 @@
 #include <boost/signals2/connection.hpp>
 #include <chrono>
 #include <memory>
+#include <vector>
 
 #include <QApplication>
 #include <QDebug>
@@ -54,11 +55,70 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QPalette>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
 #include <QWindow>
+
+// Viacoin: Runtime translation table to replace "Bitcoin"/"bitcoin" references
+// in user-facing Qt strings with "Viacoin"/"viacoin". This approach keeps .ui
+// files and locale sources identical to upstream, reducing merge conflicts.
+struct TranslationTable {
+    const wchar_t *From, *To;
+};
+
+static std::vector<TranslationTable> g_translationTable = {
+    {L"Bitcoin",   L"Viacoin"},
+    {L"bitcoin",   L"viacoin"},
+    {L"Bitcoins",  L"Viacoins"},
+    {L"bitcoins",  L"viacoins"},
+    {L"BITCOIN",   L"VIACOIN"},
+    {L"BITCOINS",  L"VIACOINS"},
+};
+
+static class ViacoinTranslatorInit {
+public:
+    struct QTranslationTable {
+        QString From, To;
+    };
+
+    std::vector<QTranslationTable> m_translationTable;
+
+    ViacoinTranslatorInit()
+    {
+        for (const auto& t : g_translationTable) {
+            QTranslationTable x = { QString::fromWCharArray(t.From), QString::fromWCharArray(t.To) };
+            m_translationTable.push_back(x);
+        }
+    }
+} g_ViacoinTranslatorInit;
+
+class ViacoinTranslator : public QTranslator
+{
+    bool m_isBase;
+public:
+    QString translate(const char *context, const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1) const override
+    {
+        auto s = QTranslator::translate(context, sourceText, disambiguation, n);
+        if (strstr(sourceText, "coin")
+            || strstr(sourceText, "Coin")
+            || strstr(sourceText, "COIN"))
+        {
+            if (m_isBase && s.isNull())
+                s = QString::fromUtf8(sourceText);
+            for (const auto& t : g_ViacoinTranslatorInit.m_translationTable)
+                s.replace(t.From, t.To);
+        }
+        return s;
+    }
+
+    ViacoinTranslator(bool isBase)
+        : m_isBase(isBase)
+    {
+    }
+};
 
 // Declare meta types used for QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(bool*)
@@ -195,7 +255,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 }
 
 static int qt_argc = 1;
-static const char* qt_argv = "bitcoin-qt";
+static const char* qt_argv = "viacoin-qt";
 
 BitcoinApplication::BitcoinApplication()
     : QApplication(qt_argc, const_cast<char**>(&qt_argv))
@@ -216,6 +276,27 @@ void BitcoinApplication::setupPlatformStyle()
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
     assert(platformStyle);
+
+    // Force light mode: Qt6 on Linux/GNOME inherits the system dark theme,
+    // which makes the UI unreadable with Viacoin's icon color scheme.
+    // Override the palette to the standard light palette on Linux.
+#ifdef Q_OS_LINUX
+    QPalette light_palette;
+    light_palette.setColor(QPalette::Window, QColor(255, 255, 255));
+    light_palette.setColor(QPalette::WindowText, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::Base, QColor(255, 255, 255));
+    light_palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
+    light_palette.setColor(QPalette::ToolTipBase, QColor(255, 255, 225));
+    light_palette.setColor(QPalette::ToolTipText, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::Text, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::Button, QColor(240, 240, 240));
+    light_palette.setColor(QPalette::ButtonText, QColor(0, 0, 0));
+    light_palette.setColor(QPalette::BrightText, QColor(255, 0, 0));
+    light_palette.setColor(QPalette::Link, QColor(0, 0, 255));
+    light_palette.setColor(QPalette::Highlight, QColor(76, 163, 224));
+    light_palette.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
+    QApplication::setPalette(light_palette);
+#endif
 }
 
 BitcoinApplication::~BitcoinApplication()
@@ -542,10 +623,10 @@ int GuiMain(int argc, char* argv[])
             return EXIT_FAILURE;
         }
         if (invalid_token) {
-            InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see bitcoin-qt -h for a list of options.", argv[i])));
+            InitError(Untranslated(strprintf("Command line contains unexpected token '%s', see viacoin-qt -h for a list of options.", argv[i])));
             QMessageBox::critical(nullptr, CLIENT_NAME,
                                   // message cannot be translated because translations have not been initialized
-                                  QString::fromStdString("Command line contains unexpected token '%1', see bitcoin-qt -h for a list of options.").arg(QString::fromStdString(argv[i])));
+                                  QString::fromStdString("Command line contains unexpected token '%1', see viacoin-qt -h for a list of options.").arg(QString::fromStdString(argv[i])));
             return EXIT_FAILURE;
         }
     }
@@ -562,7 +643,7 @@ int GuiMain(int argc, char* argv[])
 
     /// 4. Initialization of translations, so that intro dialog is in user's language
     // Now that QSettings are accessible, initialize translations
-    QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
+    ViacoinTranslator qtTranslatorBase(true), qtTranslator(false), translatorBase(true), translator(false);
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,

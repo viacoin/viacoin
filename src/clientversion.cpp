@@ -20,7 +20,7 @@ using util::Join;
  * for both bitcoind and bitcoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string UA_NAME("Satoshi");
+const std::string UA_NAME("Viacoin");
 
 
 #include <bitcoin-build-info.h>
@@ -76,16 +76,23 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
     // Make sure Bitcoin Core copyright is not removed by accident
     if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+        // Viacoin copyright starts from 2014; Bitcoin Core from 2009.
+        std::string bitcoinPrefix = strPrefix;
+        const std::string viacoin_start = strprintf("%i", COPYRIGHT_HOLDERS_START_YEAR);
+        const auto pos = bitcoinPrefix.find(viacoin_start);
+        if (pos != std::string::npos) {
+            bitcoinPrefix.replace(pos, viacoin_start.size(), "2009");
+        }
+        strCopyrightHolders += "\n" + bitcoinPrefix + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;
 }
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/bitcoin/bitcoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/viacoin/viacoin>";
 
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR).translated + " ") + "\n" +
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), COPYRIGHT_HOLDERS_START_YEAR, COPYRIGHT_YEAR).translated + " ") + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software."),

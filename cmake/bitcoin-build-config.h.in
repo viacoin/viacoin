@@ -29,6 +29,9 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
+/* Copyright start year for Viacoin-specific holders */
+#define COPYRIGHT_HOLDERS_START_YEAR @COPYRIGHT_HOLDERS_START_YEAR@
+
 /* Define if external signer support is enabled */
 #cmakedefine ENABLE_EXTERNAL_SIGNER 1
 

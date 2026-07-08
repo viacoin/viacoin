@@ -251,6 +251,7 @@ add_executable(bitcoin-qt
   main.cpp
   ../init/bitcoin-qt.cpp
 )
+set_target_properties(bitcoin-qt PROPERTIES OUTPUT_NAME viacoin-qt)
 
 add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
 add_windows_application_manifest(bitcoin-qt)
@@ -278,6 +279,7 @@ if(ENABLE_IPC)
     bitcoin_node
     bitcoin_ipc
   )
+  set_target_properties(bitcoin-gui PROPERTIES OUTPUT_NAME viacoin-gui)
   import_plugins(bitcoin-gui)
   install_binary_component(bitcoin-gui INTERNAL)
   if(WIN32)

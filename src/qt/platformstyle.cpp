@@ -9,6 +9,8 @@
 #include <QImage>
 #include <QPalette>
 
+#include <map>
+
 static const struct {
     const char *platformId;
     /** Show images on push buttons */
@@ -42,6 +44,11 @@ void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 
 QIcon ColorizeIcon(const QIcon& ico, const QColor& colorbase)
 {
+    static std::map<QString, QIcon> cache;
+    const QString key = QString::number(ico.cacheKey()) + QLatin1Char(':') + colorbase.name();
+    const auto it = cache.find(key);
+    if (it != cache.end()) return it->second;
+
     QIcon new_ico;
     for (const QSize& sz : ico.availableSizes())
     {
@@ -49,6 +56,7 @@ QIcon ColorizeIcon(const QIcon& ico, const QColor& colorbase)
         MakeSingleColorImage(img, colorbase);
         new_ico.addPixmap(QPixmap::fromImage(img));
     }
+    cache.emplace(key, new_ico);
     return new_ico;
 }
 
@@ -61,7 +69,14 @@ QImage ColorizeImage(const QString& filename, const QColor& colorbase)
 
 QIcon ColorizeIcon(const QString& filename, const QColor& colorbase)
 {
-    return QIcon(QPixmap::fromImage(ColorizeImage(filename, colorbase)));
+    static std::map<QString, QIcon> cache;
+    const QString key = filename + QLatin1Char(':') + colorbase.name();
+    const auto it = cache.find(key);
+    if (it != cache.end()) return it->second;
+
+    QIcon result = QIcon(QPixmap::fromImage(ColorizeImage(filename, colorbase)));
+    cache.emplace(key, result);
+    return result;
 }
 
 }
